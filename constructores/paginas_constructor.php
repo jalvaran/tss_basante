@@ -724,6 +724,11 @@ class PageConstruct extends html_estruct_class{
     public function AgregaAngular(){
         print('<script src="../../componentes/angularjs/angular.min.js"></script>');
     }
+    public function AgregaJSInputMask(){
+        print('<script src="../../plugins/input-mask/jquery.inputmask.js"></script>');
+        print('<script src="../../plugins/input-mask/jquery.inputmask.phone.extensions.js"></script>');
+        print('<script src="../../plugins/input-mask/jquery.inputmask.numeric.extensions.js"></script>');
+    }
     /**
      * Crea una barra de progreso
      * @param type $NombreBarra -> Nombre
