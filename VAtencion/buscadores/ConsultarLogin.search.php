@@ -1,0 +1,28 @@
+<?php
+include_once("../../modelo/php_conexion.php");
+
+$obCon=new conexion(1);
+
+if(isset($_REQUEST['Login'])){
+    $key=$obCon->normalizar($_REQUEST['Login']);
+    $sql="SELECT Login FROM usuarios WHERE Login LIKE '$key'";
+    $consulta=$obCon->Query($sql);
+    $Datos=$obCon->FetchArray($consulta);
+    if($Datos["Login"]<>''){
+        print("Error");
+    }else{
+        print("OK");
+    }
+}
+
+if(isset($_REQUEST['Tipo'])){
+    $key=$obCon->normalizar($_REQUEST['Tipo']);
+    $sql="SELECT Tipo FROM usuarios_tipo WHERE Tipo LIKE '$key'";
+    $consulta=$obCon->Query($sql);
+    $Datos=$obCon->FetchArray($consulta);
+    if($Datos["Tipo"]<>''){
+        print("Error");
+    }else{
+        print("OK");
+    }
+}

@@ -1,0 +1,39 @@
+
+	Editar		0005154	2	1 	Mantenimiento Correctivo	bloqueo	asignada (juan.lopez)	2018-09-13	fallo al generrar reportes			2.0.0.0
+	Editar		0005102	2	1 	Mantenimiento Correctivo	bloqueo	asignada (juan.lopez)	2018-09-12	Bloqueo en la pantalla			2.0.0.0
+	Editar		0005099	2	2 	Mantenimiento Correctivo	bloqueo	asignada (juan.lopez)	2018-09-12	No permite generar glosas			2.0.0.0
+	Editar		0005072	2	  	Mantenimiento Correctivo	bloqueo	asignada (juan.lopez)	2018-09-12	Bloqueo en el botón de enviar al cargar rips			2.0.0.0
+	Editar		0005035	2	1 	Mantenimiento Correctivo	bloqueo	asignada (juan.lopez)	2018-09-12	Fallo al cambiar de pagina en Facturas			2.0.0.0
+	Editar		0005129	2	1 	Mantenimiento Correctivo	bloqueo	asignada (juan.lopez)	2018-09-12	Fallo al responder glosa o contra glosa			2.0.0.0
+	Editar		0005110	2	1 	Mantenimiento Correctivo	bloqueo	asignada (juan.lopez)	2018-09-12	Fallo al visualizar detalles de glosa			2.0.0.0
+	Editar		0005146	2	1 	Mantenimiento Correctivo	bloqueo	asignada (juan.lopez)	2018-09-12	Inconsistencias en el estado de la actividad			2.0.0.0
+	Editar		0005084	2	1 	Mantenimiento Correctivo	bloqueo	asignada (juan.lopez)	2018-09-04	Fallo al cargar archivo de RIPS			2.0.0.0
+	Editar		0005024	2	1 	Mantenimiento Correctivo	bloqueo	asignada (juan.lopez)	2018-09-04	No permite cargar rips de cuentas			2.0.0.0
+	Editar		0005097	4	1 	Mantenimiento Correctivo	mayor	resuelta (jose.marin)	2018-09-13	Se muestran glosas no relacionadas			2.0.0.0
+	Editar		0005101	5	1 	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-13	Validación formulario de glosas			2.0.0.0
+	Editar		0005134	2	1 	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-12	No realiza el cambio de estado correctamente			2.0.0.0
+	Editar		0005104	2	1 	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-12	Inconsistencias en el formulario de glosas			2.0.0.0
+	Editar		0005100	2	1 	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-12	Al glosar una actividad se glosan las demás de la misma factura			2.0.0.0
+	Editar		0005098	2	2 	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-12	Indica almacenado de glosas sin registros
+				0005111
+				
+	Editar		0004975	4	  	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-06	Validaciones para campos al agregar glosas			2.0.0.0
+	Editar		0004954	4	  	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-06	No se evidencia funcionalidad para bloquear usuario			2.0.0.0
+	Editar		0004974	4	  	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-06	No valida campos obligatorios al agregar conceptos de glosas			2.0.0.0
+	Editar		0005088	2	1 	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-06	No realiza el filtro de las facturas por cuenta			2.0.0.0
+	Editar		0004976	4	  	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-06	Campo de lista para seleccionar concepto general			2.0.0.0
+	Editar		0004973	4	  	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-06	Falta de información de conceptos generales de glosas			2.0.0.0
+	Editar		0004941	4	  	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-05	validaciones de ingreso al sistema			2.0.0.0
+	Editar		0004940	4	  	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-05	No se muestra validación al no ingresar usuario o contraseña			2.0.0.0
+	Editar		0004948	4	  	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-05	Validación para usuarios repetidos			2.0.0.0
+	Editar		0004969	4	  	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-05	Muestra información de poco interés en el combo de tipo usuario			2.0.0.0
+	Editar		0004944	4	  	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-05	Validaciones para campos de usuario			2.0.0.0
+	Editar		0004983	4	  	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-05	Errores al generar los reportes			2.0.0.0
+	Editar		0005080	3	1 	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-05	Inconvenientes al visualizar información de facturas duplicadas			2.0.0.0
+	Editar		0004949	4	  	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-05	Validación para contraseña			2.0.0.0
+	Editar		0004951	5	  	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-05	No se visualiza campos en la tabla de usuario			2.0.0.0
+	Editar		0004945	5	  	Mantenimiento Correctivo	mayor	asignada (juan.lopez)	2018-09-05	Inconsistencias al editar un usuario			2.0.0.0
+	Editar		0005071	3	3 	Mantenimiento Correctivo	mayor	resuelta (juan.lopez)	2018-09-05	Validación cuando se carga cuenta existente			2.0.0.0
+				0005087
+				0005069
+	
