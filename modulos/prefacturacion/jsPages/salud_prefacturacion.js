@@ -169,15 +169,22 @@ function ValidaDocumentoPaciente(){
         type: 'post',
         success: function(data){
             var respuestas = data.split(';'); //Armamos un vector separando los punto y coma de la cadena de texto
+            
             if(respuestas[0]=="OK"){                
-                alertify.success(respuestas[1]);
+                //alertify.success(respuestas[1]);
                 var Edad=respuestas[3];
                 var Unidad=respuestas[4];
-                $("#UnidadMedidaEdad option:"+Unidad).attr('selected','selected');
+                document.getElementById("Edad").value=Edad;
+                $("#UnidadMedidaEdad option:selected").attr("selected",false);
+                $("#UnidadMedidaEdad option[value="+ Unidad +"]").attr("selected",true);
+                
                 DesMarqueErrorElemento(respuestas[2]);
                 
             }else if(respuestas[0]=="E1"){  
-                alertify.error(respuestas[1],0);
+                //alertify.error(respuestas[1],0);
+                document.getElementById("Edad").value='';
+                var Unidad='';
+                $("#UnidadMedidaEdad option:selected").attr("selected",false);
                 MarqueErrorElemento(respuestas[2]);
                 
             }else{
@@ -196,34 +203,53 @@ function ValidaDocumentoPaciente(){
     }
   
 
-function CrearPaciente(){
-    var idDivMensajes='DivMensajes';
-    var idBoton='BtnGuardar';
-    document.getElementById(idBoton).disabled=true;
-    var Fecha=document.getElementById("Fecha").value;    
-    var CmbEps=document.getElementById("CmbEps").value;    
-    var CmbBanco=document.getElementById("CmbBanco").value;    
-    var NumeroTransaccion=document.getElementById("NumeroTransaccion").value;  
-    var CmbTipoPago=document.getElementById("CmbTipoPago").value; 
+function CrearEditarPaciente(TipoFormulario=1,idEditar=0){
     
-    var ValorTransaccion=document.getElementById("ValorTransaccion").value;
-    var Observaciones=document.getElementById("Observaciones").value;
+    var idBoton='btnGuardarPaciente';
+    document.getElementById(idBoton).disabled=true;
+    var TipoDocumento=document.getElementById("TipoDocumento").value;    
+    var NumeroDocumento=document.getElementById("NumeroDocumento").value;    
+    var CodEPS=document.getElementById("CodEPS").value;    
+    var idRegimenPaciente=document.getElementById("idRegimenPaciente").value;  
+    var PrimerNombre=document.getElementById("PrimerNombre").value;
+    var SegundoNombre=document.getElementById("SegundoNombre").value;
+    var PrimerApellido=document.getElementById("PrimerApellido").value;    
+    var SegundoApellido=document.getElementById("SegundoApellido").value;  
+    var FechaNacimiento=document.getElementById("FechaNacimiento").value;
+    var Edad=document.getElementById("Edad").value;
+    var UnidadMedidaEdad=document.getElementById("UnidadMedidaEdad").value;    
+    var Sexo=document.getElementById("Sexo").value;  
+    var CodigoDANE=document.getElementById("CodigoDANE").value;
+    var Direccion=document.getElementById("Direccion").value;
+    var ZonaResidencial=document.getElementById("ZonaResidencial").value;
+    var Telefono=document.getElementById("Telefono").value;
+    var Correo=document.getElementById("Correo").value;
     
     
     var form_data = new FormData();
-        form_data.append('Accion', '1'); 
-        form_data.append('Fecha', Fecha);
-        form_data.append('CmbEps', CmbEps);
-        form_data.append('CmbBanco', CmbBanco);
-        form_data.append('NumeroTransaccion', NumeroTransaccion);
-        form_data.append('CmbTipoPago', CmbTipoPago);
-        form_data.append('ValorTransaccion', ValorTransaccion);
-        form_data.append('Observaciones', Observaciones);        
-        form_data.append('UpSoporte', $('#UpSoporte').prop('files')[0]);
-        
+        form_data.append('Accion', '3'); 
+        form_data.append('TipoDocumento', TipoDocumento);
+        form_data.append('NumeroDocumento', NumeroDocumento);
+        form_data.append('CodEPS', CodEPS);
+        form_data.append('idRegimenPaciente', idRegimenPaciente);
+        form_data.append('PrimerNombre', PrimerNombre);
+        form_data.append('SegundoNombre', SegundoNombre);
+        form_data.append('PrimerApellido', PrimerApellido); 
+        form_data.append('SegundoApellido', SegundoApellido);
+        form_data.append('FechaNacimiento', FechaNacimiento);
+        form_data.append('Edad', Edad);
+        form_data.append('UnidadMedidaEdad', UnidadMedidaEdad);
+        form_data.append('Sexo', Sexo);
+        form_data.append('CodigoDANE', CodigoDANE);
+        form_data.append('Direccion', Direccion);
+        form_data.append('ZonaResidencial', ZonaResidencial); 
+        form_data.append('Telefono', Telefono);
+        form_data.append('Correo', Correo);
+        form_data.append('TipoFormulario', TipoFormulario);
+        form_data.append('idEditar', idEditar);
         
         $.ajax({
-        url: './procesadores/tesoreria_pagos.process.php',
+        url: './procesadores/salud_prefacturacion.process.php',
         //dataType: 'json',
         cache: false,
         contentType: false,
@@ -235,13 +261,14 @@ function CrearPaciente(){
             if(respuestas[0]=="OK"){
                 
                 alertify.success(respuestas[1]);
-                ListarPagos();
+                document.getElementById(idBoton).disabled=false;
+                ListarPacientes();
             }else if(respuestas[0]=="E1"){  
                 alertify.error(respuestas[1]);
                 MarqueErrorElemento(respuestas[2]);
                 
             }else{
-                document.getElementById(idDivMensajes).innerHTML=data;
+                alertify.alert(data);
                 
             }
             document.getElementById(idBoton).disabled=false;         
@@ -255,12 +282,12 @@ function CrearPaciente(){
     
     }
     
- function ConfirmaCrearPago(){
-    alertify.confirm('Está seguro que desea Crear este Pago?',
+ function ConfirmaGuardarEditarPaciente(TipoFormulario=1,idEditar=0){
+    alertify.confirm('Está seguro que desea Guardar?',
         function (e) {
             if (e) {
                 
-                CrearPago();
+                CrearEditarPaciente(TipoFormulario,idEditar);
             }else{
                 alertify.error("Se canceló el proceso");
 
@@ -288,7 +315,7 @@ function DesMarqueErrorElemento(idElemento){
     
 }
 
-function CambiePagina(Page=""){
+function CambiePagina(Funcion,Page=""){
     
     if(Page==""){
         if(document.getElementById('CmbPage')){
@@ -297,7 +324,10 @@ function CambiePagina(Page=""){
             Page=1;
         }
     }
-    ListarPagos(Page);
+    if(Funcion==1){
+        ListarPacientes(Page);
+    }
+    
 }
 
 ListarPacientes();

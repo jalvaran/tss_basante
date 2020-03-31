@@ -31,7 +31,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             $Condicion=" WHERE ID>0 ";
             
             if($Busquedas<>''){
-                $Condicion.=" AND (t1.ID = '$Busquedas' or t1.NumeroDocumento = '%$Busquedas%' or t1.CodEPS like '%$Busquedas%' or t1.PrimerApellido like '%$Busquedas%' or t1.SegundoApellido like '%$Busquedas%' or t1.Telefono like '%$Busquedas%')";
+                $Condicion.=" AND ( t1.NumeroDocumento like '%$Busquedas%' or t1.CodEPS like '%$Busquedas%' or t1.PrimerNombre like '%$Busquedas%' or t1.SegundoNombre like '%$Busquedas%' or t1.PrimerApellido like '%$Busquedas%' or t1.SegundoApellido like '%$Busquedas%' or t1.Telefono like '%$Busquedas%')";
             }
             
             
@@ -46,7 +46,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                         
             $sql="SELECT t1.*,
                   (SELECT t2.NombreRegimen FROM prefactura_regimen_paciente t2 WHERE t2.ID=t1.idRegimenPaciente ) as NombreRegimenPaciente,
-                  (SELECT t3.NombreUnidad FROM prefactura_unidades_medida_edad t3 WHERE t3.ID=t1.UnidadMedidaEdad ) as NombreUnidadMedidaEdad,
+                  
                   (SELECT t4.nombre_completo FROM salud_eps t4 WHERE t4.cod_pagador_min=t1.CodEPS LIMIT 1) as NombreEPS,
                   (SELECT CONCAT(t5.Nombre,' ',t5.Departamento) FROM catalogo_municipios t5 WHERE t5.CodigoDANE=t1.CodigoDANE LIMIT 1) as Municipio
                   
@@ -108,6 +108,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                             while($RegistrosTabla=$obCon->FetchAssoc($Consulta)){
                                 
                                 $idItem=$RegistrosTabla["ID"];
+                                $DatosEdad=$obCon->CalcularEdad($RegistrosTabla["FechaNacimiento"]);
                                 $NombreCompleto= utf8_encode($RegistrosTabla["PrimerNombre"]." ".$RegistrosTabla["SegundoNombre"]." ".$RegistrosTabla["PrimerApellido"]." ".$RegistrosTabla["SegundoApellido"]);
                                 print('<tr>');
                                     print("<td>");
@@ -126,11 +127,9 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                         print($RegistrosTabla["NumeroDocumento"]);
                                     print("</td>");
                                     print("<td class='mailbox-subject'>");
-                                        print($RegistrosTabla["Edad"]);
+                                        print($RegistrosTabla["FechaNacimiento"]." <strong>".$DatosEdad["Edad"]." ".$DatosEdad["NombreUnidad"]."</strong>");
                                     print("</td>");
-                                    print("<td class='mailbox-subject'>");
-                                        print(utf8_encode($RegistrosTabla["NombreUnidadMedidaEdad"]));
-                                    print("</td>");
+                                    
                                     print("<td class='mailbox-subject'>");
                                         print(($RegistrosTabla["Sexo"]));
                                     print("</td>");
@@ -170,6 +169,9 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
         break;//fin caso 1
         
         case 2:// formulario para crear o editar un paciente
+            $TipoFormulario=$obCon->normalizar($_REQUEST["TipoFormulario"]);
+            $idEditar=$obCon->normalizar($_REQUEST["idEditar"]);
+            $DatosPaciente=$obCon->DevuelveValores("prefactura_paciente", "ID", $idEditar);
             $css->CrearTitulo("Crear o Editar Usuario", "naranja");
             $css->CrearDiv("", "box box-default", "", 1, 1);
                 $css->CrearDiv("", "box-body", "", 1, 1);
@@ -178,28 +180,57 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                             $css->CrearDiv("", "form-group", "", 1, 1);
                                 print('<label>Tipo de Documento</label>');
                                 $css->select("TipoDocumento", "form-control", "TipoDocumento", "", "", "", "onchange=ValidaDocumentoPaciente()");
-                                    $css->option("", "", "", '', "", "");
+                                    $sel=0;
+                                    $css->option("", "", "", '', "", "",$sel);
                                         print("Seleccione una opción");
                                     $css->Coption();
-                                    $css->option("", "", "", 'CC', "", "");
+                                    $sel=0;
+                                    if($DatosPaciente["TipoDocumento"]=="CC"){
+                                        $sel=1;
+                                    }
+                                    $css->option("", "", "", 'CC', "", "",$sel);
                                         print("CC");
                                     $css->Coption();
-                                    $css->option("", "", "", 'CE', "", "");
+                                    $sel=0;
+                                    if($DatosPaciente["TipoDocumento"]=="CE"){
+                                        $sel=1;
+                                    }
+                                    $css->option("", "", "", 'CE', "", "",$sel);
                                         print("CE");
                                     $css->Coption();
-                                    $css->option("", "", "", 'PA', "", "");
+                                    $sel=0;
+                                    if($DatosPaciente["TipoDocumento"]=="PA"){
+                                        $sel=1;
+                                    }
+                                    $css->option("", "", "", 'PA', "", "",$sel);
                                         print("PA");
                                     $css->Coption();
-                                    $css->option("", "", "", 'RC', "", "");
+                                    $sel=0;
+                                    if($DatosPaciente["TipoDocumento"]=="RC"){
+                                        $sel=1;
+                                    }
+                                    $css->option("", "", "", 'RC', "", "",$sel);
                                         print("RC");
                                     $css->Coption();
-                                    $css->option("", "", "", 'TI', "", "");
+                                    $sel=0;
+                                    if($DatosPaciente["TipoDocumento"]=="TI"){
+                                        $sel=1;
+                                    }
+                                    $css->option("", "", "", 'TI', "", "",$sel);
                                         print("TI");
                                     $css->Coption();
-                                    $css->option("", "", "", 'AS', "", "");
+                                    $sel=0;
+                                    if($DatosPaciente["TipoDocumento"]=="AS"){
+                                        $sel=1;
+                                    }
+                                    $css->option("", "", "", 'AS', "", "",$sel);
                                         print("AS");
                                     $css->Coption();
-                                    $css->option("", "", "", 'MS', "", "");
+                                    $sel=0;
+                                    if($DatosPaciente["TipoDocumento"]=="MS"){
+                                        $sel=1;
+                                    }
+                                    $css->option("", "", "", 'MS', "", "",$sel);
                                         print("MS");
                                     $css->Coption();
                                 $css->Cselect();
@@ -209,7 +240,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                         $css->CrearDiv("", "col-md-3", "", 1, 1);
                             $css->CrearDiv("", "form-group", "", 1, 1);
                                 print('<label>Número del Documento</label>');                                
-                                $css->input("text", "NumeroDocumento", "form-control", "NumeroDocumento", "Numero Documento", "", "Numero Documento", "off", "", "onchange=ValidaDocumentoPaciente()");
+                                $css->input("text", "NumeroDocumento", "form-control", "NumeroDocumento", "Numero Documento", $DatosPaciente["NumeroDocumento"], "Numero Documento", "off", "", "onchange=ValidaDocumentoPaciente()");
                             $css->CerrarDiv(); 
                             
                         $css->CerrarDiv(); 
@@ -222,6 +253,12 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                     $css->option("", "", "", '', "", "");
                                         print("Seleccione una EPS");
                                     $css->Coption();
+                                    if($DatosPaciente["CodEPS"]<>''){
+                                        $DatosEps=$obCon->DevuelveValores("salud_eps", "cod_pagador_min", $DatosPaciente["CodEPS"]);
+                                        $css->option("", "", "", $DatosPaciente["CodEPS"], "", "",1);
+                                            print(utf8_encode($DatosPaciente["CodEPS"]." ".$DatosEps["nombre_completo"]));
+                                        $css->Coption();
+                                    }
                                     
                                 $css->Cselect();
                             $css->CerrarDiv();                             
@@ -238,7 +275,11 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                     $Consulta=$obCon->Query($sql);
                                     
                                     while($DatosConsulta=$obCon->FetchAssoc($Consulta)){
-                                        $css->option("", "", "", $DatosConsulta["ID"], "", "");
+                                        $sel=0;
+                                        if($DatosPaciente["idRegimenPaciente"]==$DatosConsulta["ID"]){
+                                            $sel=1;
+                                        }
+                                        $css->option("", "", "", $DatosConsulta["ID"], "", "",$sel);
                                             print($DatosConsulta["NombreRegimen"]);
                                         $css->Coption();
                                     }
@@ -253,28 +294,28 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                         $css->CrearDiv("", "col-md-3", "", 1, 1);
                             $css->CrearDiv("", "form-group", "", 1, 1);
                                 print('<label>Primer Nombre</label>');
-                                $css->input("text", "PrimerNombre", "form-control", "PrimerNombre", "Primer Nombre", "", "Primer Nombre", "off", "", "");
+                                $css->input("text", "PrimerNombre", "form-control", "PrimerNombre", "Primer Nombre", $DatosPaciente["PrimerNombre"], "Primer Nombre", "off", "", "");
                             $css->CerrarDiv(); 
                             
                         $css->CerrarDiv();  
                         $css->CrearDiv("", "col-md-3", "", 1, 1);
                             $css->CrearDiv("", "form-group", "", 1, 1);
                                 print('<label>Segundo Nombre</label>');
-                                $css->input("text", "SegundoNombre", "form-control", "SegundoNombre", "Segundo Nombre", "", "Segundo Nombre", "off", "", "");
+                                $css->input("text", "SegundoNombre", "form-control", "SegundoNombre", "Segundo Nombre", $DatosPaciente["SegundoNombre"], "Segundo Nombre", "off", "", "");
                             $css->CerrarDiv(); 
                             
                         $css->CerrarDiv();  
                         $css->CrearDiv("", "col-md-3", "", 1, 1);
                             $css->CrearDiv("", "form-group", "", 1, 1);
                                 print('<label>Primer Apellido</label>');
-                                $css->input("text", "PrimerApellido", "form-control", "PrimerApellido", "Primer Apellido", "", "Primer Apellido", "off", "", "");
+                                $css->input("text", "PrimerApellido", "form-control", "PrimerApellido", "Primer Apellido", $DatosPaciente["PrimerApellido"], "Primer Apellido", "off", "", "");
                             $css->CerrarDiv(); 
                             
                         $css->CerrarDiv();  
                         $css->CrearDiv("", "col-md-3", "", 1, 1);
                             $css->CrearDiv("", "form-group", "", 1, 1);
                                 print('<label>Segundo Apellido</label>');
-                                $css->input("text", "SegundoApellido", "form-control", "SegundoApellido", "Segundo Apellido", "", "Segundo Apellido", "off", "", "");
+                                $css->input("text", "SegundoApellido", "form-control", "SegundoApellido", "Segundo Apellido", $DatosPaciente["SegundoApellido"], "Segundo Apellido", "off", "", "");
                             $css->CerrarDiv(); 
                             
                         $css->CerrarDiv();  
@@ -286,13 +327,20 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                         $css->CrearDiv("", "col-md-3", "", 1, 1);
                             $css->CrearDiv("", "form-group", "", 1, 1);
                                 print('<label>Fecha de Nacimiento</label>');
-                                $css->input("date", "FechaNacimiento", "form-control", "FechaNacimiento", "Fecha de Nacimiento", "", "Fecha de Nacimiento", "off", "", "","style='line-height: 15px;'");
+                                $css->input("date", "FechaNacimiento", "form-control", "FechaNacimiento", "Fecha de Nacimiento", $DatosPaciente["FechaNacimiento"], "Fecha de Nacimiento", "off", "", "onchange=CalculeEdad();","style='line-height: 15px;' max='".date("Y-m-d")."'");
                             $css->CerrarDiv();                             
                         $css->CerrarDiv();
                         $css->CrearDiv("", "col-md-3", "", 1, 1);
                             $css->CrearDiv("", "form-group", "", 1, 1);
+                                $Edad="";
+                                $Unidad="";
+                                if($DatosPaciente["FechaNacimiento"]<>''){
+                                    $DatosEdad=$obCon->CalcularEdad($DatosPaciente["FechaNacimiento"]);
+                                    $Edad=$DatosEdad["Edad"];
+                                    $Unidad=$DatosEdad["Unidad"];
+                                }
                                 print('<label>Edad</label>');
-                                $css->input("number", "Edad", "form-control", "Edad", "Edad", "", "Edad", "off", "", "","disabled");
+                                $css->input("number", "Edad", "form-control", "Edad", "Edad", $Edad, "Edad", "off", "", "","disabled");
                             $css->CerrarDiv();                             
                         $css->CerrarDiv();
                         $css->CrearDiv("", "col-md-3", "", 1, 1);
@@ -306,7 +354,11 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                     $Consulta=$obCon->Query($sql);
                                     
                                     while($DatosConsulta=$obCon->FetchAssoc($Consulta)){
-                                        $css->option("", "", "", $DatosConsulta["ID"], "", "");
+                                        $sel=0;
+                                        if($Unidad==$DatosConsulta["ID"]){
+                                            $sel=1;
+                                        }
+                                        $css->option("", "", "", $DatosConsulta["ID"], "", "",$sel);
                                             print(utf8_encode($DatosConsulta["NombreUnidad"]));
                                         $css->Coption();
                                     }
@@ -322,10 +374,18 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                     $css->option("", "", "", '', "", "");
                                         print("Seleccione una opción");
                                     $css->Coption();
-                                    $css->option("", "", "", 'M', "", "");
+                                    $sel=0;
+                                    if($DatosPaciente["Sexo"]=="M"){
+                                        $sel=1;
+                                    }
+                                    $css->option("", "", "", 'M', "", "",$sel);
                                         print("Masculino");
                                     $css->Coption();
-                                    $css->option("", "", "", 'F', "", "");
+                                    $sel=0;
+                                    if($DatosPaciente["Sexo"]=="F"){
+                                        $sel=1;
+                                    }
+                                    $css->option("", "", "", 'F', "", "",$sel);
                                         print("Femenino");
                                     $css->Coption();
                                     
@@ -348,6 +408,13 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                         print("Seleccione un Municipio");
                                     $css->Coption();
                                     
+                                    if($DatosPaciente["CodigoDANE"]<>''){
+                                        $DatosMunicipio=$obCon->DevuelveValores("catalogo_municipios", "CodigoDANE", $DatosPaciente["CodigoDANE"]);
+                                        $css->option("", "", "", $DatosMunicipio["CodigoDANE"], "", "",1);
+                                            print(utf8_encode($DatosMunicipio["Nombre"]." || ".$DatosMunicipio["Departamento"]." || ".$DatosMunicipio["CodigoDANE"]));
+                                        $css->Coption();
+                                    }
+                                    
                                 $css->Cselect();
                             $css->CerrarDiv();                             
                         $css->CerrarDiv();
@@ -355,7 +422,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                         $css->CrearDiv("", "col-md-6", "", 1, 1);
                             $css->CrearDiv("", "form-group", "", 1, 1);
                                 print('<label>Dirección</label>');
-                                $css->input("text", "Direccion", "form-control", "Direccion", "Direccion", "", "Direccion", "off", "", "","");
+                                $css->input("text", "Direccion", "form-control", "Direccion", "Direccion", $DatosPaciente["Direccion"], "Direccion", "off", "", "","");
                             $css->CerrarDiv();                             
                         $css->CerrarDiv();
                         
@@ -373,12 +440,19 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                     $css->option("", "", "", '', "", "");
                                         print("Seleccione una Zona Residencial");
                                     $css->Coption();
+                                    $sel=0;
+                                    if($DatosPaciente["ZonaResidencial"]=='U'){
+                                        $sel=1;
+                                    }
                                     
-                                    $css->option("", "", "", 'U', "", "");
+                                    $css->option("", "", "", 'U', "", "",$sel);
                                         print("URBANO");
                                     $css->Coption();
-                                    
-                                    $css->option("", "", "", 'R', "", "");
+                                    $sel=0;
+                                    if($DatosPaciente["ZonaResidencial"]=='R'){
+                                        $sel=1;
+                                    }
+                                    $css->option("", "", "", 'R', "", "",$sel);
                                         print("RURAL");
                                     $css->Coption();
                                     
@@ -389,21 +463,21 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                         $css->CrearDiv("", "col-md-3", "", 1, 1);
                             $css->CrearDiv("", "form-group", "", 1, 1);
                                 print('<label>Teléfono</label>');
-                                $css->input("text", "Telefono", "form-control", "Telefono", "Telefono", "", "Telefono", "off", "", "","");
+                                $css->input("text", "Telefono", "form-control", "Telefono", "Telefono", $DatosPaciente["Telefono"], "Telefono", "off", "", "","");
                             $css->CerrarDiv();                             
                         $css->CerrarDiv();
                         
                         $css->CrearDiv("", "col-md-3", "", 1, 1);
                             $css->CrearDiv("", "form-group", "", 1, 1);
                                 print('<label>Correo</label>');
-                                $css->input("text", "Correo", "form-control", "Correo", "Correo", "", "Correo", "off", "", "","");
+                                $css->input("text", "Correo", "form-control", "Correo", "Correo", $DatosPaciente["Correo"], "Correo", "off", "", "","");
                             $css->CerrarDiv();                             
                         $css->CerrarDiv();
                         
                         $css->CrearDiv("", "col-md-3", "", 1, 1);
                             $css->CrearDiv("", "form-group", "", 1, 1);
                                 print('<label>Guardar</label>');
-                                $css->CrearBotonEvento("btnGuardarPaciente", "Guardar", 1, "onclick", "ConfirmaGuadarEditarPaciente()", "rojo");
+                                $css->CrearBotonEvento("btnGuardarPaciente", "Guardar", 1, "onclick", "ConfirmaGuardarEditarPaciente(`$TipoFormulario`,`$idEditar`)", "rojo");
                             $css->CerrarDiv();                             
                         $css->CerrarDiv();
                         

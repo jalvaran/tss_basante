@@ -6,6 +6,10 @@ if (!isset($_SESSION['username'])){
   
 }
 $idUser=$_SESSION['idUser'];
+function validateDate($date, $format = 'Y-m-d H:i:s'){
+    $d = DateTime::createFromFormat($format, $date);
+    return $d && $d->format($format) == $date;
+}
 
 include_once("../clases/salud_prefacturacion.class.php");
 
@@ -36,252 +40,77 @@ if( !empty($_REQUEST["Accion"]) ){
             
         break;//Fin caso 1
         
-        case 2://Recibe el archivo de pagos
+        case 2://Calcula la edad de acuerdo a la fecha de nacimiento
             
-            $obRips->VaciarTabla("salud_pagos_temporal"); //Vacío la tabla de subida temporal
-            $obCon->VaciarTabla("salud_pagos_contributivo_temp");
-            $Separador=$obRips->normalizar($_REQUEST["CmbSeparador"]);
-            $TipoGiro=$obRips->normalizar($_REQUEST["CmbTipoGiro"]);
-            $FechaGiro=$obRips->normalizar($_REQUEST["TxtFechaGira"]);
-            $FechaCargue=date("Y-m-d H:i:s");
-            $destino="";
+            $FechaNacimiento=$obCon->normalizar($_REQUEST["FechaNacimiento"]);
             
-            if(!empty($_FILES['UpPago']['name'])){
-                $Atras="../";
-                $carpeta=$Atras."ArchivosTemporales/";
-                opendir($carpeta);
-                $NombreArchivo=str_replace(' ','_',$_FILES['UpPago']['name']);  
-                $NombreArchivo=str_replace('%','_',$_FILES['UpPago']['name']); 
-                move_uploaded_file($_FILES['UpPago']['tmp_name'],$carpeta.$NombreArchivo);
-                
-                $handle = fopen($carpeta.$NombreArchivo, "r");
-                //print($carpeta.$NombreArchivo);
-                if($Separador==1){
-                    $SeparadorT=";"; 
-                 }else{
-                    $SeparadorT=",";  
-                 }
-                
-                $i=0;
-                while (($data = fgetcsv($handle, 1000, $SeparadorT,'"', "#")) !== FALSE) {
-                     //print_r($data);
-                    $i++;
-                    //$data[$i]=str_ireplace('"','',$data[$i]); 
-                    //$data[$i]=str_replace('"','',$data[$i]); 
-                    
-                    if($i==2){
-                        if($TipoGiro==1){
-                            if(!isset($data[10])){
-                                exit("El archivo no es válido");
-                            }
-                            $idGiro= uniqid("_");
-                            $idGiro=str_replace(" ","",$idGiro);
-                            $Giro=$idGiro;
-                        }
-                        if($TipoGiro==3 or $TipoGiro==2){
-                            if(!isset($data[1])){
-                                exit("E1;El archivo no es válido");
-                            }
-                          
-                            $idGiro= uniqid("_");
-                            $idGiro=str_replace(" ","",$idGiro);
-                            $Giro=$idGiro;
-                        }
-                       // print($Giro);
-                        
-                    }
-                }
-                fclose($handle);
-                
-                $NombreAR="AR".$Giro.".txt";
-                $destinoAR="../../../VSalud/archivos/".$NombreAR;
-                copy($carpeta.$NombreArchivo,$destinoAR);
-                unlink($carpeta.$NombreArchivo);
-                
-               
-                                
+            if(!(validateDate($FechaNacimiento, 'Y-m-d'))){
+                exit("E1;Debe seleccionar una Fecha de Nacimiento válida;FechaNacimiento");
             }
             
-            //Verificamos si el archivo ya fue subido
+            $DatosEdad=$obCon->CalcularEdad($FechaNacimiento);
+            $Edad=$DatosEdad["Edad"];
+            $Unidad=$DatosEdad["Unidad"];
+            print("OK;Edad Calculada;FechaNacimiento;$Edad;$Unidad");
             
-            $DatosUploads=$obRips->DevuelveValores("salud_upload_control", "nom_cargue", $NombreAR);
-            
-            if($DatosUploads["id_upload_control"]==''){
-                
-                if(!empty($_FILES['UpSoporte']['name'])){
-                    $Name='';
-                    $info = new SplFileInfo($_FILES['UpSoporte']['name']);
-                    $Extension=($info->getExtension());
-                    $Atras="../";
-                    $carpeta="SoportesSalud/SoportesAR/";
-                    opendir($Atras.$Atras.$Atras.$carpeta);
-                    $Name=$NombreAR.".".$Extension;  
-                    //$Name=str_replace('%','_',$_FILES['UpSoporte']['name']);  
-                    $destino=$carpeta.$Name;
-                    //print($destino);
-                    move_uploaded_file($_FILES['UpSoporte']['tmp_name'],$Atras.$Atras.$Atras.$destino);
-                }
-                
-                $obRips->VaciarTabla("salud_subir_rips_pago_control");
-                $Datos["ArchivoActual"]=$NombreAR;
-                $Datos["idUser"]=$idUser;
-                $Datos["Separador"]=$Separador;
-                $Datos["Destino"]=$destino;
-                $Datos["FechaGiro"]=$FechaGiro;
-                $Datos["FechaCargue"]=$FechaCargue;
-                $Datos["TipoGiro"]=$TipoGiro;
-                $sql=$obRips->getSQLInsert("salud_subir_rips_pago_control", $Datos);
-                $obRips->Query($sql);
-                
-                print("OK");
-                
-            }else{
-                $css->CrearNotificacionAzul("El archivo ya fue subido el $DatosUploads[fecha_cargue], por el usuario $DatosUploads[idUser]",16);
-            }
-            
-            
-        break;//Fin caso 2  
+        break;//Fin caso 2 
         
-        case 3://Insertar RIPS de Pagos
-            $TipoGiro=$obRips->normalizar($_REQUEST["CmbTipoGiro"]);
-            $idPago=$obRips->normalizar($_REQUEST["idPago"]);
-            //print("Tipo de Giro".$TipoGiro);
+        case 3://Guarda o edita un paciente
             
-            $DatosArchivoActual=$obRips->DevuelveValores("salud_subir_rips_pago_control", "ID", 1);
+            $Datos["TipoDocumento"]=$obCon->normalizar($_REQUEST["TipoDocumento"]);
+            $Datos["NumeroDocumento"]=$obCon->normalizar($_REQUEST["NumeroDocumento"]);
+            $Datos["CodEPS"]=$obCon->normalizar($_REQUEST["CodEPS"]);
+            $Datos["idRegimenPaciente"]=$obCon->normalizar($_REQUEST["idRegimenPaciente"]);
+            $Datos["PrimerNombre"]=$obCon->normalizar($_REQUEST["PrimerNombre"]);
+            $Datos["SegundoNombre"]=$obCon->normalizar($_REQUEST["SegundoNombre"]);
+            $Datos["PrimerApellido"]=$obCon->normalizar($_REQUEST["PrimerApellido"]);
+            $Datos["SegundoApellido"]=$obCon->normalizar($_REQUEST["SegundoApellido"]);
+            $Datos["FechaNacimiento"]=$obCon->normalizar($_REQUEST["FechaNacimiento"]);
+            //$Datos["Edad"]=$obCon->normalizar($_REQUEST["Edad"]);
+            //$Datos["UnidadMedidaEdad"]=$obCon->normalizar($_REQUEST["UnidadMedidaEdad"]);
+            $Datos["Sexo"]=$obCon->normalizar($_REQUEST["Sexo"]);
+            $Datos["CodigoDANE"]=$obCon->normalizar($_REQUEST["CodigoDANE"]);
+            $Datos["Direccion"]=$obCon->normalizar($_REQUEST["Direccion"]);
+            $Datos["ZonaResidencial"]=$obCon->normalizar($_REQUEST["ZonaResidencial"]);
+            $Datos["Telefono"]=$obCon->normalizar($_REQUEST["Telefono"]);
+            $Datos["Correo"]=$obCon->normalizar($_REQUEST["Correo"]);
+            $TipoFormulario=$obCon->normalizar($_REQUEST["TipoFormulario"]);
+            $idEditar=$obCon->normalizar($_REQUEST["idEditar"]);
             
-            if($TipoGiro==1 ){
-                
-                $obRips->InsertarRipsPagosAdres($DatosArchivoActual["ArchivoActual"],$DatosArchivoActual["Separador"], $DatosArchivoActual["FechaCargue"], $idUser,$DatosArchivoActual["Destino"],$DatosArchivoActual["FechaGiro"],$DatosArchivoActual["TipoGiro"], "");
-                $sql="SELECT SUM(ValorGiro) as TotalPagoAR FROM salud_pagos_temporal";
-                $Totales=$obCon->FetchAssoc($obCon->Query($sql));
-                $DatosPago=$obCon->DevuelveValores("salud_tesoreria", "ID", $idPago);
-
-                if($Totales["TotalPagoAR"]>$DatosPago["valor_legalizar"]){
-                    exit("E1;El valor en el AR (". number_format($Totales["TotalPagoAR"]).") Supera el Valor por Legalizar (".$DatosPago["valor_legalizar"].")");
+            if(!(validateDate($Datos["FechaNacimiento"], 'Y-m-d'))){
+                exit("E1;Debe seleccionar una Fecha de Nacimiento válida;FechaNacimiento");
+            }
+            
+            foreach ($Datos as $key => $value) {
+                if($value=='' and $key<>'SegundoNombre' and $key<>'Correo'){
+                    exit("E1;El campo $key no puede estar vacío;$key");
                 }
-                
-                $obRips->AnaliceInsercionFacturasPagadasAdres("");
-            }
-            if($TipoGiro==3 or $TipoGiro==2){
-               
-                $obRips->InsertarRipsPagosAdresContributivoTemporal($DatosArchivoActual["ArchivoActual"],$DatosArchivoActual["Separador"], $DatosArchivoActual["FechaCargue"], $idUser,$DatosArchivoActual["Destino"],$DatosArchivoActual["FechaGiro"],$DatosArchivoActual["TipoGiro"], "");
-                                
-                $sql="UPDATE salud_pagos_contributivo_temp pt INNER JOIN salud_archivo_facturacion_mov_generados mg ON mg.num_factura=pt.numero_factura 
-                        SET pt.CodigoEps=mg.cod_enti_administradora, pt.FechaFactura=mg.fecha_factura, pt.FormaContratacion=mg.tipo_negociacion;";
-                $obCon->Query($sql);
-                $sql="SELECT SUM(ValorGiro) as TotalPagoAR FROM salud_pagos_contributivo_temp";
-                $Totales=$obCon->FetchAssoc($obCon->Query($sql));
-                $DatosPago=$obCon->DevuelveValores("salud_tesoreria", "ID", $idPago);
-                
-                if($Totales["TotalPagoAR"]>$DatosPago["valor_legalizar"]){
-                    exit("El valor en el AR (". number_format($Totales["TotalPagoAR"]).") Supera el Valor por Legalizar (".$DatosPago["valor_legalizar"].")");
-                }
-                
-                $sql="SELECT t1.* FROM salud_pagos_contributivo_temp t1  WHERE EXISTS (SELECT 1 FROM `salud_pagos_contributivo` as t2 WHERE t1.`FechaPago`=t2.`FechaPago` and t1.`numero_factura`=t2.`numero_factura` AND t1.`NitEPS`=t2.`NitEPS`) LIMIT 10;"; 
-                $Consulta=$obCon->Query($sql);
-                $error=0;
-                while ($DatosTemporal=$obCon->FetchAssoc($Consulta)){
-                    $error=1;
-                    print("El pago de la Factura ".$DatosTemporal["numero_factura"].", por valor de ". number_format($DatosTemporal["ValorGiro"])." ya fue cargado<br>");
-                }
-                if($error==1){
-                    exit();
-                }
-                $sql="INSERT INTO `salud_pagos_contributivo` SELECT * FROM `salud_pagos_contributivo_temp` as t1 
-                        WHERE NOT EXISTS (SELECT 1 FROM `salud_pagos_contributivo` as t2 WHERE t1.`FechaPago`=t2.`FechaPago` and t1.`numero_factura`=t2.`numero_factura` AND t1.`NitEPS`=t2.`NitEPS`);"; 
-                $obCon->Query($sql);
-                
-                $sql="INSERT INTO `salud_pagos_temporal` (`id_temp_rips_generados`, `Proceso`, `CodigoEPS`, `NombreEPS`, `FormaContratacion`, `Departamento`, `Municipio`, `FechaFactura`, `PrefijoFactura`, `NumeroFactura`, `ValorGiro`, `FechaPago`, `NumeroGiro`, `nom_cargue`, `fecha_cargue`, `idUser`, `Soporte`,`numero_factura`)
-                SELECT '',Proceso,CodigoEps,NombreEPS,FormaContratacion,'','',FechaFactura,PrefijoFactura,NumeroFactura,ValorGiro,FechaPago,'','',fecha_cargue,idUser,Soporte,numero_factura FROM salud_pagos_contributivo WHERE Estado=0";
-                $obCon->Query($sql);
-                $obCon->update("salud_pagos_contributivo", "Estado", 1, "");
-                $obRips->AjusteAutoIncrement("salud_pagos_contributivo", "ID", "");
-                
-                $TipoMovimiento="Contributivo";
-                if($TipoGiro==2){
-                    $TipoMovimiento="CuentaMaestra";
-                }
-                
-                $obRips->AnaliceInsercionFacturasPagadasAdres("",$TipoMovimiento);
-                //print("Subido");
-            }
-            print("OK;".$Totales["TotalPagoAR"]);
-        break;//Fin caso 3    
-        
-        case 4:// encuentre facturas con diferencia
-            
-            $obRips->EncuentreFacturasPagadasConDiferencia("");
-            print("OK");
-            
-        break;//Fin caso 4    
-    
-        case 5:// encuentre facturas pagadas
-            
-            $obRips->EncuentreFacturasPagadas("");            
-            print("OK");
-            
-        break;//Fin caso 5
-        
-        case 6://Actualiza las observaciones de cartera tras subir un archivo de pagos
-            $Observaciones=$obCon->normalizar($_REQUEST["Observaciones"]);
-            $idPago=$obCon->normalizar($_REQUEST["idPago"]);
-            $TotalPago=$obCon->normalizar($_REQUEST["ValorPagos"]);
-            $DatosPago=$obCon->DevuelveValores("salud_tesoreria", "ID", $idPago);
-            $TotalLegalizado=$DatosPago["valor_legalizado"]+$TotalPago;
-            $TotalXLegalizar=$DatosPago["valor_transaccion"]-$TotalLegalizado;
-            $obCon->ActualizaRegistro("salud_tesoreria", "observaciones_cartera", $Observaciones, "ID", $idPago);
-            
-            $obCon->ActualizaRegistro("salud_tesoreria", "valor_legalizado", $TotalLegalizado, "ID", $idPago,0);
-            
-            $obCon->ActualizaRegistro("salud_tesoreria", "valor_legalizar", $TotalXLegalizar, "ID", $idPago,0);
-            if($TotalXLegalizar<=0){
-                $obCon->ActualizaRegistro("salud_tesoreria", "legalizado", "SI", "ID", $idPago);
-            }
-            print("OK");
-        break;//fin caso 6   
-    
-        case 7://Editar un pago
-            $idPago=$obCon->normalizar($_REQUEST["idPago"]);
-            $Fecha=$obCon->normalizar($_REQUEST["Fecha"]);
-            $CmbEps=$obCon->normalizar($_REQUEST["CmbEps"]);
-            $CmbBanco=$obCon->normalizar($_REQUEST["CmbBanco"]);
-            $NumeroTransaccion=$obCon->normalizar($_REQUEST["NumeroTransaccion"]);
-            $CmbTipoPago=$obCon->normalizar($_REQUEST["CmbTipoPago"]);
-            $ValorTransaccion=$obCon->normalizar($_REQUEST["ValorTransaccion"]);
-            $Observaciones=$obCon->normalizar($_REQUEST["Observaciones"]);
-            
-            if($Fecha==''){
-                exit("E1;Debe escribir una Fecha;Fecha");
-            }
-            if($CmbEps==''){
-                exit("E1;Debe Seleccionar una EPS;CmbEps");
-            }
-            if($CmbBanco==''){
-                exit("E1;Debe escribir un Banco;CmbBanco");
-            }
-            if($NumeroTransaccion==''){
-                exit("E1;Debe escribir un Número de Transacción;NumeroTransaccion");
-            }
-            if($CmbTipoPago==''){
-                exit("E1;Seleccione un tipo de pago;CmbTipoPago");
-            }
-            if($Observaciones==''){
-                exit("E1;Debe escribir las observaciones;Observaciones");
-            }
-            if(!is_numeric($ValorTransaccion) or $ValorTransaccion<=0){
-                exit("E1;El campo cantidad debe ser un numero mayor a Cero, no sea mk;Cantidad");
-            }
-            $DatosPago= $obCon->DevuelveValores("salud_tesoreria", "ID", $idPago);
-            
-            $ValorXLegalizar=$ValorTransaccion-$DatosPago["valor_legalizado"];
-            if($ValorXLegalizar<0){
-                exit("E1;El Valor de la transaccion digitado supera al valor por legalizar, la operacion no puede ser realizada;ValorTransaccion");
             }
             
-            $obCon->EditarPagoTesoreria($idPago,$Fecha,$CmbEps,$CmbBanco,$NumeroTransaccion,$CmbTipoPago,$ValorTransaccion,$ValorXLegalizar,$Observaciones,$idUser);
-            print("OK;Pago editado correctamente");
+            if(!is_numeric($Datos["NumeroDocumento"]) or $Datos["NumeroDocumento"]<=0){
+                exit("E1;El campo NumeroDocumento Debe ser un valor Numerico mayor a Cero;NumeroDocumento");
+            }
+            $TipoDocumento=$Datos["TipoDocumento"];
+            $NumeroDocumento=$Datos["NumeroDocumento"];
+            $sql="SELECT ID FROM prefactura_paciente WHERE TipoDocumento='$TipoDocumento' AND NumeroDocumento='$NumeroDocumento' ";
+            $Validacion=$obCon->FetchAssoc($obCon->Query($sql));
+            if($Validacion["ID"]<>''){
+                print("OK;El Paciente ya Existe;NumeroDocumento");
+            }
             
-        break;//Fin caso 7    
+            if($TipoFormulario==1){
+                $Datos["Created"]=date("Y-m-d H:i:s");
+                $sql=$obCon->getSQLInsert("prefactura_paciente", $Datos);
+            }
+            if($TipoFormulario==2){
+                $sql=$obCon->getSQLUpdate("prefactura_paciente", $Datos);
+                $sql.=" WHERE ID='$idEditar'";
+            }
+            $obCon->Query($sql);
+            print("OK;Registro Guardado Correctamente");
+            
+        break;//Fin caso 3
+           
         
     }
     

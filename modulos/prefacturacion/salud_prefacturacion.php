@@ -107,7 +107,7 @@ $css->PageInit($myTitulo);
                         
                     print('<div class="input-group">'); 
                         
-                        $css->input("text", "TxtBusquedas", "form-control", "TxtBusquedas", "", "", "Buscar", "", "", "onchange=CambiePagina()");
+                        $css->input("text", "TxtBusquedas", "form-control", "TxtBusquedas", "", "", "Buscar", "", "", "onchange=ListarPacientes()");
 
                     print('<span class="input-group-addon"><i class="fa fa-fw fa-search"></i></span>
                               </div>');

@@ -4,6 +4,42 @@ if(file_exists("../../../modelo/php_conexion.php")){
 }
 class Prefacturacion extends conexion{
     
+    public function CalcularEdad($FechaNacimiento) {
+        $FechaActual=date("Y-m-d");
+        $datetime1 = new DateTime($FechaNacimiento);
+        $datetime2 = new DateTime($FechaActual);
+        $interval = $datetime1->diff($datetime2);
+        $FechaMayor=$interval->format('%R');
+        $Dias=$interval->format('%d');
+        $Anios=$interval->format('%y');
+        $Meses=$interval->format('%m');
+        $Salte=0;
+        if($Anios>0 and $Salte==0){
+            $EdadCalculada=$Anios;
+            $Unidad=1;
+            $Salte=1;
+            $NombreUnidad="AÑOS";
+        }
+        
+        if($Meses>0 and $Salte==0){
+            $EdadCalculada=$Meses;
+            $Unidad=2;
+            $Salte=1;
+            $NombreUnidad="MESES";
+        }
+        
+        if($Dias>0 and $Salte==0){
+            $EdadCalculada=$Dias;
+            $Unidad=3;
+            $Salte=1;
+            $NombreUnidad="DIAS";
+        }
+        
+        $DatosEdad["Edad"]=$EdadCalculada;
+        $DatosEdad["Unidad"]=$Unidad;
+        $DatosEdad["NombreUnidad"]=$NombreUnidad;
+        return($DatosEdad);
+    }
     
     public function IngresarPagoTesoreria($Fecha,$CmbEps,$CmbBanco,$NumeroTransaccion,$TipoPago,$ValorTransaccion,$Observaciones,$Soporte,$idUser) {
         $DatosEps= $this->DevuelveValores("salud_eps", "cod_pagador_min", $CmbEps);
