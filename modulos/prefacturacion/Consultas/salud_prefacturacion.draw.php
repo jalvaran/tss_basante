@@ -576,10 +576,13 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                 $NombreCompleto= utf8_encode($RegistrosTabla["NombreCompleto"]);
                                 print('<tr>');
                                     print("<td>");
-                                        print('<button type="button" class="btn btn-warning btn-sm" onclick=FormularioCrearEditarReserva(`2`,`'.$idItem.'`)><i class="fa fa-edit"></i></button>');
+                                        print('<button type="button" class="btn btn-warning btn-sm" title="Editar" onclick=FormularioCrearEditarReserva(`2`,`'.$idItem.'`)><i class="fa fa-edit"></i></button>');
                                     print("</td>");
                                     print("<td>");
-                                        print('<button type="button" class="btn btn-success btn-sm" onclick=VerReserva(`'.$idItem.'`)><i class="fa fa-eye"></i></button>');
+                                        print('<button type="button" class="btn btn-success btn-sm" title="Ver Reserva" onclick=VerReserva(`'.$idItem.'`)><i class="fa fa-eye"></i></button>');
+                                    print("</td>");
+                                    print("<td>");
+                                        print('<button type="button" class="btn btn-primary btn-sm" title="Validar Reserva" onclick=FormularioValidarReserva(`'.$idItem.'`)><i class="fa fa-check"></i></button>');
                                     print("</td>");
                                     print("<td class='mailbox-name'>");
                                         print($RegistrosTabla["ID"]);
@@ -606,7 +609,14 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                     print("<td class='mailbox-subject'>");
                                         print(($RegistrosTabla["Telefono"]));
                                     print("</td>");
-                                    
+                                    print("<td class='mailbox-subject'>");
+                                        if($RegistrosTabla["Estado"]==3){
+                                            print('<a href="'.substr($RegistrosTabla["RutaSoporte"], 3).'" target="blank" class="mailbox-attachment-name"><i class="fa fa-paperclip"></i> '.$RegistrosTabla["NombreArchivo"].'</a>');
+                                        }else{
+                                            print("");
+                                        }
+                                        
+                                    print("</td>");
                                     print("<td class='mailbox-subject'>");
                                         print(utf8_encode("<strong>".$RegistrosTabla["NombreEstado"]."</strong>"));
                                     print("</td>");
@@ -920,7 +930,151 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                     print('</table>');
                 $css->Cdiv();
             
-        break;//Fin caso 8    
+        break;//Fin caso 8   
+        
+        case 9://Dibuja formulario para validar una reserva
+            $idReserva=$obCon->normalizar($_REQUEST["idReserva"]);
+            if($idReserva==''){
+                exit("E1;No se recibió el id de la reserva");
+            }
+            $DatosReserva=$obCon->DevuelveValores("prefactura_reservas", "ID", $idReserva);
+            $DatosPaciente=$obCon->DevuelveValores("prefactura_paciente", "ID", $DatosReserva["idPaciente"]);
+            $DatosMunicipio=$obCon->DevuelveValores("catalogo_municipios", "CodigoDANE", $DatosPaciente["CodigoDANE"]);
+            $DatosEps=$obCon->DevuelveValores("salud_eps", "cod_pagador_min", $DatosPaciente["CodEPS"]);
+            $NombreCompleto= utf8_encode($DatosPaciente["PrimerNombre"]." ".$DatosPaciente["SegundoNombre"]." ".$DatosPaciente["PrimerApellido"]." ".$DatosPaciente["SegundoApellido"]);
+            
+            $css->CrearTitulo("<strong>Validar la Reserva $idReserva</strong>", "azul");
+            $css->CrearDiv("", "col-md-4", "center", 1, 1);
+                $css->CrearDiv("", "box box-widget widget-user-2", "left", 1, 1);
+                    $css->CrearDiv("", "widget-user-header bg-aqua-active", "left", 1, 1);
+                        $css->CrearDiv("", "widget-user-image", "left", 1, 1);
+                            print('<img class="img-circle" src="../../images/usuariostipo.png" alt="User Avatar"></img>');
+                        $css->CerrarDiv();
+                        print('<h4 class="widget-user-username">');
+                            print("<strong>".$NombreCompleto."</strong>");
+                        print('</h4>');
+                    $css->CerrarDiv();   
+                    
+                    $css->CrearDiv("", "box-footer no-padding", "left", 1, 1);
+                        print('<ul class="nav nav-stacked" style="font-size:16px;">');
+                            print('<li><a onclick="CopiarAlPortapapelesID(`#spAutorizacionReserva`);">Autorización <span id="spAutorizacionReserva" class="pull-right" style="font-size:16px;"><strong>'.$DatosReserva["NumeroAutorizacion"].'</strong></span></a></li>');
+                            print('<li><a>No. Servicios Autorizados<span  class="pull-right" style="font-size:16px;"><strong>'.$DatosReserva["CantidadServicios"].'</strong></span></a></li>');
+                            //print('<li><a>No. Servicios Disponibles<span id="spServiciosDisponibles" class="pull-right badge bg-blue" style="font-size:16px;"><strong>'.($DatosReserva["CantidadServicios"]-$TotalCitasAgregadas).'</strong></span></a></li>');
+                            print('<li><a>Sexo <span  class="pull-right" style="font-size:16px;"><strong>'.$DatosPaciente["Sexo"].'</strong></span></a></li>');
+                            print('<li><a>Tipo de Documento <span class="pull-right" style="font-size:16px;"><strong>'.$DatosPaciente["TipoDocumento"].'</strong></span></a></li>');
+                            print('<li><a onclick="CopiarAlPortapapelesID(`#spIdentificacionPaciente`);">Numero de Documento <span id="spIdentificacionPaciente" class="pull-right" style="font-size:16px;"><strong>'.$DatosPaciente["NumeroDocumento"].'</strong></span></a></li>');
+                            print('<li><a onclick="CopiarAlPortapapelesID(`#spTelefonoPaciente`);">Teléfono <span id="spTelefonoPaciente" class="pull-right" style="font-size:16px;"><strong>'.$DatosPaciente["Telefono"].'</strong></span></a></li>');
+                            print('<li><a disabled onclick="CopiarAlPortapapelesID(`#spDireccionPaciente`);">Dirección <span  id="spDireccionPaciente" class="pull-right" style="font-size:16px;"><strong>'.utf8_encode($DatosPaciente["Direccion"]).'</strong></span></a></li>');
+                            print('<li><a disabled >Ciudad <span class="pull-right" style="font-size:16px;"><strong>'.utf8_encode($DatosMunicipio["Nombre"]).'</strong></span></a></li>');
+                            print('<li><a disabled >Departamento <span class="pull-right" style="font-size:16px;"><strong>'.utf8_encode($DatosMunicipio["Departamento"]).'</strong></span></a></li>');
+                            print('<li><a disabled >EPS<span class="pull-right" style="font-size:16px;"><strong>'.utf8_encode($DatosEps["nombre_completo"]).'</strong></span></a></li>');
+                           
+                        print('</ul>');
+                    $css->CerrarDiv();
+                $css->CerrarDiv();    
+                
+            $css->CerrarDiv();
+            $css->CrearDiv("", "col-md-8", "center", 1, 1);
+                $css->CrearDiv("DivFormularioValidacion", "", "center", 1, 1);
+                    $css->CrearTitulo("<strong>Validar Autorización</strong>","verde");
+                    $css->CrearDiv("", "box box-default", "", 1, 1);
+                        $css->CrearDiv("", "box-body", "", 1, 1);
+                            
+                            //Fila 1
+                            $css->CrearDiv("", "row", "", 1, 1);
+                                $css->CrearDiv("", "col-md-3", "", 1, 1);
+                                    $css->CrearDiv("", "form-group", "", 1, 1);
+                                        print('<label>Fecha</label>');
+                                        $css->input("date", "Fecha", "form-control", "Fecha", "Fecha", "", "Fecha", "off", "", "","style='line-height: 15px;'");
+                        
+                                    $css->CerrarDiv();                             
+                                $css->CerrarDiv();
+                                
+                                $css->CrearDiv("", "col-md-4", "", 1, 1);
+                                    $css->CrearDiv("", "form-group", "", 1, 1);
+                                        print('<label>Observaciones</label>');
+                                        $css->textarea("Observaciones", "form-control", "Observaciones", "", "Observaciones", "", "");
+                                            
+                                        $css->Ctextarea();
+                                    $css->CerrarDiv();                             
+                                $css->CerrarDiv();
+                                
+                                $css->CrearDiv("", "col-md-5", "", 1, 1);
+                                    $css->CrearDiv("", "form-group", "", 1, 1);
+                                        print('<label>Soporte</label>');
+                                        $css->input("file", "SoporteValidacionReserva", "form-control", "SoporteValidacionReserva", "", "Subir Soporte", "Subir Soporte", "off", "", "");
+                                        print("<br>");
+                                        $css->CrearBotonEvento("btnValidarReserva", "Validar", 1, "onclick", "ValidarReserva(`$idReserva`)", "rojo");
+                                    $css->CerrarDiv();                             
+                                $css->CerrarDiv();
+
+                            $css->CerrarDiv();
+                            //Fin fila 1
+                        $css->CerrarDiv();    
+
+                    $css->CerrarDiv();
+                    
+                $css->CerrarDiv();
+                
+                $css->CrearDiv("DivValidacionesReservas", "", "center", 1, 1);
+                    
+                $css->CerrarDiv();
+            $css->CerrarDiv();
+            print("<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>");
+        break;//Fin caso 9
+        
+        case 10;//Dibujar la validacion de las reservas
+            $idReserva=$obCon->normalizar($_REQUEST["idReserva"]);
+            if($idReserva==''){
+                exit("E;No se recibió el id de la reserva");
+            }
+            $css->CrearTitulo("<strong>Datos de la Validacion de la Reserva $idReserva</strong>", "naranja");
+            $sql="SELECT t1.*,
+                    (SELECT CONCAT(t2.Nombre,t2.Apellido) FROM usuarios t2 WHERE t2.idUsuarios=t1.idUser) as NombreUsuario
+                    
+                    FROM prefactura_reservas_validacion t1 WHERE t1.idReserva='$idReserva'";
+            $Consulta=$obCon->Query($sql);
+            
+            $css->CrearDiv("", "table-responsive mailbox-messages", "", 1, 1);
+                    print('<table class="table table-hover table-striped">');
+                        print('<tbody>');
+                            while($RegistrosTabla=$obCon->FetchAssoc($Consulta)){
+                                
+                                $idItem=$RegistrosTabla["ID"];
+                                
+                                $NombreCompleto= utf8_encode($RegistrosTabla["NombreUsuario"]);
+                                print('<tr>');
+                                    
+                                    print("<td class='mailbox-name'>");
+                                        print($RegistrosTabla["Fecha"]);
+                                    print("</td>");                                    
+                                    print("<td class='mailbox-subject'>");
+                                        print($RegistrosTabla["Observaciones"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print('<a href="'.substr($RegistrosTabla["Ruta"], 3).'" target="blank" class="mailbox-attachment-name"><i class="fa fa-paperclip"></i> '.$RegistrosTabla["NombreArchivo"].'</a>');
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".$NombreCompleto."</strong>");
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print($RegistrosTabla["Created"]);
+                                    print("</td>");
+                                    print("<td style='font-size:16px;text-align:center;color:red' title='Borrar'>");                             
+                                        $css->li("", "fa  fa-remove", "", "onclick=EliminarValidacion(`$idReserva`,`1`,`$idItem`) style=font-size:16px;cursor:pointer;text-align:center;color:red");
+                                        $css->Cli();
+                                    print("</td>");                                                                       
+                                print('</tr>');
+
+                            }
+
+                        print('</tbody>');
+                    print('</table>');
+                $css->Cdiv();
+            
+            
+        break;//fin caso 10    
+        
  }
     
           

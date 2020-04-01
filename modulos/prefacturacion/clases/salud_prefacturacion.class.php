@@ -58,6 +58,25 @@ class Prefacturacion extends conexion{
         $this->Query($sql);
     }
     
+    public function ValidarReserva($idReserva,$Fecha,$Observaciones,$destino,$Tamano, $NombreArchivo, $Extension, $idUser) {
+        
+        $tab="prefactura_reservas_validacion";
+        
+        $Datos["idReserva"]=$idReserva;
+        $Datos["Fecha"]=$Fecha;    
+        $Datos["Observaciones"]=$Observaciones;	
+        $Datos["Ruta"]=$destino;    
+        $Datos["NombreArchivo"]=$NombreArchivo;    
+        $Datos["Extension"]=$Extension;    
+        $Datos["Tamano"]=$Tamano; 
+        $Datos["idUser"]=$idUser;		
+        $Datos["Created"]=date("Y-m-d H:i:s");		
+        	
+        
+        $sql=$this->getSQLInsert($tab, $Datos);
+        $this->Query($sql);
+    }
+    
    
     /**
      * Fin Clase

@@ -14,6 +14,11 @@ function CopiarAlPortapapelesID(idElemento){
     alertify.success("Texto Copiado: "+$(idElemento).text());
     $temp.remove();
 }
+
+function AbreModal(idModal){
+    $("#"+idModal).modal();
+}
+
 function MostrarListadoSegunID(){
     if(idListado==1){
         ListarPacientes();
@@ -309,6 +314,13 @@ function CrearEditarPaciente(TipoFormulario=1,idEditar=0){
         });
 }
 
+function OcultaXID(id){
+    
+    
+    document.getElementById(id).style.display="none";
+    
+    
+}
     
 function MarqueErrorElemento(idElemento){
     
@@ -725,5 +737,166 @@ function ConfirmarCita(idReserva,idItem){
           }
       });
 }
+
+function FormularioValidarReserva(idReserva){
+    AbreModal('ModalAcciones');
+    OcultaXID('BntModalAcciones');
+    OcultaXID('btnCerrarModal');
+    var idDiv="DivFrmModalAcciones";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+        
+    var form_data = new FormData();
+        form_data.append('Accion', 9);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('idReserva', idReserva);
+        
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){   
+            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos 
+            ListarValidacionesReservas(idReserva);
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+
+function ValidarReserva(idReserva){
+    var idBoton='btnValidarReserva';
+    document.getElementById(idBoton).disabled=true;
+    document.getElementById(idBoton).value="Guardando...";
+    
+    var Fecha=document.getElementById('Fecha').value;
+    var Observaciones=document.getElementById('Observaciones').value;
+        
+    var form_data = new FormData();
+        form_data.append('Accion', 8);
+        form_data.append('Fecha', Fecha);
+        form_data.append('Observaciones', Observaciones);
+        form_data.append('idReserva', idReserva);        
+        form_data.append('SoporteValidacionReserva', $('#SoporteValidacionReserva').prop('files')[0]);
+        
+                
+    $.ajax({
+        //async:false,
+        url: './procesadores/salud_prefacturacion.process.php',
+        //dataType: 'json',
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post',
+        success: function(data){
+            var respuestas = data.split(';'); 
+           if(respuestas[0]==="OK"){   
+                
+                document.getElementById(idBoton).disabled=false;
+                document.getElementById(idBoton).value="Validar";
+                alertify.success(respuestas[1]);
+                ListarValidacionesReservas(idReserva);
+                ListarReservas();
+            }else if(respuestas[0]==="E1"){
+                
+                alertify.alert(respuestas[1]);
+                MarqueErrorElemento(respuestas[2]);
+                document.getElementById(idBoton).disabled=false;
+                document.getElementById(idBoton).value="Validar";
+                return;                
+            }else{
+                
+                alertify.alert(data);
+                document.getElementById(idBoton).disabled=false;
+                document.getElementById(idBoton).value="Validar";
+            }
+            
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            
+            document.getElementById(idBoton).disabled=false;
+            document.getElementById(idBoton).value="Validar";
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      })
+}
+
+function ListarValidacionesReservas(idReserva){
+    var idDiv="DivValidacionesReservas";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+        
+    var form_data = new FormData();
+        form_data.append('Accion', 10);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('idReserva', idReserva);
+        
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos                      
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+function EliminarValidacion(idReserva,Tabla,idItem){
+        
+    var form_data = new FormData();
+        form_data.append('Accion', 9);
+        form_data.append('Tabla', Tabla);
+        form_data.append('idItem', idItem);
+        form_data.append('idReserva', idReserva);
+        $.ajax({
+        url: './procesadores/salud_prefacturacion.process.php',
+        //dataType: 'json',
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post',
+        success: function(data){
+            var respuestas = data.split(';'); 
+            if(respuestas[0]=="OK"){
+                
+                alertify.error(respuestas[1]);
+                
+                ListarValidacionesReservas(idReserva);
+                ListarReservas();
+            }else if(respuestas[0]=="E1"){  
+                alertify.error(respuestas[1]);
+                                
+            }else{
+                alertify.alert(data);
+                
+            }
+            
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
 MostrarListadoSegunID();
 

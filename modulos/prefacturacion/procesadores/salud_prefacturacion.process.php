@@ -239,7 +239,84 @@ if( !empty($_REQUEST["Accion"]) ){
             
             
         break;//Fin caso 7
+        
+        case 8://valida una reserva
+            $idReserva=$obCon->normalizar($_REQUEST["idReserva"]);
+            $Fecha=$obCon->normalizar($_REQUEST["Fecha"]);
+            $Observaciones=$obCon->normalizar($_REQUEST["Observaciones"]);
+            
+            if($idReserva==''){
+                exit("E1;No se recibió el id de la Reserva");
+            }
+            if($Fecha==''){
+                exit("E1;Debe seleccionar una fecha de Validacion;Fecha");
+            }
+            if($Observaciones==''){
+                exit("E1;Debe escribir las observaciones de la validacion;Observaciones");
+            }
+            
+            $Extension="";
+            if(!empty($_FILES['SoporteValidacionReserva']['name'])){
+                
+                $info = new SplFileInfo($_FILES['SoporteValidacionReserva']['name']);
+                $Extension=($info->getExtension());  
+                $Tamano=filesize($_FILES['SoporteValidacionReserva']['tmp_name']);
+                $carpeta="../../../SoportesSalud/SoportesPrefacturacion/";
+                if (!file_exists($carpeta)) {
+                    mkdir($carpeta, 0777);
+                }
+                $carpeta="../../../SoportesSalud/SoportesPrefacturacion/$idReserva/";
+                if (!file_exists($carpeta)) {
+                    mkdir($carpeta, 0777);
+                }
+                opendir($carpeta);
+                $idAdjunto=uniqid(true);
+                $destino=$carpeta.$idReserva."_".$idAdjunto.".".$Extension;
+                
+                move_uploaded_file($_FILES['SoporteValidacionReserva']['tmp_name'],$destino);
+                
+            }else{
+                exit("E1;Debe adjuntar un soporte de la validacion;SoporteValidacionReserva");
+            }
+            $DatosValidacio=$obCon->DevuelveValores("prefactura_reservas_validacion", "idReserva", $idReserva);
+            if($DatosValidacio["ID"]<>''){
+                exit("E1;Esta Reserva ya fué validada");
+            }
+            $DatosReserva=$obCon->DevuelveValores("prefactura_reservas", "ID", $idReserva);
+            if($DatosReserva["Estado"]<=2){
+                $obCon->ActualizaRegistro("prefactura_reservas", "Estado", 3, "ID", $idReserva);
+            }
+            $obCon->ValidarReserva($idReserva, $Fecha, $Observaciones, $destino, $Tamano, $_FILES['SoporteValidacionReserva']['name'], $Extension, $idUser);
+            
+            exit("OK;Reserva $idReserva Validada");
+        break;//Fin caso 8    
            
+        case 9://Eliminar la validacion de una reserva
+            $idItem=$obCon->normalizar($_REQUEST["idItem"]);
+            $idReserva=$obCon->normalizar($_REQUEST["idReserva"]);
+            
+            if($idReserva==''){
+                exit("E1;No se recibió el id de la reserva");
+            }
+            if($idItem==''){
+                exit("E1;No se recibió la cita a eliminar");
+            }
+            
+            $DatosReserva=$obCon->DevuelveValores("prefactura_reservas", "ID", $idReserva);
+            $sql="SELECT COUNT(ID) as TotalCitas FROM prefactura_reservas_citas WHERE idReserva='$idReserva' AND Estado<10";
+            $Validacion=$obCon->FetchAssoc($obCon->Query($sql));
+            $obCon->BorraReg("prefactura_reservas_validacion", "ID", $idItem);  
+            $CitasDisponibles=$DatosReserva["CantidadServicios"]-($Validacion["TotalCitas"]);
+            
+            if($CitasDisponibles==$DatosReserva["CantidadServicios"]){
+                $obCon->ActualizaRegistro("prefactura_reservas", "Estado", 1, "ID", $idReserva);
+            }else{
+                $obCon->ActualizaRegistro("prefactura_reservas", "Estado", 2, "ID", $idReserva);
+            }
+            exit("OK;Validacion Borrada");
+            
+            
+        break;//Fin caso 9
         
     }
     

@@ -1479,10 +1479,11 @@ class PageConstruct extends html_estruct_class{
          * @param type $TituloBoton->Titulo del boton de confirmacion
          * @param type $ClassBoton->Clase del boton de confirmacion
          */
-        function CModal($idBoton,$JSBoton,$TipoBoton,$TituloBoton,$ClassBoton='btn btn-primary') {
+        function CModal($idBoton,$JSBoton,$TipoBoton,$TituloBoton,$ClassBoton='btn btn-primary',$idBotonCerrar='btnCerrarModal') {
             print('</div>
+                
                     <div class="modal-footer">
-                      <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cerrar</button>
+                      <button id="'.$idBotonCerrar.'" type="button" class="btn btn-default pull-left" data-dismiss="modal">Cerrar</button>
                       <button id='.$idBoton.' type="'.$TipoBoton.'" class="'.$ClassBoton.'" '.$JSBoton.'>'.$TituloBoton.'</button>
                     </div>
                   </div>
