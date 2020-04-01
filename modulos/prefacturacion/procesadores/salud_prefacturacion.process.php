@@ -92,14 +92,16 @@ if( !empty($_REQUEST["Accion"]) ){
             }
             $TipoDocumento=$Datos["TipoDocumento"];
             $NumeroDocumento=$Datos["NumeroDocumento"];
-            $sql="SELECT ID FROM prefactura_paciente WHERE TipoDocumento='$TipoDocumento' AND NumeroDocumento='$NumeroDocumento' ";
-            $Validacion=$obCon->FetchAssoc($obCon->Query($sql));
-            if($Validacion["ID"]<>''){
-                print("OK;El Paciente ya Existe;NumeroDocumento");
-            }
             
-            if($TipoFormulario==1){
+            
+            if($TipoFormulario==1){//Si es creacion
+                $sql="SELECT ID FROM prefactura_paciente WHERE TipoDocumento='$TipoDocumento' AND NumeroDocumento='$NumeroDocumento' ";
+                $Validacion=$obCon->FetchAssoc($obCon->Query($sql));
+                if($Validacion["ID"]<>''){
+                    exit("OK;El Paciente ya Existe;NumeroDocumento");
+                }
                 $Datos["Created"]=date("Y-m-d H:i:s");
+                $Datos["idUser"]=$idUser;
                 $sql=$obCon->getSQLInsert("prefactura_paciente", $Datos);
             }
             if($TipoFormulario==2){
@@ -110,6 +112,133 @@ if( !empty($_REQUEST["Accion"]) ){
             print("OK;Registro Guardado Correctamente");
             
         break;//Fin caso 3
+        
+        case 4://Guarda o edita una reserva
+            
+            $Datos["idPaciente"]=$obCon->normalizar($_REQUEST["idPaciente"]);
+            $Datos["NumeroAutorizacion"]=$obCon->normalizar($_REQUEST["NumeroAutorizacion"]);
+            $Datos["CantidadServicios"]=$obCon->normalizar($_REQUEST["CantidadServicios"]);
+            $Datos["Cie10"]=$obCon->normalizar($_REQUEST["Cie10"]);
+            $Datos["Observaciones"]=$obCon->normalizar($_REQUEST["Observaciones"]);
+            
+            $TipoFormulario=$obCon->normalizar($_REQUEST["TipoFormulario"]);
+            $idEditar=$obCon->normalizar($_REQUEST["idEditar"]);
+            
+            foreach ($Datos as $key => $value) {
+                if($value=='' ){
+                    exit("E1;El campo $key no puede estar vacío;$key");
+                }
+            }
+            if(!is_numeric($Datos["CantidadServicios"]) or $Datos["CantidadServicios"]<=0){
+                exit("E1;El campo Cantidad de Servicios Debe ser un valor Numerico mayor a Cero;CantidadServicios");
+            }
+            $Tabla="prefactura_reservas";
+            $idPaciente=$Datos["idPaciente"];
+            $NumeroAutorizacion=$Datos["NumeroAutorizacion"];
+            
+            
+            if($TipoFormulario==1){
+                $sql="SELECT ID FROM $Tabla WHERE idPaciente='$idPaciente' AND NumeroAutorizacion='$NumeroAutorizacion' ";
+                $Validacion=$obCon->FetchAssoc($obCon->Query($sql));
+                if($Validacion["ID"]<>''){
+                    exit("E1;El Numero de autorizacion ya ha sido usado para este paciente;NumeroAutorizacion");
+                }
+                $Datos["Created"]=date("Y-m-d H:i:s");
+                $Datos["idUser"]=$idUser;
+                $Datos["Estado"]=1;
+                $sql=$obCon->getSQLInsert($Tabla, $Datos);
+                $obCon->Query($sql);
+                $idReserva=$obCon->ObtenerMAX($Tabla, "ID", 1,"");
+            }
+            if($TipoFormulario==2){
+                $sql=$obCon->getSQLUpdate($Tabla, $Datos);
+                $sql.=" WHERE ID='$idEditar'";
+                $obCon->Query($sql);
+                $idReserva=$idEditar;
+            }
+            
+            print("OK;Registro Guardado Correctamente en el ID: $idReserva;$idReserva");
+            
+        break;//Fin caso 4
+        
+        case 5://Agregar una cita a una reserva
+            $idReserva=$obCon->normalizar($_REQUEST["idReserva"]);
+            $idHospital=$obCon->normalizar($_REQUEST["idHospital"]);
+            $Fecha=$obCon->normalizar($_REQUEST["Fecha"]);
+            $Hora=$obCon->normalizar($_REQUEST["Hora"]);
+            $Observaciones=$obCon->normalizar($_REQUEST["Observaciones"]);
+            if($idReserva==''){
+                exit("E1;No se recibió el id de la reserva");
+            }
+            if($idHospital==''){
+                exit("E1;Debe seleccionar un hospital;idHospital");
+            }
+            if($Fecha==''){
+                exit("E1;Debe seleccionar una fecha;Fecha");
+            }
+            if($Hora==''){
+                exit("E1;Debe Seleccionar una Hora;Hora");
+            }
+            $DatosReserva=$obCon->DevuelveValores("prefactura_reservas", "ID", $idReserva);
+            $sql="SELECT COUNT(ID) as TotalCitas FROM prefactura_reservas_citas WHERE idReserva='$idReserva' AND Estado<10";
+            $Validacion=$obCon->FetchAssoc($obCon->Query($sql));
+            if($Validacion["TotalCitas"]>=$DatosReserva["CantidadServicios"]){
+                exit("E1;Ya se agregaron todas las citas autorizadas");
+            }
+            $obCon->AgregarCitaReserva($idReserva, $idHospital, $Fecha, $Hora,$Observaciones, $idUser);
+            $CitasDisponibles=$DatosReserva["CantidadServicios"]-($Validacion["TotalCitas"]+1);
+            if($DatosReserva["Estado"]==1){
+                $obCon->ActualizaRegistro("prefactura_reservas", "Estado", 2, "ID", $idReserva);
+            }            
+            exit("OK;Cita Agregada;$CitasDisponibles");
+            
+            
+        break;//Fin caso 5  
+        
+        case 6://Eliminar una cita a una reserva
+            $idItem=$obCon->normalizar($_REQUEST["idItem"]);
+            $idReserva=$obCon->normalizar($_REQUEST["idReserva"]);
+            
+            if($idReserva==''){
+                exit("E1;No se recibió el id de la reserva");
+            }
+            if($idItem==''){
+                exit("E1;No se recibió la cita a eliminar");
+            }
+            
+            $DatosReserva=$obCon->DevuelveValores("prefactura_reservas", "ID", $idReserva);
+            $sql="SELECT COUNT(ID) as TotalCitas FROM prefactura_reservas_citas WHERE idReserva='$idReserva' AND Estado<10";
+            $Validacion=$obCon->FetchAssoc($obCon->Query($sql));
+            $obCon->ActualizaRegistro("prefactura_reservas_citas", "Estado", 11, "ID", $idItem, 0);            
+            $CitasDisponibles=$DatosReserva["CantidadServicios"]-($Validacion["TotalCitas"]-1);
+            
+            if($CitasDisponibles==$DatosReserva["CantidadServicios"]){
+                $obCon->ActualizaRegistro("prefactura_reservas", "Estado", 1, "ID", $idReserva);
+            }
+            exit("OK;Cita Borrada;$CitasDisponibles");
+            
+            
+        break;//Fin caso 6
+        
+        case 7://Confirmar una cita de una reserva
+            $idItem=$obCon->normalizar($_REQUEST["idItem"]);
+            $idReserva=$obCon->normalizar($_REQUEST["idReserva"]);
+            
+            if($idReserva==''){
+                exit("E1;No se recibió el id de la reserva");
+            }
+            if($idItem==''){
+                exit("E1;No se recibió la cita a Confirmar");
+            }
+            
+            $DatosReserva=$obCon->DevuelveValores("prefactura_reservas", "ID", $idReserva);
+            
+            $obCon->ActualizaRegistro("prefactura_reservas_citas", "Estado", 2, "ID", $idItem, 0);            
+            
+            exit("OK;Cita Confirmada");
+            
+            
+        break;//Fin caso 7
            
         
     }

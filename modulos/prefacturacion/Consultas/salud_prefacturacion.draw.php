@@ -60,14 +60,12 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             
             $css->div("", "box-body no-padding", "", "", "", "", "");
                 $css->div("", "mailbox-controls", "", "", "", "", "");
-                /*
-                    $css->div("", "col-md-6", "", "", "", "", "");
-                        print("<strong>Registros:</strong> <h4 style=color:green>". number_format($ResultadosTotales)."</h4>");
-                    $css->Cdiv();
-                 * 
-                 */
-                    print('<button type="button" class="btn btn-success btn-lg" onclick=FormularioCrearEditarPaciente()><i class="fa fa-user-plus"></i>
-                    </button>');
+                
+                    print('<a class="btn btn-app" style="background-color:#12a900;color:white;" onclick=FormularioCrearEditarPaciente()>
+                        <span class="badge bg-blue" style="font-size:14px">'.$ResultadosTotales.'</span>
+                        <i class="fa fa-user-plus"></i> Agregar 
+                      </a>');
+                   
                     $css->div("", "pull-right", "", "", "", "", "");
                         if($ResultadosTotales>$Limit){
                             $TotalPaginas= ceil($ResultadosTotales/$Limit);                               
@@ -486,269 +484,443 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                 $css->CerrarDiv();
                 
             $css->CerrarDiv();
-            /*
-            print('               
-          
-                
-       
-              <!-- /.form-group -->
-              <div class="form-group">
-                <label>Disabled</label>
-                <select class="form-control select2 select2-hidden-accessible" disabled="" style="width: 100%;" tabindex="-1" aria-hidden="true">
-                  <option selected="selected">Alabama</option>
-                  <option>Alaska</option>
-                  <option>California</option>
-                  <option>Delaware</option>
-                  <option>Tennessee</option>
-                  <option>Texas</option>
-                  <option>Washington</option>
-                </select><span class="select2 select2-container select2-container--default select2-container--disabled" dir="ltr" style="width: 100%;"><span class="selection"><span class="select2-selection select2-selection--single" role="combobox" aria-haspopup="true" aria-expanded="false" tabindex="-1" aria-labelledby="select2-qqdj-container"><span class="select2-selection__rendered" id="select2-qqdj-container" title="Alabama">Alabama</span><span class="select2-selection__arrow" role="presentation"><b role="presentation"></b></span></span></span><span class="dropdown-wrapper" aria-hidden="true"></span></span>
-              </div>
-              <!-- /.form-group -->
-            </div>
-            <!-- /.col -->
-            <div class="col-md-6">
-              <div class="form-group">
-                <label>Multiple</label>
-                <select class="form-control select2 select2-hidden-accessible" multiple="" data-placeholder="Select a State" style="width: 100%;" tabindex="-1" aria-hidden="true">
-                  <option>Alabama</option>
-                  <option>Alaska</option>
-                  <option>California</option>
-                  <option>Delaware</option>
-                  <option>Tennessee</option>
-                  <option>Texas</option>
-                  <option>Washington</option>
-                </select><span class="select2 select2-container select2-container--default" dir="ltr" style="width: 100%;"><span class="selection"><span class="select2-selection select2-selection--multiple" role="combobox" aria-haspopup="true" aria-expanded="false" tabindex="-1"><ul class="select2-selection__rendered"><li class="select2-search select2-search--inline"><input class="select2-search__field" type="search" tabindex="0" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" role="textbox" aria-autocomplete="list" placeholder="Select a State" style="width: 517.5px;"></li></ul></span></span><span class="dropdown-wrapper" aria-hidden="true"></span></span>
-              </div>
-              <!-- /.form-group -->
-              <div class="form-group">
-                <label>Disabled Result</label>
-                <select class="form-control select2 select2-hidden-accessible" style="width: 100%;" tabindex="-1" aria-hidden="true">
-                  <option selected="selected">Alabama</option>
-                  <option>Alaska</option>
-                  <option disabled="disabled">California (disabled)</option>
-                  <option>Delaware</option>
-                  <option>Tennessee</option>
-                  <option>Texas</option>
-                  <option>Washington</option>
-                </select><span class="select2 select2-container select2-container--default" dir="ltr" style="width: 100%;"><span class="selection"><span class="select2-selection select2-selection--single" role="combobox" aria-haspopup="true" aria-expanded="false" tabindex="0" aria-labelledby="select2-cez6-container"><span class="select2-selection__rendered" id="select2-cez6-container" title="Alabama">Alabama</span><span class="select2-selection__arrow" role="presentation"><b role="presentation"></b></span></span></span><span class="dropdown-wrapper" aria-hidden="true"></span></span>
-              </div>
-              <!-- /.form-group -->
-            </div>
-            <!-- /.col -->
-          </div>
-          <!-- /.row -->
-        </div>
-        <!-- /.box-body -->
-        <div class="box-footer">
-          Visit <a href="https://select2.github.io/">Select2 documentation</a> for more examples and information about
-          the plugin.
-        </div>
-      </div>');
-           */ 
+            
         break;// fin caso 2  
         
-        case 3://Formulario para subir los pagos
-            
-            $idPago=$obCon->normalizar($_REQUEST["idPago"]);
-            
-            $DatosPago=$obCon->DevuelveValores("salud_tesoreria", "ID", $idPago);
-            
-            $css->input("hidden", "idPago", "", "idPago", "", $idPago, "", "", "", "");
-            
-            $css->ProgressBar("PgProgresoUp", "LyProgresoCMG", "", 0, 0, 100, 0, "0%", "", "");
-    
-            $Mensaje="LEGALIZAR EL PAGO No. $idPago, de la EPS: <strong> ".$DatosPago["nom_enti_administradora"]." </strong>";
-            $css->CrearTitulo($Mensaje, "verde");
-            
-            $css->CrearTabla();
-                $css->FilaTabla(16);
-                    $css->ColTabla("<strong>FECHA DEL PAGO</strong>", 1);
-                    $css->ColTabla("<strong>VALOR DEL PAGO:</strong>", 1);
-                    $css->ColTabla("<strong>VALOR X LEGALIZAR:</strong>", 1);
-                    
-                $css->CierraFilaTabla();
-                $css->FilaTabla(16);
-                    $css->ColTabla($DatosPago["fecha_transaccion"], 1);
-                    $css->ColTabla(number_format($DatosPago["valor_transaccion"]), 1);
-                    $css->ColTabla(number_format($DatosPago["valor_legalizar"]), 1);
-                    
-                $css->CierraFilaTabla();
-                
-                $css->FilaTabla(16);
-                
-                    print("<td>");
-                        print("<strong>Separador de Archivo</strong><br>");
-                        $css->select("CmbSeparador", "form-control", "CmbSeparador", "", "", "", "");
-                            $css->option("", "", "", "", "", "");
-                                print("Selecciones el Separador de los archivos");
-                            $css->Coption();
-                            $css->option("", "", "", "1", "", "");
-                                print("Punto y Coma (;)");
-                            $css->Coption();
-                            $css->option("", "", "", "2", "", "",1);
-                                print("Coma (,)");
-                            $css->Coption();
-
-                        $css->Cselect();
-                    print("</td>");
-                    print("<td colspan=2>");
-                        print("<strong>Tipo de Giro</strong><br>");
-
-                        $css->select("CmbTipoGiro", "form-control", "CmbTipoGiro", "", "", "", "");
-                            $css->option("", "", "", "", "", "");
-                                print("Tipo de Giro");
-                            $css->Coption();
-                            $css->option("", "", "", "1", "", "");
-                                print("Giro Directo Subsidiado");
-                            $css->Coption();
-                            $css->option("", "", "", "2", "", "",1);
-                                print("Cuenta Maestra (Tesoreria)");
-                            $css->Coption();
-                            $css->option("", "", "", "3", "", "");
-                                print("Giro Directo Contributivo");
-                            $css->Coption();
-
-                        $css->Cselect();
+        case 5://dibuja el listado de las reservas
                         
-                    print("</td>");
-                $css->CierraFilaTabla();
-
-                $css->FilaTabla(16);
-                    $css->ColTabla("<strong>Pagos (AR)</strong>", 1);
-                    $css->ColTabla("<strong>Fecha de Giro</strong>", 1);
-                    $css->ColTabla("<strong>Soporte de Pago</strong>", 1);
-                    
-                $css->CierraFilaTabla();
-
-
-                $css->FilaTabla(16);
-
-                    print("<td>");
-                        
-                        $css->input("file", "UpPago", "form-control", "UpPago", "Soporte", "", "Soporte", "off", "", "style=width:100%");
-                    print("</td>");
-                    print("<td colspan=1>");
-                        $css->input("date", "TxtFechaGira", "form-control", "TxtFechaGira", "Fecha", date("Y-m-d"), "Fecha", "off", "", "","style='line-height: 15px;'");
-                        
-                    print("</td>");
-                    print("<td>");
-                        
-                        $css->input("file", "UpSoporte", "form-control", "UpSoporte", "Soporte", "", "Soporte", "off", "", "style=width:100%");
-                    print("</td>");
-                    $css->FilaTabla(16);
-                        print("<td colspan=3>");
-                            $css->textarea("TxtObservaciones", "form-control", "", "", "Observaciones", "", "");
-                                
-                            $css->Ctextarea();
-                        print("<td>");
-                    $css->CierraFilaTabla();
-                    $css->FilaTabla(16);
-                    print("<td colspan=3>");
-                        $css->CrearBotonEvento("BtnEnviar", "Subir", 1, "onClick", "CargarAR('$idPago')", "rojo", "");
-                       
-                    print("</td>");
-                    $css->CierraFilaTabla();
-                $css->CierraFilaTabla();
-
-            $css->CerrarTabla();
-        break;//Fin caso 3    
-        
-    
-        case 4:// formulario para editar pago
+            $Limit=20;
+            $Page=$obCon->normalizar($_REQUEST["Page"]);
+            $NumPage=$obCon->normalizar($_REQUEST["Page"]);
+            if($Page==''){
+                $Page=1;
+                $NumPage=1;
+            }
+            $Busquedas=$obCon->normalizar($_REQUEST["Busquedas"]);
+            $Estado=$obCon->normalizar($_REQUEST["Estado"]);
+            $Condicion=" WHERE ID>0 ";
             
-            $idPago=$obCon->normalizar($_REQUEST["idPago"]);
-            $DatosPago=$obCon->DevuelveValores("salud_tesoreria", "ID", $idPago);
-            $css->CrearTitulo("<strong>Editar el Pago No. $idPago</strong>", "naranja");
-            $css->CrearTabla();
+            if($Busquedas<>''){
+                $Condicion.=" AND ( NumeroAutorizacion like '%$Busquedas%' or NumeroDocumento like '%$Busquedas%' or NombreCompleto like '%$Busquedas%' or Telefono like '%$Busquedas%')";
+            }
             
-                $css->FilaTabla(16);
-                    $css->ColTabla("<strong>Fecha:</strong>", 1,"C");
-                    $css->ColTabla("<strong>EPS:</strong>", 1,"C");
-                    $css->ColTabla("<strong>Banco:</strong>", 1,"C");
-                    $css->ColTabla("<strong>Número Transacción:</strong>", 1,"C");
-                $css->CierraFilaTabla();
-                
-                $css->FilaTabla(16);
-                    print("<td>");
-                        $css->input("date", "Fecha", "form-control", "Fecha", "Fecha", date("Y-m-d"), "Fecha", "off", $DatosPago["fecha_transaccion"], "","style='line-height: 15px;'");
+            if($Estado<>''){
+                $Condicion.=" AND Estado='$Estado'";
+            }
+            
+            $PuntoInicio = ($Page * $Limit) - $Limit;
+            
+            $sql = "SELECT COUNT(ID) as Items 
+                   FROM vista_prefactura_reservas t1 $Condicion;";
+            
+            $Consulta=$obCon->Query($sql);
+            $totales = $obCon->FetchAssoc($Consulta);
+            $ResultadosTotales = $totales['Items'];
                         
-                    print("</td>");   
-                    print("<td>");
-                        $DatosEPS=$obCon->DevuelveValores("salud_eps", "cod_pagador_min", $DatosPago["cod_enti_administradora"]);
-                        $css->select("CmbEps", "form-control", "CmbEps", "", "", "", "style=width:400px");
-                            $css->option("", "", "", $DatosPago["cod_enti_administradora"], "", "");
-                                print($DatosPago["nom_enti_administradora"]);
-                            $css->Coption();    
-                        $css->Cselect();
-                    print("</td>");
-                    
-                    print("<td>");
-                        $sql="SELECT * FROM salud_bancos";
-                        $Consulta=$obCon->Query($sql);
-                        
-                        $css->select("CmbBanco", "form-control", "CmbBanco", "", "", "", "");
-                            $css->option("", "", "", "", "", "");
-                                print("Seleccione un Banco");
-                            $css->Coption(); 
-                            while($DatosBanco=$obCon->FetchAssoc($Consulta)){
-                                    $Seleccionado=0;
-                                if($DatosBanco["banco_transaccion"]==$DatosPago["banco_transaccion"]){
-                                    $Seleccionado=1;
-                                }
-                                $css->option("", "", "", $DatosBanco["ID"], "", "",$Seleccionado);
-                                    print($DatosBanco["banco_transaccion"]." || ".$DatosBanco["num_cuenta_banco"]." || ".$DatosBanco["tipo_cuenta"]);
-                                $css->Coption(); 
+            $sql="SELECT *
+                  FROM vista_prefactura_reservas $Condicion ORDER BY ID DESC LIMIT $PuntoInicio,$Limit;";
+            $Consulta=$obCon->Query($sql);
+            
+            
+            $css->CrearTitulo("Lista de Reservas", "azul");
+            
+            
+            
+            $css->div("", "box-body no-padding", "", "", "", "", "");
+                $css->div("", "mailbox-controls", "", "", "", "", "");
+                    print('<a class="btn btn-app" style="background-color:blue;color:white;" onclick=FormularioCrearEditarReserva()>
+                        <span class="badge bg-green" style="font-size:14px">'.$ResultadosTotales.'</span>
+                        <i class="fa fa-ambulance"></i> Reservar 
+                      </a>');
+                    $css->div("", "pull-right", "", "", "", "", "");
+                        if($ResultadosTotales>$Limit){
+                            $TotalPaginas= ceil($ResultadosTotales/$Limit);                               
+                            print('<div class="input-group" style=width:150px>');
+                            if($NumPage>1){
+                                $NumPage1=$NumPage-1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`2`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-left"></i></span>');
                             }
-                        $css->Cselect();
-                        
-                    print("</td>");
-                    
-                    print("<td>");
-                        $css->input("text", "NumeroTransaccion", "form-control", "NumeroTransaccion", $DatosPago["num_transaccion"], $DatosPago["num_transaccion"], "Numero de transaccion", "off", "", "");
-                    print("</td>");
-                    
-                $css->CierraFilaTabla();
-                
-                $css->FilaTabla(16);
-                    print("<td>");
-                        $sql="SELECT * FROM salud_tesoreria_tipos_pago";
-                            $Consulta=$obCon->Query($sql);
+                            $FuncionJS="onchange=CambiePagina(`2`);";
+                            $css->select("CmbPage", "form-control", "CmbPage", "", "", $FuncionJS, "");
 
-                            $css->select("CmbTipoPago", "form-control", "CmbTipoPago", "", "", "", "");
-                                $css->option("", "", "", "", "", "");
-                                    print("Seleccione un tipo de Pago");
-                                $css->Coption(); 
-                                while($DatosTipoPago=$obCon->FetchAssoc($Consulta)){
-                                    $Seleccionado=0;
-                                    if($DatosTipoPago["ID"]=$DatosPago["TipoPago"]){
-                                        $Seleccionado=1;
+                                for($p=1;$p<=$TotalPaginas;$p++){
+                                    if($p==$NumPage){
+                                        $sel=1;
+                                    }else{
+                                        $sel=0;
                                     }
-                                    $css->option("", "", "", $DatosTipoPago["ID"], "", "",$Seleccionado);
-                                        print($DatosTipoPago["TipoPago"]);
-                                    $css->Coption(); 
+
+                                    $css->option("", "", "", $p, "", "",$sel);
+                                        print($p);
+                                    $css->Coption();
+
                                 }
+
                             $css->Cselect();
-                        print("</td>");
+                            if($ResultadosTotales>($PuntoInicio+$Limit)){
+                                $NumPage1=$NumPage+1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`2`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-right" ></i></span>');
+                            }
+                            print("</div>");
+                        }    
+                    $css->Cdiv();
+                $css->Cdiv();
+                   
+                $css->CrearDiv("", "table-responsive mailbox-messages", "", 1, 1);
+                    print('<table class="table table-hover table-striped">');
+                        print('<tbody>');
+                            while($RegistrosTabla=$obCon->FetchAssoc($Consulta)){
+                                
+                                $idItem=$RegistrosTabla["ID"];
+                                
+                                $NombreCompleto= utf8_encode($RegistrosTabla["NombreCompleto"]);
+                                print('<tr>');
+                                    print("<td>");
+                                        print('<button type="button" class="btn btn-warning btn-sm" onclick=FormularioCrearEditarReserva(`2`,`'.$idItem.'`)><i class="fa fa-edit"></i></button>');
+                                    print("</td>");
+                                    print("<td>");
+                                        print('<button type="button" class="btn btn-success btn-sm" onclick=VerReserva(`'.$idItem.'`)><i class="fa fa-eye"></i></button>');
+                                    print("</td>");
+                                    print("<td class='mailbox-name'>");
+                                        print($RegistrosTabla["ID"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".$NombreCompleto."</strong>");
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print($RegistrosTabla["TipoDocumento"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print($RegistrosTabla["NumeroDocumento"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print(($RegistrosTabla["Sexo"]));
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".$RegistrosTabla["NumeroAutorizacion"]."</strong>");
+                                    print("</td>");
+                                    
+                                    print("<td class='mailbox-subject'>");
+                                        print(utf8_encode($RegistrosTabla["Direccion"]." <br>(".$RegistrosTabla["Municipio"]." ".$RegistrosTabla["Departamento"].")"));
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print(($RegistrosTabla["Telefono"]));
+                                    print("</td>");
+                                    
+                                    print("<td class='mailbox-subject'>");
+                                        print(utf8_encode("<strong>".$RegistrosTabla["NombreEstado"]."</strong>"));
+                                    print("</td>");
+                                                                        
+                                print('</tr>');
+
+                            }
+
+                        print('</tbody>');
+                    print('</table>');
+                $css->Cdiv();
+            $css->Cdiv();
+        break;//fin caso 5
+        
+        case 6:// formulario para crear o editar un paciente
+            $TipoFormulario=$obCon->normalizar($_REQUEST["TipoFormulario"]);
+            $idEditar=$obCon->normalizar($_REQUEST["idEditar"]);
+            $DatosReserva=$obCon->DevuelveValores("prefactura_reservas", "ID", $idEditar);
+            $DatosPaciente=$obCon->DevuelveValores("prefactura_paciente", "ID", $DatosReserva["idPaciente"]);
+            $css->CrearTitulo("Crear o Editar una Reserva", "verde");
+            $css->CrearDiv("", "box box-default", "", 1, 1);
+                $css->CrearDiv("", "box-body", "", 1, 1);
+                    $css->CrearDiv("", "row", "", 1, 1);
+                        $css->CrearDiv("", "col-md-12", "", 1, 1);
+                            $css->CrearDiv("", "form-group", "", 1, 1);
+                                print('<label>Seleccione un Paciente</label>');
+                                $css->select("idPaciente", "form-control", "idPaciente", "", "", "", "");
+                                    $sel=0;
+                                    $css->option("", "", "", '', "", "",$sel);
+                                        print("Seleccione un paciente");
+                                    $css->Coption();
+                                    $sel=0;
+                                    if($DatosReserva["idPaciente"]<>''){
+                                        $sel=1;
+                                        $NombreCompleto=$DatosPaciente["PrimerNombre"]." ".$DatosPaciente["PrimerNombre"]." ".$DatosPaciente["PrimerApellido"]." ".$DatosPaciente["SegundoApellido"];
+                                        $css->option("", "", "", $DatosPaciente["ID"], "", "",$sel);
+                                            print($DatosPaciente["ID"]." || ".$NombreCompleto." || ".$DatosPaciente["TipoDocumento"]." || ".$DatosPaciente["NumeroDocumento"]." || ".utf8_encode($DatosPaciente["Direccion"])." || ".$DatosPaciente["Telefono"]);
+                                        $css->Coption();
+                                    }
+                                    
+                                $css->Cselect();
+                            $css->CerrarDiv();                             
+                        $css->CerrarDiv();
                         
+                    $css->CerrarDiv();
+                    //Fin Fila 1
+                    //Inicia Fila 2
+                    $css->CrearDiv("", "row", "", 1, 1);
+                        $css->CrearDiv("", "col-md-3", "", 1, 1);
+                            $css->CrearDiv("", "form-group", "", 1, 1);
+                                print('<label>Número de Autorización</label>');
+                                $css->input("text", "NumeroAutorizacion", "form-control", "NumeroAutorizacion", "Número de Autorización", $DatosReserva["NumeroAutorizacion"], "Numero de autorizacion", "off", "", "");
+                            $css->CerrarDiv(); 
+                            
+                        $css->CerrarDiv(); 
+                        $css->CrearDiv("", "col-md-3", "", 1, 1);
+                            $css->CrearDiv("", "form-group", "", 1, 1);
+                                print('<label>Cantidad de Servicios</label>');
+                                $css->input("text", "CantidadServicios", "form-control", "CantidadServicios", "Cantidad de Servicios", $DatosReserva["CantidadServicios"], "Cantidad de Servicios", "off", "", "");
+                            $css->CerrarDiv(); 
+                            
+                        $css->CerrarDiv();  
+                        $css->CrearDiv("", "col-md-6", "", 1, 1);
+                            $css->CrearDiv("", "form-group", "", 1, 1);
+                                print('<label>Diagnóstico</label>');
+                                $css->select("Cie10", "form-control", "Cie10", "", "", "", "");
+                                    $sel=0;
+                                    $css->option("", "", "", '', "", "",$sel);
+                                        print("Seleccione un diagnostico");
+                                    $css->Coption();
+                                    $sel=0;
+                                    if($DatosReserva["Cie10"]<>''){
+                                        $sel=1;
+                                        $DatosCIE=$obCon->DevuelveValores("salud_cie10", "codigo_sistema", $DatosReserva["Cie10"]);
+                                        
+                                        $css->option("", "", "", $DatosCIE["codigo_sistema"], "", "",$sel);
+                                            print(utf8_encode($DatosCIE["codigo_sistema"]." || ".$DatosCIE["descripcion_cups"]));
+                                        $css->Coption();
+                                    }
+                                    
+                                $css->Cselect();
+                            $css->CerrarDiv(); 
+                            
+                        $css->CerrarDiv();  
                         
-                        print("<td>");
-                            $css->input("number", "ValorTransaccion", "form-control", "ValorTransaccion", "", $DatosPago["valor_transaccion"], "Valor de transaccion", "off", "", "");
-                        print("</td>");
-                        print("<td>");
-                            $css->textarea("Observaciones", "form-control", "Observaciones", "", "Observaciones", "", "");
-                                print($DatosPago["observacion"]);
-                            $css->Ctextarea();
-                        print("</td>");
+                    $css->CerrarDiv(); 
+                    //Fin Fila 2
+                    
+                    //Inicio Fila 3
+                    $css->CrearDiv("", "row", "", 1, 1);
                         
+                        $css->CrearDiv("", "col-md-9", "", 1, 1);
+                            $css->CrearDiv("", "form-group", "", 1, 1);
+                                print('<label>Observaciones</label>');
+                                $css->textarea("Observaciones", "form-control", "Observaciones", "", "Observaciones", "", "");
+                                    print(utf8_encode($DatosReserva["Observaciones"]));
+                                $css->Ctextarea();
+                                
+                            $css->CerrarDiv();                             
+                        $css->CerrarDiv();
                         
-                $css->CierraFilaTabla();
+                        $css->CrearDiv("", "col-md-3", "", 1, 1);
+                            $css->CrearDiv("", "form-group", "", 1, 1);
+                                print('<label>Guardar</label>');
+                                $css->CrearBotonEvento("btnGuardarReserva", "Guardar", 1, "onclick", "ConfirmaGuardarEditarReserva(`$TipoFormulario`,`$idEditar`)", "rojo");
+                            $css->CerrarDiv();                             
+                        $css->CerrarDiv();
+                        
+                    $css->CerrarDiv(); 
+                    //Fin Fila 3
+                $css->CerrarDiv();
+                
+            $css->CerrarDiv();
             
-                $css->CerrarTabla();
+        break;// fin caso 6
+        
+        case 7://Dibuja una Reserva con sus citas y formulario para agregar citas
+            $idReserva=$obCon->normalizar($_REQUEST["idReserva"]);
+            if($idReserva==''){
+                exit("E1;No se recibió el id de la reserva");
+            }
+            $DatosReserva=$obCon->DevuelveValores("prefactura_reservas", "ID", $idReserva);
+            $DatosPaciente=$obCon->DevuelveValores("prefactura_paciente", "ID", $DatosReserva["idPaciente"]);
+            $DatosMunicipio=$obCon->DevuelveValores("catalogo_municipios", "CodigoDANE", $DatosPaciente["CodigoDANE"]);
+            $DatosEps=$obCon->DevuelveValores("salud_eps", "cod_pagador_min", $DatosPaciente["CodEPS"]);
+            $NombreCompleto= utf8_encode($DatosPaciente["PrimerNombre"]." ".$DatosPaciente["SegundoNombre"]." ".$DatosPaciente["PrimerApellido"]." ".$DatosPaciente["SegundoApellido"]);
+            $sql="SELECT COUNT(ID) as TotalCitas FROM prefactura_reservas_citas WHERE idReserva='$idReserva' AND Estado<10";
+            $Validacion=$obCon->FetchAssoc($obCon->Query($sql));
+            $TotalCitasAgregadas=$Validacion["TotalCitas"];
+            $css->CrearTitulo("<strong>Reserva $idReserva</strong>", "azul");
+            $css->CrearDiv("", "col-md-4", "center", 1, 1);
+                $css->CrearDiv("", "box box-widget widget-user-2", "left", 1, 1);
+                    $css->CrearDiv("", "widget-user-header bg-aqua-active", "left", 1, 1);
+                        $css->CrearDiv("", "widget-user-image", "left", 1, 1);
+                            print('<img class="img-circle" src="../../images/usuariostipo.png" alt="User Avatar"></img>');
+                        $css->CerrarDiv();
+                        print('<h4 class="widget-user-username">');
+                            print("<strong>".$NombreCompleto."</strong>");
+                        print('</h4>');
+                    $css->CerrarDiv();   
+                    
+                    $css->CrearDiv("", "box-footer no-padding", "left", 1, 1);
+                        print('<ul class="nav nav-stacked" style="font-size:16px;">');
+                            print('<li><a onclick="CopiarAlPortapapelesID(`#spAutorizacionReserva`);">Autorización <span id="spAutorizacionReserva" class="pull-right" style="font-size:16px;"><strong>'.$DatosReserva["NumeroAutorizacion"].'</strong></span></a></li>');
+                            print('<li><a>No. Servicios Autorizados<span  class="pull-right" style="font-size:16px;"><strong>'.$DatosReserva["CantidadServicios"].'</strong></span></a></li>');
+                            print('<li><a>No. Servicios Disponibles<span id="spServiciosDisponibles" class="pull-right badge bg-blue" style="font-size:16px;"><strong>'.($DatosReserva["CantidadServicios"]-$TotalCitasAgregadas).'</strong></span></a></li>');
+                            print('<li><a>Sexo <span  class="pull-right" style="font-size:16px;"><strong>'.$DatosPaciente["Sexo"].'</strong></span></a></li>');
+                            print('<li><a>Tipo de Documento <span class="pull-right" style="font-size:16px;"><strong>'.$DatosPaciente["TipoDocumento"].'</strong></span></a></li>');
+                            print('<li><a onclick="CopiarAlPortapapelesID(`#spIdentificacionPaciente`);">Numero de Documento <span id="spIdentificacionPaciente" class="pull-right" style="font-size:16px;"><strong>'.$DatosPaciente["NumeroDocumento"].'</strong></span></a></li>');
+                            print('<li><a onclick="CopiarAlPortapapelesID(`#spTelefonoPaciente`);">Teléfono <span id="spTelefonoPaciente" class="pull-right" style="font-size:16px;"><strong>'.$DatosPaciente["Telefono"].'</strong></span></a></li>');
+                            print('<li><a disabled onclick="CopiarAlPortapapelesID(`#spDireccionPaciente`);">Dirección <span  id="spDireccionPaciente" class="pull-right" style="font-size:16px;"><strong>'.utf8_encode($DatosPaciente["Direccion"]).'</strong></span></a></li>');
+                            print('<li><a disabled >Ciudad <span class="pull-right" style="font-size:16px;"><strong>'.utf8_encode($DatosMunicipio["Nombre"]).'</strong></span></a></li>');
+                            print('<li><a disabled >Departamento <span class="pull-right" style="font-size:16px;"><strong>'.utf8_encode($DatosMunicipio["Departamento"]).'</strong></span></a></li>');
+                            print('<li><a disabled >EPS<span class="pull-right" style="font-size:16px;"><strong>'.utf8_encode($DatosEps["nombre_completo"]).'</strong></span></a></li>');
+                           
+                        print('</ul>');
+                    $css->CerrarDiv();
+                $css->CerrarDiv();    
+                
+            $css->CerrarDiv();
+            $css->CrearDiv("", "col-md-8", "center", 1, 1);
+                $css->CrearDiv("DivFormularioCitas", "", "center", 1, 1);
+                    $css->CrearTitulo("<strong>Agregar una Cita</strong>","verde");
+                    $css->CrearDiv("", "box box-default", "", 1, 1);
+                        $css->CrearDiv("", "box-body", "", 1, 1);
+                            $css->CrearDiv("", "row", "", 1, 1);
+                                $css->CrearDiv("", "col-md-12", "", 1, 1);
+                                    $css->CrearDiv("", "form-group", "", 1, 1);
+                                        print('<label>Seleccione un Hospital</label>');
+                                        $css->select("idHospital", "form-control", "idHospital", "", "", "", "");                                            
+                                            $css->option("", "", "", '', "", "");
+                                                print("Seleccione un Hospital");
+                                            $css->Coption();                                            
+                                        $css->Cselect();
+                                    $css->CerrarDiv();                             
+                                $css->CerrarDiv();
+
+                            $css->CerrarDiv();
+                            //Fila 2
+                            $css->CrearDiv("", "row", "", 1, 1);
+                                $css->CrearDiv("", "col-md-6", "", 1, 1);
+                                    $css->CrearDiv("", "form-group", "", 1, 1);
+                                        print('<label>Fecha</label>');
+                                        $css->input("date", "Fecha", "form-control", "Fecha", "Fecha", "", "Fecha", "off", "", "","style='line-height: 15px;'");
+                        
+                                    $css->CerrarDiv();                             
+                                $css->CerrarDiv();
+                                
+                                $css->CrearDiv("", "col-md-6", "", 1, 1);
+                                    $css->CrearDiv("", "form-group", "", 1, 1);
+                                        
+                                                        
+                                        print('<div class="bootstrap-timepicker">
+                                            <div class="form-group">
+                                              <label>Hora:</label>
+
+                                              <div class="input-group">
+                                                <input id="Hora" type="text" class="form-control timepicker">
+
+                                                <div class="input-group-addon">
+                                                  <i class="fa fa-clock-o"></i>
+                                                </div>
+                                              </div>
+                                              <!-- /.input group -->
+                                            </div>
+                                            <!-- /.form group -->
+                                          </div>');
+                                          
+                                       // print('<label>Hora</label>');
+                                       // $css->input("text", "Hora", "form-control", "Hora", "Hora", "", "Hora", "off", "", "","style='line-height: 15px;'");
+                        
+                                    $css->CerrarDiv();                             
+                                $css->CerrarDiv();
+                                
+                                
+
+                            $css->CerrarDiv();
+                            //Fin fila 2
+                            //Fila 3
+                            $css->CrearDiv("", "row", "", 1, 1);
+                                
+                                $css->CrearDiv("", "col-md-8", "", 1, 1);
+                                    $css->CrearDiv("", "form-group", "", 1, 1);
+                                        print('<label>Observaciones</label>');
+                                        $css->textarea("Observaciones", "form-control", "Observaciones", "", "Observaciones", "", "");
+                                            
+                                        $css->Ctextarea();
+                                    $css->CerrarDiv();                             
+                                $css->CerrarDiv();
+                                $css->CrearDiv("", "col-md-4", "", 1, 1);
+                                    $css->CrearDiv("", "form-group", "", 1, 1);
+                                        print('<label>Agregar</label>');
+                                        $css->CrearBotonEvento("btnCrearCita", "Agregar", 1, "onclick", "AgregarCitaAReserva(`$idReserva`)", "naranja");
+                                    $css->CerrarDiv();                             
+                                $css->CerrarDiv();
+                            $css->CerrarDiv();                            
+                            //Fin fila 3
+                            
+                            
+                        $css->CerrarDiv();    
+
+                    $css->CerrarDiv();
+                    
+                $css->CerrarDiv();
+                
+                $css->CrearDiv("DivCitasReserva", "", "center", 1, 1);
+                    
+                $css->CerrarDiv();
+            $css->CerrarDiv();
+        break;//Fin caso 7   
+        
+        case 8://Listar las citas de una reserva
+            $idReserva=$obCon->normalizar($_REQUEST["idReserva"]);
+            if($idReserva==''){
+                exit("E;No se recibió el id de la reserva");
+            }
+            $css->CrearTitulo("<strong>Citas agregadas a la Reserva $idReserva</strong>", "naranja");
+            $sql="SELECT t1.*,
+                    (SELECT t2.Nombre FROM ips t2 WHERE t2.ID=t1.idHospital) as NombreHospital,
+                    (SELECT t2.NIT FROM ips t2 WHERE t2.ID=t1.idHospital) as NITHospital,
+                    (SELECT t2.Direccion FROM ips t2 WHERE t2.ID=t1.idHospital) as DireccionHospital,
+                    (SELECT t2.Municipio FROM ips t2 WHERE t2.ID=t1.idHospital) as MunicipioHospital,
+                    (SELECT t2.Departamento FROM ips t2 WHERE t2.ID=t1.idHospital) as DepartamentoHospital,
+                    (SELECT t3.EstadoCita FROM prefactura_reservas_citas_estados t3 WHERE t3.ID=t1.Estado) as NombreEstadoCita
+                    FROM prefactura_reservas_citas t1 WHERE t1.idReserva='$idReserva' AND Estado<10";
+            $Consulta=$obCon->Query($sql);
             
-            $css->CrearBotonEvento("BtnGuardar", "Editar", 1, "onclick", "ConfirmaEditarPago('$idPago')", "rojo");
+            $css->CrearDiv("", "table-responsive mailbox-messages", "", 1, 1);
+                    print('<table class="table table-hover table-striped">');
+                        print('<tbody>');
+                            while($RegistrosTabla=$obCon->FetchAssoc($Consulta)){
+                                
+                                $idItem=$RegistrosTabla["ID"];
+                                
+                                $NombreCompleto= utf8_encode($RegistrosTabla["NombreHospital"]);
+                                print('<tr>');
+                                    print("<td>");
+                                        $disabled="";
+                                        if($RegistrosTabla["Estado"]>1){
+                                            $disabled="disabled";
+                                        }
+                                        print('<button '.$disabled.' type="button" class="btn btn-success btn-sm" onclick=ConfirmarCita(`'.$idReserva.'`,`'.$idItem.'`)><i class="fa fa-hand-o-up"></i></button>');
+                                    print("</td>");
+                                    print("<td>");
+                                        print('<button type="button" class="btn btn-primary btn-sm" onclick=AdjuntarSoportesCita(`'.$idItem.'`)><i class="fa fa-paperclip"></i></button>');
+                                    print("</td>");
+                                    print("<td class='mailbox-name'>");
+                                        print($RegistrosTabla["ID"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-name'>");
+                                        print($RegistrosTabla["Fecha"]." ".$RegistrosTabla["Hora"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".$NombreCompleto."</strong>");
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print($RegistrosTabla["Observaciones"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print($RegistrosTabla["NombreEstadoCita"]);
+                                    print("</td>");
+                                    print("<td style='font-size:16px;text-align:center;color:red' title='Borrar'>");                             
+                                        $css->li("", "fa  fa-remove", "", "onclick=EliminarCita(`$idReserva`,`1`,`$idItem`) style=font-size:16px;cursor:pointer;text-align:center;color:red");
+                                        $css->Cli();
+                                    print("</td>");                                                                       
+                                print('</tr>');
+
+                            }
+
+                        print('</tbody>');
+                    print('</table>');
+                $css->Cdiv();
             
-        break;// fin caso 4
+        break;//Fin caso 8    
  }
     
           

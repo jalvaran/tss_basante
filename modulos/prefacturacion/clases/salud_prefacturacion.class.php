@@ -41,25 +41,19 @@ class Prefacturacion extends conexion{
         return($DatosEdad);
     }
     
-    public function IngresarPagoTesoreria($Fecha,$CmbEps,$CmbBanco,$NumeroTransaccion,$TipoPago,$ValorTransaccion,$Observaciones,$Soporte,$idUser) {
-        $DatosEps= $this->DevuelveValores("salud_eps", "cod_pagador_min", $CmbEps);
-        $DatosBanco= $this->DevuelveValores("salud_bancos", "ID", $CmbBanco);
-        $tab="salud_tesoreria";
+    public function AgregarCitaReserva($idReserva, $idHospital, $Fecha, $Hora,$Observaciones, $idUser) {
         
-        $Datos["cod_enti_administradora"]=$CmbEps;	
-        $Datos["nom_enti_administradora"]=$DatosEps["nombre_completo"];	
-        $Datos["fecha_transaccion"]=$Fecha;           
-        $Datos["num_transaccion"]=$NumeroTransaccion;		
-        $Datos["banco_transaccion"]=$DatosBanco["banco_transaccion"];		
-        $Datos["num_cuenta_banco"]=$DatosBanco["num_cuenta_banco"];		
-        $Datos["valor_transaccion"]=$ValorTransaccion;		
-        $Datos["Soporte"]=$Soporte;			
-        $Datos["observacion"]=$Observaciones;			
-        $Datos["fecha_hora_registro"]=date("Y-m-d H:i:s");		
-        $Datos["idUser"]=$idUser;			
-        $Datos["valor_legalizar"]=$ValorTransaccion;
-        $Datos["TipoPago"]=$TipoPago;	 
-
+        $tab="prefactura_reservas_citas";
+        
+        $Datos["idReserva"]=$idReserva;	
+        $Datos["idHospital"]=$idHospital;	
+        $Datos["Fecha"]=$Fecha;           
+        $Datos["Hora"]=$Hora;	
+        $Datos["Observaciones"]=$Observaciones;	
+        $Datos["idUser"]=$idUser;		
+        $Datos["Created"]=date("Y-m-d H:i:s");		
+        $Datos["Estado"]=1;		
+        
         $sql=$this->getSQLInsert($tab, $Datos);
         $this->Query($sql);
     }

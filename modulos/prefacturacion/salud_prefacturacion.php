@@ -37,12 +37,16 @@ $css->PageInit($myTitulo);
     $css->section("", "content", "", "");
         $css->CrearDiv("", "row", "left", 1, 1);
          $css->CrearDiv("", "col-md-2", "left", 1, 1);
-            $css->CrearBotonEvento("BtnPacientes", "Pacientes", 1, "onclick", "ListarPacientes()", "verde");
+            $css->CrearBotonEvento("BtnPacientes", "Pacientes", 1, "onclick", "ListarPacientes();idListado=1;", "verde");
             print("<br><br>");
-            $css->CrearBotonEvento("BtnReservas", "Reservas", 1, "onclick", "ListarReservas()", "azul");
-            $css->CrearDiv("", "box box-solid", "left", 1, 1);
+            $css->CrearBotonEvento("BtnReservas", "Reservas", 1, "onclick", "ListarReservas();idListado=2;", "azul");
+            print("<br>");
+            $css->CrearBotonEvento("BtnCitas", "Citas", 1, "onclick", "ListarCitas();idListado=3;", "naranja");
+            print("<br><br>");
+            $css->CrearDiv("DivFiltrosReservas", "box box-solid", "left", 1, 1);
              $css->CrearDiv("", "box-header with-border", "left", 1, 1);
-               print('<h3 class="box-title">Filtros</h3>');
+                
+               print('<h3 class="box-title">Filtros Reservas</h3>');
                
                $css->CrearDiv("", "box-tools", "left", 1, 1);    
                   print('<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
@@ -50,45 +54,59 @@ $css->PageInit($myTitulo);
                       </div>
                   </div>');
         
-                   $css->div("DivFiltrosReservas", "box-body no-padding", "", "", "", "", "");
-                                
-                                //Creamos el Selector que contiene las bases de datos
-                         $css->select("cmbFiltros", "form-control", "cmbFiltros", "", "", "onchange=ListarPagos()"/*funcion js para listar las tablas de  una base de datos*/, "");
+                   $css->div("", "box-body no-padding", "", "", "", "", "");
+                         $css->select("cmbFiltrosReservas", "form-control", "cmbFiltrosReservas", "", "", "onchange=ListarReservas()"/*funcion js para listar las tablas de  una base de datos*/, "");
                             $css->option("", "", "", "", "", "");
                                     print("Todas");
                             $css->Coption();
-                            $css->option("", "", "", "1", "", "");
-                                    print("Pendientes por validar");
-                            $css->Coption();
-
-                            $css->option("", "", "", "2", "", "");
-                                    print("Pendientes por carga de documentos");
-                            $css->Coption();
                             
-                            $css->option("", "", "", "3", "", "");
-                                    print("Autorizadas");
-                            $css->Coption();
-                            
-                            $css->option("", "", "", "4", "", "");
-                                    print("Pendientes por Facturar");
-                            $css->Coption();
-                            
-                            $css->option("", "", "", "5", "", "");
-                                    print("Facturadas");
-                            $css->Coption();
-                            
-                            $css->option("", "", "", "10", "", "");
-                                    print("Anuladas");
-                            $css->Coption();
+                            $sql="SELECT * FROM prefactura_reservas_estados";
+                            $Consulta=$obCon->Query($sql);
+                            while($DatosConsulta=$obCon->FetchAssoc($Consulta)){
+                                $css->option("", "", "", $DatosConsulta["ID"], "", "");
+                                    print($DatosConsulta["EstadoReserva"]);
+                                $css->Coption();
+                            }
                       $css->Cselect();
             
                     $css->Cdiv();
+                $css->Cdiv();
+                
+                $css->CrearDiv("DivFiltrosCitas", "box box-solid", "left", 1, 1);
+             $css->CrearDiv("", "box-header with-border", "left", 1, 1);
+                
+               print('<h3 class="box-title">Filtros Citas</h3>');
+               
+               $css->CrearDiv("", "box-tools", "left", 1, 1);    
+                  print('<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                        </button>
+                      </div>
+                  </div>');
         
-            print('        
-                <!-- /.box-body -->
-              </div>
-              <!-- /.box -->
-            </div>');
+                   $css->div("", "box-body no-padding", "", "", "", "", "");
+                                
+                                //Creamos el Selector que contiene las bases de datos
+                         $css->select("cmbFiltrosCitas", "form-control", "cmbFiltrosCitas", "", "", "onchange=ListarCitas()"/*funcion js para listar las tablas de  una base de datos*/, "");
+                            $css->option("", "", "", "", "", "");
+                                    print("Todas");
+                            $css->Coption();
+                            $sql="SELECT * FROM prefactura_reservas_citas_estados";
+                            $Consulta=$obCon->Query($sql);
+                            while($DatosConsulta=$obCon->FetchAssoc($Consulta)){
+                                $css->option("", "", "", $DatosConsulta["ID"], "", "");
+                                    print($DatosConsulta["EstadoCita"]);
+                                $css->Coption();
+                            }
+                      $css->Cselect();
+            
+                    $css->Cdiv();
+                $css->Cdiv();
+                    
+                
+                
+            $css->Cdiv();
+        
+            
             $css->CrearDiv("", "col-md-10", "left", 1, 1);
                       
             $css->CrearDiv("DivMensajes", "col-md-4", "left", 1, 1);
@@ -107,7 +125,7 @@ $css->PageInit($myTitulo);
                         
                     print('<div class="input-group">'); 
                         
-                        $css->input("text", "TxtBusquedas", "form-control", "TxtBusquedas", "", "", "Buscar", "", "", "onchange=ListarPacientes()");
+                        $css->input("text", "TxtBusquedas", "form-control", "TxtBusquedas", "", "", "Buscar", "", "", "onchange=MostrarListadoSegunID()");
 
                     print('<span class="input-group-addon"><i class="fa fa-fw fa-search"></i></span>
                               </div>');

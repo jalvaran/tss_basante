@@ -43,6 +43,7 @@ class PageConstruct extends html_estruct_class{
                 print('<link rel="stylesheet" href="../../componentes/techno/css/checkts.css">');
                 print('<link rel="stylesheet" href="../../componentes/techno/css/css_ts.css">');                 
                 print('<link rel="stylesheet" href="../../componentes/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css">'); 
+                print('<link rel="stylesheet" href="../../plugins/timepicker/bootstrap-timepicker.min.css">'); 
                 print("<link rel='stylesheet' href='../../componentes/alertify/themes/alertify.core.css' />");
                 print("<link rel='stylesheet' href='../../componentes/alertify/themes/alertify.default.css' id='toggleCSS' />");
                 print('<link rel="stylesheet" href="../../componentes/select2/dist/css/select2.min.css">');       
@@ -712,6 +713,7 @@ class PageConstruct extends html_estruct_class{
         print('<script src="../../componentes/fastclick/lib/fastclick.js"></script>');
         print('<script src="../../componentes/alertify/lib/alertify.min.js"></script>');
         print('<script src="../../componentes/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>');
+        print('<script src="../../plugins/timepicker/bootstrap-timepicker.min.js"></script>');
         
         print('<script src="../../dist/js/adminlte.min.js"></script>');
         print('<script src="../../dist/js/admintss.js"></script>');

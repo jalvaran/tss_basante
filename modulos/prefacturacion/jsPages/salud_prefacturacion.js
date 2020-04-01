@@ -3,15 +3,28 @@
  * JULIAN ANDRES ALVARAN
  * 2020-02-16
  */
-
+var idListado=1;
 document.getElementById("BtnMuestraMenuLateral").click(); //da click sobre el boton que esconde el menu izquierdo de la pagina principal
 
-/**
- * Funcion que lista las tablas de una base de datos
- * @returns {undefined}
- */
- 
-
+function CopiarAlPortapapelesID(idElemento){
+    var $temp = $("<input>");
+    $("body").append($temp);
+    $temp.val($(idElemento).text()).select();
+    document.execCommand("copy");
+    alertify.success("Texto Copiado: "+$(idElemento).text());
+    $temp.remove();
+}
+function MostrarListadoSegunID(){
+    if(idListado==1){
+        ListarPacientes();
+    }
+    if(idListado==2){
+        ListarReservas();
+    }
+    if(idListado==1){
+        ListarCitas();
+    }
+}
 function ListarPacientes(Page=1){
     var idDiv="DivGeneralDraw";
     document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
@@ -327,8 +340,390 @@ function CambiePagina(Funcion,Page=""){
     if(Funcion==1){
         ListarPacientes(Page);
     }
+    if(Funcion==2){
+        ListarReservas(Page);
+    }
+    if(Funcion==3){
+        ListarCitas(Page);
+    }
     
 }
 
-ListarPacientes();
+function ListarReservas(Page=1){
+    var idDiv="DivGeneralDraw";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+    
+    var Busquedas =document.getElementById("TxtBusquedas").value;
+    var Estado =document.getElementById("cmbFiltrosReservas").value;
+    
+    var form_data = new FormData();
+        form_data.append('Accion', 5);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('Page', Page);
+        form_data.append('Busquedas', Busquedas);
+        form_data.append('Estado', Estado);
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos                      
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+
+function FormularioCrearEditarReserva(TipoFormulario=1,idEditar=0){
+    var idDiv="DivGeneralDraw";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+        
+    var form_data = new FormData();
+        form_data.append('Accion', 6);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('TipoFormulario', TipoFormulario);
+        form_data.append('idEditar', idEditar);
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data; 
+            
+            $('#idPaciente').select2({
+		  
+                placeholder: 'Selecciona un paciente',
+                ajax: {
+                  url: 'buscadores/prefactura_paciente.search.php',
+                  dataType: 'json',
+                  delay: 250,
+                  processResults: function (data) {
+                      
+                    return {                     
+                      results: data
+                    };
+                  },
+                 cache: true
+                }
+              });
+              
+              $('#Cie10').select2({
+		  
+                placeholder: 'Selecciona un Diagnostico',
+                ajax: {
+                  url: 'buscadores/salud_cie10.search.php',
+                  dataType: 'json',
+                  delay: 250,
+                  processResults: function (data) {
+                      
+                    return {                     
+                      results: data
+                    };
+                  },
+                 cache: true
+                }
+              });
+            
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+
+function ConfirmaGuardarEditarReserva(TipoFormulario=1,idEditar=0){
+    alertify.confirm('Está seguro que desea Guardar?',
+        function (e) {
+            if (e) {
+                
+                CrearEditarReserva(TipoFormulario,idEditar);
+            }else{
+                alertify.error("Se canceló el proceso");
+
+                return;
+            }
+        });
+}
+
+function CrearEditarReserva(TipoFormulario=1,idEditar=0){
+    
+    var idBoton='btnGuardarReserva';
+    document.getElementById(idBoton).disabled=true;
+    var idPaciente=document.getElementById("idPaciente").value;    
+    var NumeroAutorizacion=document.getElementById("NumeroAutorizacion").value;    
+    var CantidadServicios=document.getElementById("CantidadServicios").value;    
+    var Cie10=document.getElementById("Cie10").value;    
+    var Observaciones=document.getElementById("Observaciones").value;  
+      
+    var form_data = new FormData();
+        form_data.append('Accion', '4'); 
+        form_data.append('idPaciente', idPaciente);
+        form_data.append('NumeroAutorizacion', NumeroAutorizacion);
+        form_data.append('CantidadServicios', CantidadServicios);
+        form_data.append('Cie10', Cie10);
+        form_data.append('Observaciones', Observaciones);        
+        form_data.append('TipoFormulario', TipoFormulario);
+        form_data.append('idEditar', idEditar);
+        
+        $.ajax({
+        url: './procesadores/salud_prefacturacion.process.php',
+        //dataType: 'json',
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post',
+        success: function(data){
+            var respuestas = data.split(';'); //Armamos un vector separando los punto y coma de la cadena de texto
+            if(respuestas[0]=="OK"){
+                
+                alertify.success(respuestas[1]);
+                document.getElementById(idBoton).disabled=false;
+                ListarReservas();
+            }else if(respuestas[0]=="E1"){  
+                alertify.error(respuestas[1]);
+                MarqueErrorElemento(respuestas[2]);
+                
+            }else{
+                alertify.alert(data);
+                
+            }
+            document.getElementById(idBoton).disabled=false;         
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            document.getElementById(idBoton).disabled=false;   
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+    
+    }
+    
+    
+
+function VerReserva(idReserva){
+    var idDiv="DivGeneralDraw";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+        
+    var form_data = new FormData();
+        form_data.append('Accion', 7);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('idReserva', idReserva);
+               
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data; 
+            $('#Hora').timepicker({
+                showInputs: false
+              })
+              
+              
+            $('#idHospital').select2({
+		  
+                placeholder: 'Selecciona una ips',
+                ajax: {
+                  url: 'buscadores/ips.search.php',
+                  dataType: 'json',
+                  delay: 250,
+                  processResults: function (data) {
+                      
+                    return {                     
+                      results: data
+                    };
+                  },
+                 cache: true
+                }
+              });
+              ListarCitasReserva(idReserva);
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+function AgregarCitaAReserva(idReserva){
+    var idBoton='btnCrearCita';
+    document.getElementById(idBoton).disabled=true;
+    var idHospital=document.getElementById("idHospital").value;    
+    var Fecha=document.getElementById("Fecha").value;    
+    var Hora=document.getElementById("Hora").value; 
+    var Observaciones=document.getElementById("Observaciones").value;  
+      
+    var form_data = new FormData();
+        form_data.append('Accion', '5'); 
+        form_data.append('idHospital', idHospital);
+        form_data.append('Fecha', Fecha);
+        form_data.append('Hora', Hora);
+        form_data.append('Observaciones', Observaciones); 
+        form_data.append('idReserva', idReserva);
+        
+        $.ajax({
+        url: './procesadores/salud_prefacturacion.process.php',
+        //dataType: 'json',
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post',
+        success: function(data){
+            var respuestas = data.split(';'); //Armamos un vector separando los punto y coma de la cadena de texto
+            if(respuestas[0]=="OK"){
+                
+                alertify.success(respuestas[1]);
+                var ServiciosDisponibles=respuestas[2];
+                document.getElementById(idBoton).disabled=false;
+                document.getElementById('Fecha').value='';
+                ListarCitasReserva(idReserva);
+                ActualizarServiciosDisponibles(ServiciosDisponibles);
+            }else if(respuestas[0]=="E1"){  
+                alertify.error(respuestas[1]);
+                MarqueErrorElemento(respuestas[2]);
+                
+            }else{
+                alertify.alert(data);
+                
+            }
+            document.getElementById(idBoton).disabled=false;         
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            document.getElementById(idBoton).disabled=false;   
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+function ListarCitasReserva(idReserva){
+    var idDiv="DivCitasReserva";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+        
+    var form_data = new FormData();
+        form_data.append('Accion', 8);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('idReserva', idReserva);
+        
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos                      
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+function ActualizarServiciosDisponibles(ServiciosDisponibles){
+    document.getElementById('spServiciosDisponibles').innerHTML=ServiciosDisponibles;
+}
+
+function EliminarCita(idReserva,Tabla,idItem){
+        
+    var form_data = new FormData();
+        form_data.append('Accion', 6);
+        form_data.append('Tabla', Tabla);
+        form_data.append('idItem', idItem);
+        form_data.append('idReserva', idReserva);
+        $.ajax({
+        url: './procesadores/salud_prefacturacion.process.php',
+        //dataType: 'json',
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post',
+        success: function(data){
+            var respuestas = data.split(';'); 
+            if(respuestas[0]=="OK"){
+                
+                alertify.error(respuestas[1]);
+                var ServiciosDisponibles=respuestas[2];  
+                ListarCitasReserva(idReserva);
+                ActualizarServiciosDisponibles(ServiciosDisponibles);
+            }else if(respuestas[0]=="E1"){  
+                alertify.error(respuestas[1]);
+                                
+            }else{
+                alertify.alert(data);
+                
+            }
+            
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+function ConfirmarCita(idReserva,idItem){
+        
+    var form_data = new FormData();
+        form_data.append('Accion', 7);        
+        form_data.append('idItem', idItem);
+        form_data.append('idReserva', idReserva);
+        $.ajax({
+        url: './procesadores/salud_prefacturacion.process.php',
+        //dataType: 'json',
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post',
+        success: function(data){
+            var respuestas = data.split(';'); 
+            if(respuestas[0]=="OK"){
+                
+                alertify.success(respuestas[1]);
+                 
+                ListarCitasReserva(idReserva);
+                
+            }else if(respuestas[0]=="E1"){  
+                alertify.error(respuestas[1]);
+                                
+            }else{
+                alertify.alert(data);
+                
+            }
+            
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+MostrarListadoSegunID();
 
