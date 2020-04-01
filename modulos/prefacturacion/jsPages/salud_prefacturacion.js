@@ -1071,11 +1071,16 @@ function ListarCitas(Page=1){
     
     var Busquedas =document.getElementById("TxtBusquedas").value;
     var Estado =document.getElementById("cmbFiltrosCitas").value;
+    var FechaInicialRangos =document.getElementById("FechaInicialRangos").value;
+    var FechaFinalRangos =document.getElementById("FechaFinalRangos").value;
+    
     var form_data = new FormData();
         form_data.append('Accion', 13);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
         form_data.append('Page', Page);
         form_data.append('Busquedas', Busquedas);
         form_data.append('Estado', Estado);
+        form_data.append('FechaInicialRangos', FechaInicialRangos);
+        form_data.append('FechaFinalRangos', FechaFinalRangos);
                 
        $.ajax({// se arma un objecto por medio de ajax  
         url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto

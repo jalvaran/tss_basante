@@ -114,11 +114,11 @@ $css->PageInit($myTitulo);
             $css->CerrarDiv();
             $css->CrearDiv("", "col-md-2", "right", 1, 1); 
                 
-                //$css->input("date", "FechaInicialRangos", "form-control", "FechaInicialRangos", "Fecha", "", "Fecha Inicial", "off", "", "onchange=CambiePagina()","style='line-height: 15px;'");
+                $css->input("date", "FechaInicialRangos", "form-control", "FechaInicialRangos", "Fecha", "", "Fecha Inicial", "off", "", "onchange=MostrarListadoSegunID()","style='line-height: 15px;'");
                 
             $css->CerrarDiv();
             $css->CrearDiv("", "col-md-2", "right", 1, 1); 
-                //$css->input("date", "FechaFinalRangos", "form-control", "FechaFinalRangos", "Fecha", "", "Fecha Final", "off", "", "onchange=CambiePagina()","style='line-height: 15px;'");
+                $css->input("date", "FechaFinalRangos", "form-control", "FechaFinalRangos", "Fecha", "", "Fecha Final", "off", "", "onchange=MostrarListadoSegunID()","style='line-height: 15px;'");
                 
             $css->CerrarDiv();
             $css->CrearDiv("", "box-tools pull-right", "left", 1, 1);      

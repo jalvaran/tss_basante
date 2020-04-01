@@ -1222,6 +1222,8 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             }
             $Busquedas=$obCon->normalizar($_REQUEST["Busquedas"]);
             $Estado=$obCon->normalizar($_REQUEST["Estado"]);
+            $FechaInicialRangos=$obCon->normalizar($_REQUEST["FechaInicialRangos"]);
+            $FechaFinalRangos=$obCon->normalizar($_REQUEST["FechaFinalRangos"]);
             $Condicion=" WHERE ID>0 ";
             
             if($Busquedas<>''){
@@ -1232,6 +1234,12 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                 $Condicion.=" AND Estado='$Estado'";
             }
             
+            if($FechaInicialRangos<>''){
+                $Condicion.=" AND Fecha>='$FechaInicialRangos'";
+            }
+            if($FechaFinalRangos<>''){
+                $Condicion.=" AND Fecha<='$FechaFinalRangos'";
+            }
             $PuntoInicio = ($Page * $Limit) - $Limit;
             
             $sql = "SELECT COUNT(ID) as Items 
@@ -1303,6 +1311,10 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                     print("</td>");
                                     print("<td>");
                                         print('<button type="button" class="btn btn-primary btn-sm" onclick=FormularioAdjuntarDocumentosCita(`'.$idItem.'`,`2`)><i class="fa fa-paperclip"></i></button>');
+                                    print("</td>");
+                                    
+                                    print("<td>");
+                                        print('<a class="btn btn-danger btn-sm" href="#" target="_blank"><i class="fa fa-file-pdf-o"></i></a>');
                                     print("</td>");
                                     
                                     print("<td class='mailbox-name'>");
