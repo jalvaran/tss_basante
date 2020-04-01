@@ -898,5 +898,165 @@ function EliminarValidacion(idReserva,Tabla,idItem){
       });
 }
 
+function FormularioAdjuntarDocumentosCita(idCita){
+    AbreModal('ModalAcciones');
+    OcultaXID('BntModalAcciones');
+    OcultaXID('btnCerrarModal');
+    var idDiv="DivFrmModalAcciones";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+        
+    var form_data = new FormData();
+        form_data.append('Accion', 11);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('idCita', idCita);
+        
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){   
+            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos 
+            ListarAdjuntosCita(idCita);
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+function AdjuntarDocumentoCita(idCita,idReserva,ListaAActualizar=1){
+    var idBoton='btnAdjuntar';
+    document.getElementById(idBoton).disabled=true;
+    document.getElementById(idBoton).value="Guardando...";
+    
+    var form_data = new FormData();
+        form_data.append('Accion', 10);
+        form_data.append('idCita', idCita);        
+        form_data.append('upSoporte', $('#upSoporte').prop('files')[0]);
+        
+                
+    $.ajax({
+        //async:false,
+        url: './procesadores/salud_prefacturacion.process.php',
+        //dataType: 'json',
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post',
+        success: function(data){
+            var respuestas = data.split(';'); 
+           if(respuestas[0]==="OK"){   
+                
+                document.getElementById(idBoton).disabled=false;
+                document.getElementById(idBoton).value="Adjuntar";
+                alertify.success(respuestas[1]);
+                ListarAdjuntosCita(idCita);
+                if(ListaAActualizar==1){
+                    ListarCitasReserva(idReserva);
+                }else{
+                    ListarCitas();
+                }
+                document.getElementById("upSoporte").value="";
+            }else if(respuestas[0]==="E1"){
+                
+                alertify.alert(respuestas[1]);
+                MarqueErrorElemento(respuestas[2]);
+                document.getElementById(idBoton).disabled=false;
+                document.getElementById(idBoton).value="Adjuntar";
+                return;                
+            }else{
+                
+                alertify.alert(data);
+                document.getElementById(idBoton).disabled=false;
+                document.getElementById(idBoton).value="Adjuntar";
+            }
+            
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            
+            document.getElementById(idBoton).disabled=false;
+            document.getElementById(idBoton).value="Adjuntar";
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      })
+}
+
+function ListarAdjuntosCita(idCita){
+    var idDiv="DivAdjuntosCita";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+        
+    var form_data = new FormData();
+        form_data.append('Accion', 12);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('idCita', idCita);
+        
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos                      
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+function EliminarAdjuntoCita(idReserva,idCita,Tabla,idItem){
+        
+    var form_data = new FormData();
+        form_data.append('Accion', 11);
+        form_data.append('Tabla', Tabla);
+        form_data.append('idItem', idItem);
+        form_data.append('idReserva', idReserva);
+        form_data.append('idCita', idCita);
+        $.ajax({
+        url: './procesadores/salud_prefacturacion.process.php',
+        //dataType: 'json',
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post',
+        success: function(data){
+            var respuestas = data.split(';'); 
+            if(respuestas[0]=="OK"){
+                
+                alertify.error(respuestas[1]);
+                
+                ListarAdjuntosCita(idCita);
+                ListarCitasReserva(idReserva);
+            }else if(respuestas[0]=="E1"){  
+                alertify.error(respuestas[1]);
+                                
+            }else{
+                alertify.alert(data);
+                
+            }
+            
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
 MostrarListadoSegunID();
 

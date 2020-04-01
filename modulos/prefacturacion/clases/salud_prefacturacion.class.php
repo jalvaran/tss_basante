@@ -77,6 +77,24 @@ class Prefacturacion extends conexion{
         $this->Query($sql);
     }
     
+    public function AdjuntarDocumentoCita($idCita,$destino,$Tamano, $NombreArchivo, $Extension, $idUser) {
+        
+        $tab="prefactura_reservas_citas_adjuntos";
+        
+        $Datos["idCita"]=$idCita;
+        
+        $Datos["Ruta"]=$destino;    
+        $Datos["NombreArchivo"]=$NombreArchivo;    
+        $Datos["Extension"]=$Extension;    
+        $Datos["Tamano"]=$Tamano; 
+        $Datos["idUser"]=$idUser;		
+        $Datos["Created"]=date("Y-m-d H:i:s");		
+        	
+        
+        $sql=$this->getSQLInsert($tab, $Datos);
+        $this->Query($sql);
+    }
+    
    
     /**
      * Fin Clase

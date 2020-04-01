@@ -901,7 +901,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                         print('<button '.$disabled.' type="button" class="btn btn-success btn-sm" onclick=ConfirmarCita(`'.$idReserva.'`,`'.$idItem.'`)><i class="fa fa-hand-o-up"></i></button>');
                                     print("</td>");
                                     print("<td>");
-                                        print('<button type="button" class="btn btn-primary btn-sm" onclick=AdjuntarSoportesCita(`'.$idItem.'`)><i class="fa fa-paperclip"></i></button>');
+                                        print('<button type="button" class="btn btn-primary btn-sm" onclick=FormularioAdjuntarDocumentosCita(`'.$idItem.'`)><i class="fa fa-paperclip"></i></button>');
                                     print("</td>");
                                     print("<td class='mailbox-name'>");
                                         print($RegistrosTabla["ID"]);
@@ -1075,6 +1075,139 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             
         break;//fin caso 10    
         
+        case 11://Dibuja formulario para agregar adjuntos a una cita
+            $idCita=$obCon->normalizar($_REQUEST["idCita"]);
+            if($idCita==''){
+                exit("E1;No se recibió el id de la cita");
+            }
+            $DatosCita=$obCon->DevuelveValores("prefactura_reservas_citas", "ID", $idCita);
+            $idReserva=$DatosCita["idReserva"];
+            $DatosHospital=$obCon->DevuelveValores("ips", "ID", $DatosCita["idHospital"]);
+            $DatosReserva=$obCon->DevuelveValores("prefactura_reservas", "ID", $DatosCita["idReserva"]);
+            $DatosPaciente=$obCon->DevuelveValores("prefactura_paciente", "ID", $DatosReserva["idPaciente"]);
+            $DatosMunicipio=$obCon->DevuelveValores("catalogo_municipios", "CodigoDANE", $DatosPaciente["CodigoDANE"]);
+            $DatosEps=$obCon->DevuelveValores("salud_eps", "cod_pagador_min", $DatosPaciente["CodEPS"]);
+            $NombreCompleto= utf8_encode($DatosPaciente["PrimerNombre"]." ".$DatosPaciente["SegundoNombre"]." ".$DatosPaciente["PrimerApellido"]." ".$DatosPaciente["SegundoApellido"]);
+            
+            $css->CrearTitulo("<strong>Adjuntar los Documentos de la Cita $idCita</strong>", "azul");
+            $css->CrearDiv("", "col-md-4", "center", 1, 1);
+                $css->CrearDiv("", "box box-widget widget-user-2", "left", 1, 1);
+                    $css->CrearDiv("", "widget-user-header bg-aqua-active", "left", 1, 1);
+                        $css->CrearDiv("", "widget-user-image", "left", 1, 1);
+                            print('<img class="img-circle" src="../../images/usuariostipo.png" alt="User Avatar"></img>');
+                        $css->CerrarDiv();
+                        print('<h4 class="widget-user-username">');
+                            print("<strong>".$NombreCompleto."</strong>");
+                        print('</h4>');
+                    $css->CerrarDiv();   
+                    
+                    $css->CrearDiv("", "box-footer no-padding", "left", 1, 1);
+                        print('<ul class="nav nav-stacked" style="font-size:16px;">');
+                            print('<li><a>Fecha y Hora <span class="pull-right" style="font-size:16px;"><strong>'.$DatosCita["Fecha"].' '.$DatosCita["Hora"].' </strong></span></a></li>');
+                            print('<li><a>Hospital <span  class="pull-right" style="font-size:16px;"><strong>'.$DatosHospital["Nombre"].'</strong></span></a></li>');
+                            print('<li><a onclick="CopiarAlPortapapelesID(`#spAutorizacionReserva`);">Autorización <span id="spAutorizacionReserva" class="pull-right" style="font-size:16px;"><strong>'.$DatosReserva["NumeroAutorizacion"].'</strong></span></a></li>');
+                            print('<li><a>No. Servicios Autorizados<span  class="pull-right" style="font-size:16px;"><strong>'.$DatosReserva["CantidadServicios"].'</strong></span></a></li>');
+                            //print('<li><a>No. Servicios Disponibles<span id="spServiciosDisponibles" class="pull-right badge bg-blue" style="font-size:16px;"><strong>'.($DatosReserva["CantidadServicios"]-$TotalCitasAgregadas).'</strong></span></a></li>');
+                            print('<li><a>Sexo <span  class="pull-right" style="font-size:16px;"><strong>'.$DatosPaciente["Sexo"].'</strong></span></a></li>');
+                            print('<li><a>Tipo de Documento <span class="pull-right" style="font-size:16px;"><strong>'.$DatosPaciente["TipoDocumento"].'</strong></span></a></li>');
+                            print('<li><a onclick="CopiarAlPortapapelesID(`#spIdentificacionPaciente`);">Numero de Documento <span id="spIdentificacionPaciente" class="pull-right" style="font-size:16px;"><strong>'.$DatosPaciente["NumeroDocumento"].'</strong></span></a></li>');
+                            print('<li><a onclick="CopiarAlPortapapelesID(`#spTelefonoPaciente`);">Teléfono <span id="spTelefonoPaciente" class="pull-right" style="font-size:16px;"><strong>'.$DatosPaciente["Telefono"].'</strong></span></a></li>');
+                            print('<li><a disabled onclick="CopiarAlPortapapelesID(`#spDireccionPaciente`);">Dirección <span  id="spDireccionPaciente" class="pull-right" style="font-size:16px;"><strong>'.utf8_encode($DatosPaciente["Direccion"]).'</strong></span></a></li>');
+                            print('<li><a disabled >Ciudad <span class="pull-right" style="font-size:16px;"><strong>'.utf8_encode($DatosMunicipio["Nombre"]).'</strong></span></a></li>');
+                            print('<li><a disabled >Departamento <span class="pull-right" style="font-size:16px;"><strong>'.utf8_encode($DatosMunicipio["Departamento"]).'</strong></span></a></li>');
+                            print('<li><a disabled >EPS<span class="pull-right" style="font-size:16px;"><strong>'.utf8_encode($DatosEps["nombre_completo"]).'</strong></span></a></li>');
+                           
+                        print('</ul>');
+                    $css->CerrarDiv();
+                $css->CerrarDiv();    
+                
+            $css->CerrarDiv();
+            $css->CrearDiv("", "col-md-8", "center", 1, 1);
+                $css->CrearDiv("DivFormularioValidacion", "", "center", 1, 1);
+                    $css->CrearTitulo("<strong>Adjuntar Documento</strong>","verde");
+                    $css->CrearDiv("", "box box-default", "", 1, 1);
+                        $css->CrearDiv("", "box-body", "", 1, 1);
+                            
+                            //Fila 1
+                            $css->CrearDiv("", "row", "", 1, 1);
+                                
+                                $css->CrearDiv("", "col-md-6", "", 1, 1);
+                                    $css->CrearDiv("", "form-group", "", 1, 1);
+                                        print('<label>Soporte</label>');
+                                        $css->input("file", "upSoporte", "form-control", "upSoporte", "", "Subir Soporte", "Subir Soporte", "off", "", "");
+                                        
+                                    $css->CerrarDiv();                             
+                                $css->CerrarDiv();
+                                $css->CrearDiv("", "col-md-6", "", 1, 1);
+                                    $css->CrearDiv("", "form-group", "", 1, 1);
+                                        print('<label>Adjuntar</label>');
+                                        
+                                        $css->CrearBotonEvento("btnAdjuntar", "Adjuntar", 1, "onclick", "AdjuntarDocumentoCita(`$idCita`,`$idReserva`)", "verde");
+                                    $css->CerrarDiv();                             
+                                $css->CerrarDiv();
+
+                            $css->CerrarDiv();
+                            //Fin fila 1
+                        $css->CerrarDiv();    
+
+                    $css->CerrarDiv();
+                    
+                $css->CerrarDiv();
+                
+                $css->CrearDiv("DivAdjuntosCita", "", "center", 1, 1);
+                    
+                $css->CerrarDiv();
+            $css->CerrarDiv();
+            print("<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>");
+        break;//Fin caso 11
+        
+        case 12;//Dibujar los adjuntos de una cita
+            $idCita=$obCon->normalizar($_REQUEST["idCita"]);
+            if($idCita==''){
+                exit("E;No se recibió el id de la cita");
+            }
+            $DatosCita=$obCon->DevuelveValores("prefactura_reservas_citas", "ID", $idCita);
+            $idReserva=$DatosCita["idReserva"];
+            $css->CrearTitulo("<strong>Documentos adjuntados a la cita $idCita</strong>", "naranja");
+            $sql="SELECT t1.*,
+                    (SELECT CONCAT(t2.Nombre,t2.Apellido) FROM usuarios t2 WHERE t2.idUsuarios=t1.idUser) as NombreUsuario
+                    
+                    FROM prefactura_reservas_citas_adjuntos t1 WHERE t1.idCita='$idCita'";
+            $Consulta=$obCon->Query($sql);
+            
+            $css->CrearDiv("", "table-responsive mailbox-messages", "", 1, 1);
+                    print('<table class="table table-hover table-striped">');
+                        print('<tbody>');
+                            while($RegistrosTabla=$obCon->FetchAssoc($Consulta)){
+                                
+                                $idItem=$RegistrosTabla["ID"];
+                                
+                                $NombreCompleto= utf8_encode($RegistrosTabla["NombreUsuario"]);
+                                print('<tr>');
+                                    
+                                    print("<td class='mailbox-subject'>");
+                                        print('<a href="'.substr($RegistrosTabla["Ruta"], 3).'" target="blank" class="mailbox-attachment-name"><i class="fa fa-paperclip"></i> '.$RegistrosTabla["NombreArchivo"].'</a>');
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".$NombreCompleto."</strong>");
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print($RegistrosTabla["Created"]);
+                                    print("</td>");
+                                    print("<td style='font-size:16px;text-align:center;color:red' title='Borrar'>");                             
+                                        $css->li("", "fa  fa-remove", "", "onclick=EliminarAdjuntoCita(`$idReserva`,`$idCita`,`1`,`$idItem`) style=font-size:16px;cursor:pointer;text-align:center;color:red");
+                                        $css->Cli();
+                                    print("</td>");                                                                       
+                                print('</tr>');
+
+                            }
+
+                        print('</tbody>');
+                    print('</table>');
+                $css->Cdiv();
+            
+            
+        break;//fin caso 12
  }
     
           

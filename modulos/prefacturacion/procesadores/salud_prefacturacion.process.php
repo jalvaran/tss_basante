@@ -265,7 +265,11 @@ if( !empty($_REQUEST["Accion"]) ){
                 if (!file_exists($carpeta)) {
                     mkdir($carpeta, 0777);
                 }
-                $carpeta="../../../SoportesSalud/SoportesPrefacturacion/$idReserva/";
+                $carpeta="../../../SoportesSalud/SoportesPrefacturacion/Reservas/";
+                if (!file_exists($carpeta)) {
+                    mkdir($carpeta, 0777);
+                }
+                $carpeta="../../../SoportesSalud/SoportesPrefacturacion/Reservas/$idReserva/";
                 if (!file_exists($carpeta)) {
                     mkdir($carpeta, 0777);
                 }
@@ -318,6 +322,73 @@ if( !empty($_REQUEST["Accion"]) ){
             
         break;//Fin caso 9
         
+        case 10://Adjuntar un documento a una cita
+            $idCita=$obCon->normalizar($_REQUEST["idCita"]);
+            
+            if($idCita==''){
+                exit("E1;No se recibió el id de la Reserva");
+            }
+            
+            $Extension="";
+            if(!empty($_FILES['upSoporte']['name'])){
+                
+                $info = new SplFileInfo($_FILES['upSoporte']['name']);
+                $Extension=($info->getExtension());  
+                $Tamano=filesize($_FILES['upSoporte']['tmp_name']);
+                $carpeta="../../../SoportesSalud/SoportesPrefacturacion/";
+                if (!file_exists($carpeta)) {
+                    mkdir($carpeta, 0777);
+                }
+                $carpeta="../../../SoportesSalud/SoportesPrefacturacion/Citas/";
+                if (!file_exists($carpeta)) {
+                    mkdir($carpeta, 0777);
+                }
+                $carpeta="../../../SoportesSalud/SoportesPrefacturacion/Citas/$idCita/";
+                if (!file_exists($carpeta)) {
+                    mkdir($carpeta, 0777);
+                }
+                opendir($carpeta);
+                $idAdjunto=uniqid(true);
+                $destino=$carpeta.$idCita."_".$idAdjunto.".".$Extension;
+                
+                move_uploaded_file($_FILES['upSoporte']['tmp_name'],$destino);
+                
+            }else{
+                exit("E1;Debe adjuntar un documento;upSoporte");
+            }
+            
+            $DatosCita=$obCon->DevuelveValores("prefactura_reservas_citas", "ID", $idCita);
+            if($DatosCita["Estado"]<=2){
+                $obCon->ActualizaRegistro("prefactura_reservas_citas", "Estado", 3, "ID", $idCita);
+            }
+            $obCon->AdjuntarDocumentoCita($idCita, $destino, $Tamano, $_FILES['upSoporte']['name'], $Extension, $idUser);
+            exit("OK;Documento Adjuntado a la cita $idCita");
+        break;//Fin caso 10
+        
+        case 11://Eliminar un adjunto de una cita
+            $idItem=$obCon->normalizar($_REQUEST["idItem"]);
+            $idCita=$obCon->normalizar($_REQUEST["idCita"]);
+            
+            if($idCita==''){
+                exit("E1;No se recibió el id de la cita");
+            }
+            if($idItem==''){
+                exit("E1;No se recibió el adjunto a eliminar");
+            }
+            
+            
+            $obCon->BorraReg("prefactura_reservas_citas_adjuntos", "ID", $idItem);  
+            $sql="SELECT COUNT(ID) as TotalAdjuntos FROM prefactura_reservas_citas_adjuntos WHERE idCita='$idCita'";
+            $Validacion=$obCon->FetchAssoc($obCon->Query($sql));
+            $DatosCita=$obCon->DevuelveValores("prefactura_reservas_citas", "ID", $idCita);
+            
+            if($DatosCita["Estado"]<=3 and $Validacion["TotalAdjuntos"]==0){
+                $obCon->ActualizaRegistro("prefactura_reservas_citas", "Estado", 2, "ID", $idCita);
+            }
+            exit("OK;Adjunto Eliminado");
+            
+            
+        break;//Fin caso 11
     }
     
     
