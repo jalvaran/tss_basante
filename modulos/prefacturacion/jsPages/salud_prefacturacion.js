@@ -26,7 +26,7 @@ function MostrarListadoSegunID(){
     if(idListado==2){
         ListarReservas();
     }
-    if(idListado==1){
+    if(idListado==3){
         ListarCitas();
     }
 }
@@ -898,7 +898,7 @@ function EliminarValidacion(idReserva,Tabla,idItem){
       });
 }
 
-function FormularioAdjuntarDocumentosCita(idCita){
+function FormularioAdjuntarDocumentosCita(idCita,ListaAActualizar=1){
     AbreModal('ModalAcciones');
     OcultaXID('BntModalAcciones');
     OcultaXID('btnCerrarModal');
@@ -908,7 +908,7 @@ function FormularioAdjuntarDocumentosCita(idCita){
     var form_data = new FormData();
         form_data.append('Accion', 11);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
         form_data.append('idCita', idCita);
-        
+        form_data.append('ListaAActualizar', ListaAActualizar);
                 
        $.ajax({// se arma un objecto por medio de ajax  
         url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
@@ -921,7 +921,7 @@ function FormularioAdjuntarDocumentosCita(idCita){
         success: function(data){   
             
             document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos 
-            ListarAdjuntosCita(idCita);
+            ListarAdjuntosCita(idCita,ListaAActualizar);
              },
         error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
             
@@ -938,7 +938,8 @@ function AdjuntarDocumentoCita(idCita,idReserva,ListaAActualizar=1){
     
     var form_data = new FormData();
         form_data.append('Accion', 10);
-        form_data.append('idCita', idCita);        
+        form_data.append('idCita', idCita); 
+        
         form_data.append('upSoporte', $('#upSoporte').prop('files')[0]);
         
                 
@@ -958,7 +959,7 @@ function AdjuntarDocumentoCita(idCita,idReserva,ListaAActualizar=1){
                 document.getElementById(idBoton).disabled=false;
                 document.getElementById(idBoton).value="Adjuntar";
                 alertify.success(respuestas[1]);
-                ListarAdjuntosCita(idCita);
+                ListarAdjuntosCita(idCita,ListaAActualizar);
                 if(ListaAActualizar==1){
                     ListarCitasReserva(idReserva);
                 }else{
@@ -990,13 +991,14 @@ function AdjuntarDocumentoCita(idCita,idReserva,ListaAActualizar=1){
       })
 }
 
-function ListarAdjuntosCita(idCita){
+function ListarAdjuntosCita(idCita,ListadoAActualizar=1){
     var idDiv="DivAdjuntosCita";
     document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
         
     var form_data = new FormData();
         form_data.append('Accion', 12);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
         form_data.append('idCita', idCita);
+        form_data.append('ListadoAActualizar', ListadoAActualizar);
         
                 
        $.ajax({// se arma un objecto por medio de ajax  
@@ -1018,7 +1020,7 @@ function ListarAdjuntosCita(idCita){
       });
 }
 
-function EliminarAdjuntoCita(idReserva,idCita,Tabla,idItem){
+function EliminarAdjuntoCita(idReserva,idCita,Tabla,idItem,ListadoAActualizar=1){
         
     var form_data = new FormData();
         form_data.append('Accion', 11);
@@ -1040,8 +1042,12 @@ function EliminarAdjuntoCita(idReserva,idCita,Tabla,idItem){
                 
                 alertify.error(respuestas[1]);
                 
-                ListarAdjuntosCita(idCita);
-                ListarCitasReserva(idReserva);
+                ListarAdjuntosCita(idCita,ListadoAActualizar);
+                if(ListadoAActualizar==1){
+                    ListarCitasReserva(idReserva);
+                }else{
+                    ListarCitas();
+                }
             }else if(respuestas[0]=="E1"){  
                 alertify.error(respuestas[1]);
                                 
@@ -1058,5 +1064,36 @@ function EliminarAdjuntoCita(idReserva,idCita,Tabla,idItem){
       });
 }
 
+
+function ListarCitas(Page=1){
+    var idDiv="DivGeneralDraw";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+    
+    var Busquedas =document.getElementById("TxtBusquedas").value;
+    var Estado =document.getElementById("cmbFiltrosCitas").value;
+    var form_data = new FormData();
+        form_data.append('Accion', 13);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('Page', Page);
+        form_data.append('Busquedas', Busquedas);
+        form_data.append('Estado', Estado);
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos                      
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
 MostrarListadoSegunID();
 

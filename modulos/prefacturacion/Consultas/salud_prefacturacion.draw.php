@@ -1077,6 +1077,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
         
         case 11://Dibuja formulario para agregar adjuntos a una cita
             $idCita=$obCon->normalizar($_REQUEST["idCita"]);
+            $ListaAActualizar=$obCon->normalizar($_REQUEST["ListaAActualizar"]);
             if($idCita==''){
                 exit("E1;No se recibió el id de la cita");
             }
@@ -1142,7 +1143,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                     $css->CrearDiv("", "form-group", "", 1, 1);
                                         print('<label>Adjuntar</label>');
                                         
-                                        $css->CrearBotonEvento("btnAdjuntar", "Adjuntar", 1, "onclick", "AdjuntarDocumentoCita(`$idCita`,`$idReserva`)", "verde");
+                                        $css->CrearBotonEvento("btnAdjuntar", "Adjuntar", 1, "onclick", "AdjuntarDocumentoCita(`$idCita`,`$idReserva`,`$ListaAActualizar`)", "verde");
                                     $css->CerrarDiv();                             
                                 $css->CerrarDiv();
 
@@ -1163,6 +1164,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
         
         case 12;//Dibujar los adjuntos de una cita
             $idCita=$obCon->normalizar($_REQUEST["idCita"]);
+            $ListadoAActualizar=$obCon->normalizar($_REQUEST["ListadoAActualizar"]);
             if($idCita==''){
                 exit("E;No se recibió el id de la cita");
             }
@@ -1195,7 +1197,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                         print($RegistrosTabla["Created"]);
                                     print("</td>");
                                     print("<td style='font-size:16px;text-align:center;color:red' title='Borrar'>");                             
-                                        $css->li("", "fa  fa-remove", "", "onclick=EliminarAdjuntoCita(`$idReserva`,`$idCita`,`1`,`$idItem`) style=font-size:16px;cursor:pointer;text-align:center;color:red");
+                                        $css->li("", "fa  fa-remove", "", "onclick=EliminarAdjuntoCita(`$idReserva`,`$idCita`,`1`,`$idItem`,`$ListadoAActualizar`) style=font-size:16px;cursor:pointer;text-align:center;color:red");
                                         $css->Cli();
                                     print("</td>");                                                                       
                                 print('</tr>');
@@ -1208,6 +1210,139 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             
             
         break;//fin caso 12
+        
+        case 13://dibuja el listado de las citas
+                        
+            $Limit=20;
+            $Page=$obCon->normalizar($_REQUEST["Page"]);
+            $NumPage=$obCon->normalizar($_REQUEST["Page"]);
+            if($Page==''){
+                $Page=1;
+                $NumPage=1;
+            }
+            $Busquedas=$obCon->normalizar($_REQUEST["Busquedas"]);
+            $Estado=$obCon->normalizar($_REQUEST["Estado"]);
+            $Condicion=" WHERE ID>0 ";
+            
+            if($Busquedas<>''){
+                $Condicion.=" AND ( NumeroAutorizacion like '%$Busquedas%' or NumeroDocumento like '%$Busquedas%' or NombrePaciente like '%$Busquedas%')";
+            }
+            
+            if($Estado<>''){
+                $Condicion.=" AND Estado='$Estado'";
+            }
+            
+            $PuntoInicio = ($Page * $Limit) - $Limit;
+            
+            $sql = "SELECT COUNT(ID) as Items 
+                   FROM vista_prefactura_reservas_citas t1 $Condicion;";
+            
+            $Consulta=$obCon->Query($sql);
+            $totales = $obCon->FetchAssoc($Consulta);
+            $ResultadosTotales = $totales['Items'];
+                        
+            $sql="SELECT *
+                  FROM vista_prefactura_reservas_citas $Condicion ORDER BY ID DESC LIMIT $PuntoInicio,$Limit;";
+            $Consulta=$obCon->Query($sql);
+            
+            
+            $css->CrearTitulo("Lista de Citas", "naranja");
+            
+            $css->div("", "box-body no-padding", "", "", "", "", "");
+                $css->div("", "mailbox-controls", "", "", "", "", "");
+                    print('<span class="badge bg-orange" style="font-size:14px">'.$ResultadosTotales.'</span>');
+                    $css->div("", "pull-right", "", "", "", "", "");
+                        if($ResultadosTotales>$Limit){
+                            $TotalPaginas= ceil($ResultadosTotales/$Limit);                               
+                            print('<div class="input-group" style=width:150px>');
+                            if($NumPage>1){
+                                $NumPage1=$NumPage-1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`3`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-left"></i></span>');
+                            }
+                            $FuncionJS="onchange=CambiePagina(`3`);";
+                            $css->select("CmbPage", "form-control", "CmbPage", "", "", $FuncionJS, "");
+
+                                for($p=1;$p<=$TotalPaginas;$p++){
+                                    if($p==$NumPage){
+                                        $sel=1;
+                                    }else{
+                                        $sel=0;
+                                    }
+
+                                    $css->option("", "", "", $p, "", "",$sel);
+                                        print($p);
+                                    $css->Coption();
+
+                                }
+
+                            $css->Cselect();
+                            if($ResultadosTotales>($PuntoInicio+$Limit)){
+                                $NumPage1=$NumPage+1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`3`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-right" ></i></span>');
+                            }
+                            print("</div>");
+                        }    
+                    $css->Cdiv();
+                $css->Cdiv();
+                   
+                $css->CrearDiv("", "table-responsive mailbox-messages", "", 1, 1);
+                    print('<table class="table table-hover table-striped">');
+                        print('<tbody>');
+                            while($RegistrosTabla=$obCon->FetchAssoc($Consulta)){
+                                
+                                $idItem=$RegistrosTabla["ID"];
+                                $idReserva=$RegistrosTabla["idReserva"];
+                                $NombreCompleto= utf8_encode($RegistrosTabla["NombrePaciente"]);
+                                print('<tr>');
+                                    print("<td>");
+                                        $disabled="";
+                                        if($RegistrosTabla["Estado"]>1){
+                                            $disabled="disabled";
+                                        }
+                                        print('<button '.$disabled.' type="button" class="btn btn-success btn-sm" onclick=ConfirmarCita(`'.$idReserva.'`,`'.$idItem.'`)><i class="fa fa-hand-o-up"></i></button>');
+                                    print("</td>");
+                                    print("<td>");
+                                        print('<button type="button" class="btn btn-primary btn-sm" onclick=FormularioAdjuntarDocumentosCita(`'.$idItem.'`,`2`)><i class="fa fa-paperclip"></i></button>');
+                                    print("</td>");
+                                    
+                                    print("<td class='mailbox-name'>");
+                                        print($RegistrosTabla["ID"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print(($RegistrosTabla["Fecha"]));
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print(($RegistrosTabla["Hora"]));
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print(($RegistrosTabla["NombreHospital"]));
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".$NombreCompleto."</strong>");
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print($RegistrosTabla["TipoDocumento"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print($RegistrosTabla["NumeroDocumento"]);
+                                    print("</td>");                                     
+                                    print("<td class='mailbox-subject'>");
+                                        print(($RegistrosTabla["Telefono"]));
+                                    print("</td>");
+                                    
+                                    print("<td class='mailbox-subject'>");
+                                        print(utf8_encode("<strong>".$RegistrosTabla["NombreEstado"]."</strong>"));
+                                    print("</td>");
+                                                                        
+                                print('</tr>');
+
+                            }
+
+                        print('</tbody>');
+                    print('</table>');
+                $css->Cdiv();
+            $css->Cdiv();
+        break;//fin caso 13
  }
     
           
