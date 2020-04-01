@@ -1,11 +1,36 @@
--- Adminer 4.6.3 MySQL dump
+-- Adminer 4.7.5 MySQL dump
 
 SET NAMES utf8;
 SET time_zone = '+00:00';
 SET foreign_key_checks = 0;
 SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
 
-DROP TABLE IF EXISTS `centrocosto`;
+CREATE TABLE `catalogo_departamentos` (
+  `ID` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `country_id` bigint(20) unsigned NOT NULL,
+  `Nombre` varchar(255) COLLATE utf8_spanish_ci NOT NULL,
+  `CodigoDANE` char(255) COLLATE utf8_spanish_ci NOT NULL,
+  `Updated` timestamp NULL DEFAULT NULL,
+  `Sync` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `CodigoDANE` (`CodigoDANE`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
+CREATE TABLE `catalogo_municipios` (
+  `ID` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `department_id` bigint(20) unsigned NOT NULL,
+  `Nombre` varchar(255) COLLATE utf8_spanish_ci NOT NULL,
+  `Departamento` varchar(255) COLLATE utf8_spanish_ci NOT NULL,
+  `CodigoDANE` char(255) COLLATE utf8_spanish_ci NOT NULL,
+  `Updated` timestamp NULL DEFAULT NULL,
+  `Sync` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `CodigoDANE` (`CodigoDANE`),
+  KEY `department_id` (`department_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
 CREATE TABLE `centrocosto` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Nombre` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
@@ -16,7 +41,6 @@ CREATE TABLE `centrocosto` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `cierres_contables`;
 CREATE TABLE `cierres_contables` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `Fecha` date NOT NULL,
@@ -27,7 +51,6 @@ CREATE TABLE `cierres_contables` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `ciuu`;
 CREATE TABLE `ciuu` (
   `Codigo` int(11) NOT NULL,
   `Descripcion` varchar(300) COLLATE utf8_spanish_ci NOT NULL,
@@ -37,7 +60,6 @@ CREATE TABLE `ciuu` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `clasecuenta`;
 CREATE TABLE `clasecuenta` (
   `PUC` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
   `Clase` varchar(45) COLLATE utf8_spanish_ci DEFAULT NULL,
@@ -48,7 +70,6 @@ CREATE TABLE `clasecuenta` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `cod_municipios_dptos`;
 CREATE TABLE `cod_municipios_dptos` (
   `ID` varchar(10) COLLATE utf8_spanish_ci NOT NULL,
   `Cod_mcipio` varchar(10) COLLATE utf8_spanish_ci NOT NULL,
@@ -61,7 +82,6 @@ CREATE TABLE `cod_municipios_dptos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `configuraciones_nombres_campos`;
 CREATE TABLE `configuraciones_nombres_campos` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `NombreDB` varchar(50) NOT NULL,
@@ -72,7 +92,6 @@ CREATE TABLE `configuraciones_nombres_campos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 
-DROP TABLE IF EXISTS `configuracion_general`;
 CREATE TABLE `configuracion_general` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Descripcion` text COLLATE utf8_spanish_ci NOT NULL,
@@ -83,7 +102,6 @@ CREATE TABLE `configuracion_general` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `cuentas`;
 CREATE TABLE `cuentas` (
   `idPUC` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
   `Nombre` varchar(45) COLLATE utf8_spanish_ci DEFAULT NULL,
@@ -95,7 +113,6 @@ CREATE TABLE `cuentas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `cuentasfrecuentes`;
 CREATE TABLE `cuentasfrecuentes` (
   `CuentaPUC` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
   `Nombre` varchar(200) COLLATE utf8_spanish_ci NOT NULL,
@@ -107,9 +124,19 @@ CREATE TABLE `cuentasfrecuentes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `empresapro`;
+CREATE TABLE `cuentas_contables` (
+  `PUC` bigint(20) NOT NULL,
+  `Nombre` varchar(100) COLLATE utf8_spanish_ci DEFAULT NULL,
+  `SolicitaBase` int(11) NOT NULL,
+  `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`PUC`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
 CREATE TABLE `empresapro` (
   `idEmpresaPro` int(11) NOT NULL AUTO_INCREMENT,
+  `CentroCostos` varchar(5) COLLATE utf8_spanish_ci NOT NULL,
   `RazonSocial` varchar(45) COLLATE utf8_spanish_ci DEFAULT NULL,
   `NIT` bigint(20) DEFAULT NULL,
   `DV` int(11) NOT NULL,
@@ -131,19 +158,20 @@ CREATE TABLE `empresapro` (
   `CXPAutomaticas` varchar(2) COLLATE utf8_spanish_ci NOT NULL DEFAULT 'SI',
   `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-  PRIMARY KEY (`idEmpresaPro`)
+  PRIMARY KEY (`idEmpresaPro`),
+  KEY `CentroCostos` (`CentroCostos`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `empresapro_regimenes`;
 CREATE TABLE `empresapro_regimenes` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Regimen` varchar(20) COLLATE utf8_spanish_ci NOT NULL,
+  `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `empresa_pro_sucursales`;
 CREATE TABLE `empresa_pro_sucursales` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Nombre` varchar(100) COLLATE utf8_spanish_ci NOT NULL,
@@ -159,23 +187,6 @@ CREATE TABLE `empresa_pro_sucursales` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `estadosfinancieros_mayor_temporal`;
-CREATE TABLE `estadosfinancieros_mayor_temporal` (
-  `ID` int(11) NOT NULL AUTO_INCREMENT,
-  `FechaCorte` date NOT NULL,
-  `Clase` int(11) NOT NULL,
-  `CuentaPUC` bigint(20) NOT NULL,
-  `NombreCuenta` varchar(80) COLLATE utf8_spanish_ci NOT NULL,
-  `SaldoAnterior` double NOT NULL,
-  `Neto` double NOT NULL,
-  `SaldoFinal` double NOT NULL,
-  `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
-
-
-DROP TABLE IF EXISTS `formatos_calidad`;
 CREATE TABLE `formatos_calidad` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Nombre` text COLLATE utf8_spanish_ci NOT NULL,
@@ -190,7 +201,6 @@ CREATE TABLE `formatos_calidad` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `gupocuentas`;
 CREATE TABLE `gupocuentas` (
   `PUC` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
   `Nombre` varchar(45) COLLATE utf8_spanish_ci DEFAULT NULL,
@@ -202,7 +212,29 @@ CREATE TABLE `gupocuentas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `librodiario`;
+CREATE TABLE `ips` (
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+  `Nombre` varchar(60) COLLATE utf8_spanish_ci NOT NULL,
+  `NIT` bigint(20) NOT NULL,
+  `Direccion` varchar(100) COLLATE utf8_spanish_ci NOT NULL,
+  `Departamento` varchar(60) COLLATE utf8_spanish_ci NOT NULL,
+  `Municipio` varchar(120) COLLATE utf8_spanish_ci NOT NULL,
+  `NombresRepresentante` varchar(120) COLLATE utf8_spanish_ci NOT NULL,
+  `ApellidosRepresentante` varchar(120) COLLATE utf8_spanish_ci NOT NULL,
+  `CedulaRepresentante` varchar(120) COLLATE utf8_spanish_ci NOT NULL,
+  `RepresentanteLegal` varchar(120) COLLATE utf8_spanish_ci NOT NULL,
+  `Telefono` varchar(120) COLLATE utf8_spanish_ci NOT NULL,
+  `Correo` varchar(100) COLLATE utf8_spanish_ci NOT NULL,
+  `DataBase` varchar(100) COLLATE utf8_spanish_ci NOT NULL,
+  `iduser` int(11) NOT NULL,
+  `fechaRegistro` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `fechaActualizacion` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
+  `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `DataBase` (`DataBase`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
 CREATE TABLE `librodiario` (
   `idLibroDiario` bigint(20) NOT NULL AUTO_INCREMENT,
   `Fecha` date DEFAULT NULL,
@@ -246,24 +278,6 @@ CREATE TABLE `librodiario` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `libromayorbalances`;
-CREATE TABLE `libromayorbalances` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `FechaInicial` date NOT NULL,
-  `FechaFinal` date NOT NULL,
-  `CuentaPUC` bigint(20) DEFAULT NULL,
-  `NombreCuenta` varchar(45) COLLATE utf8_spanish_ci DEFAULT NULL,
-  `SaldoAnterior` double NOT NULL,
-  `Debito` double DEFAULT NULL,
-  `Credito` double DEFAULT NULL,
-  `NuevoSaldo` double NOT NULL,
-  `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
-
-
-DROP TABLE IF EXISTS `menu`;
 CREATE TABLE `menu` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Nombre` varchar(80) COLLATE utf8_spanish_ci NOT NULL,
@@ -280,7 +294,6 @@ CREATE TABLE `menu` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `menu_carpetas`;
 CREATE TABLE `menu_carpetas` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Ruta` varchar(90) COLLATE utf8_spanish_ci NOT NULL,
@@ -290,7 +303,6 @@ CREATE TABLE `menu_carpetas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `menu_pestanas`;
 CREATE TABLE `menu_pestanas` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Nombre` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
@@ -303,7 +315,6 @@ CREATE TABLE `menu_pestanas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `menu_submenus`;
 CREATE TABLE `menu_submenus` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Nombre` varchar(100) COLLATE utf8_spanish_ci NOT NULL,
@@ -324,7 +335,6 @@ CREATE TABLE `menu_submenus` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `paginas`;
 CREATE TABLE `paginas` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Nombre` varchar(50) COLLATE utf8_spanish_ci NOT NULL,
@@ -336,7 +346,6 @@ CREATE TABLE `paginas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `paginas_bloques`;
 CREATE TABLE `paginas_bloques` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `TipoUsuario` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
@@ -348,7 +357,6 @@ CREATE TABLE `paginas_bloques` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `parametros_contables`;
 CREATE TABLE `parametros_contables` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Descripcion` text COLLATE utf8_spanish_ci NOT NULL,
@@ -360,7 +368,20 @@ CREATE TABLE `parametros_contables` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `parametros_generales`;
+CREATE TABLE `parametros_contables_glosas` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `CuentaPUC` bigint(20) NOT NULL,
+  `DescripcionCuenta` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `TipoCuentaGlosaInicial` enum('D','C') COLLATE utf8_spanish_ci NOT NULL,
+  `TipoCuentaGlosaAceptada` enum('D','C') COLLATE utf8_spanish_ci NOT NULL,
+  `TipoCuentaGlosaLevantada` enum('D','C') COLLATE utf8_spanish_ci NOT NULL,
+  `Regimen` varchar(25) COLLATE utf8_spanish_ci NOT NULL,
+  `Vigencia` int(4) NOT NULL,
+  `idUser` int(11) NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
 CREATE TABLE `parametros_generales` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `KardexCotizacion` bit(1) NOT NULL,
@@ -370,7 +391,6 @@ CREATE TABLE `parametros_generales` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `plataforma_tablas`;
 CREATE TABLE `plataforma_tablas` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `Nombre` varchar(100) COLLATE utf8_spanish_ci NOT NULL,
@@ -380,7 +400,102 @@ CREATE TABLE `plataforma_tablas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `registra_ediciones`;
+CREATE TABLE `prefactura_paciente` (
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+  `TipoDocumento` varchar(2) COLLATE utf8_spanish_ci NOT NULL COMMENT '(CC,CE,PA,RC,TI,AS,MS)',
+  `NumeroDocumento` bigint(20) NOT NULL COMMENT 'Numero del documento',
+  `CodEPS` varchar(15) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Codigo de la eps donde esté afiliado',
+  `idRegimenPaciente` int(11) NOT NULL COMMENT 'id del regimen del paciente',
+  `PrimerNombre` varchar(100) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Primer nombre del Paciente',
+  `SegundoNombre` varchar(100) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Segundo Nombre del paciente',
+  `PrimerApellido` varchar(100) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Primer Apellido del paciente',
+  `SegundoApellido` varchar(100) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Segundo Apellido del paciente',
+  `FechaNacimiento` date NOT NULL COMMENT 'Fecha de nacimiento del paciente',
+  `Sexo` varchar(1) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Sexo del paciente',
+  `Departamento` int(2) NOT NULL COMMENT 'Codigo DANE del Departamento',
+  `Municipio` int(3) NOT NULL COMMENT 'Codigo Dane del Municipio',
+  `CodigoDANE` int(5) NOT NULL COMMENT 'codigo Dane Completo',
+  `ZonaResidencial` varchar(1) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Zona residencial Urbana o Rural',
+  `Direccion` varchar(200) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Direccion del paciente',
+  `Telefono` varchar(200) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Telefono del paciente',
+  `Correo` varchar(200) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Correo del paciente',
+  `idUser` int(11) NOT NULL,
+  `Created` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'Fecha de creacion',
+  `Updated` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP COMMENT 'Fecha de Actualizacion',
+  PRIMARY KEY (`ID`),
+  KEY `TipoDocumento` (`TipoDocumento`),
+  KEY `NumeroDocumento` (`NumeroDocumento`),
+  KEY `CodEPS` (`CodEPS`),
+  KEY `CodigoDANE` (`CodigoDANE`),
+  KEY `Telefono` (`Telefono`),
+  KEY `PrimerApellido` (`PrimerApellido`),
+  KEY `SegundoApellido` (`SegundoApellido`),
+  KEY `idRegimenPaciente` (`idRegimenPaciente`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
+CREATE TABLE `prefactura_regimen_paciente` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `NombreRegimen` varchar(95) COLLATE utf8_spanish_ci NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
+CREATE TABLE `prefactura_reservas` (
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'Identificador de la reserva',
+  `idPaciente` bigint(20) NOT NULL COMMENT 'identificador del paciente',
+  `NumeroAutorizacion` varchar(45) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Autorizacion de la eps',
+  `Cie10` varchar(45) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Diagnostico de la autorizacion',
+  `CantidadServicios` int(11) NOT NULL COMMENT 'Cantidad de servicios que fueron autorizados',
+  `Observaciones` text COLLATE utf8_spanish_ci NOT NULL COMMENT 'Observaciones de la reserva',
+  `Estado` int(11) NOT NULL COMMENT 'Estado en que se encuentra la reserva',
+  `idUser` int(11) NOT NULL,
+  `Created` datetime NOT NULL,
+  `Updated` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`ID`),
+  KEY `idPaciente` (`idPaciente`),
+  KEY `NumeroAutorizacion` (`NumeroAutorizacion`),
+  KEY `Cie10` (`Cie10`),
+  KEY `Estado` (`Estado`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
+CREATE TABLE `prefactura_reservas_citas` (
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+  `idReserva` bigint(20) NOT NULL COMMENT 'id de la reserva',
+  `idHospital` bigint(20) NOT NULL COMMENT 'id del hospital',
+  `Fecha` date NOT NULL COMMENT 'Fecha de la cita',
+  `Hora` varchar(10) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Hora de la Cita',
+  `Observaciones` text COLLATE utf8_spanish_ci NOT NULL COMMENT 'Observaciones de la cita',
+  `Estado` int(11) NOT NULL COMMENT 'Estado de la cita',
+  `idUser` int(11) NOT NULL COMMENT 'usuario creador',
+  `Created` datetime NOT NULL COMMENT 'Fecha y hora del registro',
+  `Updated` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
+CREATE TABLE `prefactura_reservas_citas_estados` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `EstadoCita` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
+CREATE TABLE `prefactura_reservas_estados` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `EstadoReserva` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
+CREATE TABLE `prefactura_unidades_medida_edad` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `NombreUnidad` varchar(10) COLLATE utf8_spanish_ci NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
 CREATE TABLE `registra_ediciones` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `Fecha` date NOT NULL,
@@ -397,7 +512,6 @@ CREATE TABLE `registra_ediciones` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `registra_eliminaciones`;
 CREATE TABLE `registra_eliminaciones` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `Fecha` date NOT NULL,
@@ -416,7 +530,17 @@ CREATE TABLE `registra_eliminaciones` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `respuestas_condicional`;
+CREATE TABLE `registro_actualizacion_facturas` (
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+  `FacturaAnterior` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `FacturaNueva` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `Observaciones` text COLLATE utf8_spanish_ci NOT NULL,
+  `idUser` int(11) NOT NULL,
+  `FechaRegistro` datetime NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
 CREATE TABLE `respuestas_condicional` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Valor` varchar(4) COLLATE utf8_spanish_ci NOT NULL,
@@ -426,7 +550,54 @@ CREATE TABLE `respuestas_condicional` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_archivo_conceptos_glosas`;
+CREATE TABLE `salud_archivo_af_capita` (
+  `id_fac_mov_generados` int(20) NOT NULL AUTO_INCREMENT,
+  `cod_prest_servicio` bigint(12) NOT NULL COMMENT 'Código del prestador de servicios de salud " Ver Alineamientos tecnicos para ips ver pag 12"',
+  `razon_social` varchar(60) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Razón social o apellidos y nombre del prestado  " Ver Alineamientos tecnicos para ips ver pag 12"',
+  `tipo_ident_prest_servicio` enum('NI','CC','CE','PA') COLLATE utf8_spanish_ci NOT NULL COMMENT 'Tipo de identificación del prestador de servicios de salud " Ver Alineamientos tecnicos para ips ver pag 12"',
+  `num_ident_prest_servicio` bigint(20) NOT NULL COMMENT 'Número de identificación del prestador de servicios de salud " Ver Alineamientos tecnicos para ips ver pag 12"',
+  `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura " Ver Alineamientos tecnicos para ips ver pag 12"',
+  `fecha_factura` date NOT NULL COMMENT 'Fecha de expedición de la factura " Ver Alineamientos tecnicos para ips ver pag 13"',
+  `fecha_inicio` date NOT NULL COMMENT 'Fecha de inicio " Ver Alineamientos tecnicos para ips ver pag 13"',
+  `fecha_final` date NOT NULL COMMENT 'Fecha final " Ver Alineamientos tecnicos para ips ver pag 13"',
+  `cod_enti_administradora` varchar(6) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Código entidad administradora " Ver Alineamientos tecnicos para ips ver pag 13"',
+  `nom_enti_administradora` varchar(200) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Nombre entidad administradora " Ver Alineamientos tecnicos para ips ver pag 13" ',
+  `num_contrato` varchar(15) COLLATE utf8_spanish_ci DEFAULT NULL COMMENT 'Número del contrato " Ver Alineamientos tecnicos para ips ver pag 13"',
+  `plan_beneficios` varchar(30) COLLATE utf8_spanish_ci DEFAULT NULL COMMENT 'Plan de beneficios " Ver Alineamientos tecnicos para ips ver pag 13"',
+  `num_poliza` varchar(10) COLLATE utf8_spanish_ci DEFAULT NULL COMMENT 'Número de la póliza " Ver Alineamientos tecnicos para ips ver pag 13" ',
+  `valor_total_pago` double(15,2) NOT NULL COMMENT 'Valor total del pago compartido copago " Ver Alineamientos tecnicos para ips ver pag 14"',
+  `valor_comision` double(15,2) NOT NULL COMMENT 'Valor de la comisión " Ver Alineamientos tecnicos para ips ver pag 14"',
+  `valor_descuentos` double(15,2) NOT NULL COMMENT 'Valor total de descuentos " Ver Alineamientos tecnicos para ips ver pag 14"',
+  `valor_neto_pagar` double(15,2) NOT NULL COMMENT 'Valor neto a pagar por la entidad contratante " Ver Alineamientos tecnicos para ips ver pag 14"',
+  `tipo_negociacion` enum('evento','capita') COLLATE utf8_spanish_ci NOT NULL,
+  `nom_cargue` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Nombre con el que se hizo el cargue al sistema de cartera',
+  `fecha_cargue` datetime NOT NULL COMMENT 'Fecha Y Hora que se hizo el cargue',
+  `idUser` int(11) NOT NULL,
+  `eps_radicacion` varchar(50) COLLATE utf8_spanish_ci DEFAULT NULL COMMENT 'Eps en la que se radico la factura',
+  `dias_pactados` int(2) DEFAULT NULL COMMENT 'Dias que se pactaron para el pago de la factura con eps',
+  `fecha_radicado` date DEFAULT NULL COMMENT 'Fecha de la radicacion de la factura',
+  `numero_radicado` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Numero con que se radico la factura',
+  `Soporte` varchar(200) COLLATE utf8_spanish_ci DEFAULT NULL COMMENT 'Ruta de Archivo de comprobación de radicado',
+  `estado` varchar(50) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Indica en que tabla esta el registro en un momento dado ',
+  `EstadoCobro` varchar(20) COLLATE utf8_spanish_ci NOT NULL,
+  `Arma030Anterior` enum('S','N') COLLATE utf8_spanish_ci NOT NULL DEFAULT 'N',
+  `Escenario` varchar(15) COLLATE utf8_spanish_ci NOT NULL,
+  `CuentaGlobal` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `CuentaRIPS` int(6) unsigned zerofill NOT NULL,
+  `EstadoGlosa` int(2) NOT NULL DEFAULT '8',
+  `CuentaContable` bigint(20) NOT NULL,
+  `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`id_fac_mov_generados`),
+  UNIQUE KEY `num_factura` (`num_factura`),
+  KEY `estado` (`estado`),
+  KEY `tipo_negociacion` (`tipo_negociacion`),
+  KEY `Updated` (`Updated`),
+  KEY `EstadoCobro` (`EstadoCobro`),
+  KEY `cod_enti_administradora` (`cod_enti_administradora`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de transacciones_AF_generadas';
+
+
 CREATE TABLE `salud_archivo_conceptos_glosas` (
   `id_concepto_glosa` int(20) NOT NULL AUTO_INCREMENT,
   `cod_glosa` int(3) NOT NULL COMMENT 'Codigo de glosa, Devolucion o Respuestas',
@@ -443,7 +614,6 @@ CREATE TABLE `salud_archivo_conceptos_glosas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci ROW_FORMAT=COMPACT COMMENT='manual unico glosas,devoluciones y resp Ver Anexo tecn #6';
 
 
-DROP TABLE IF EXISTS `salud_archivo_consultas`;
 CREATE TABLE `salud_archivo_consultas` (
   `id_consultas` int(20) NOT NULL AUTO_INCREMENT,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -478,7 +648,6 @@ CREATE TABLE `salud_archivo_consultas` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de cosnultas AC';
 
 
-DROP TABLE IF EXISTS `salud_archivo_consultas_temp`;
 CREATE TABLE `salud_archivo_consultas_temp` (
   `id_consultas` varchar(1) COLLATE utf8_spanish_ci NOT NULL,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -511,7 +680,6 @@ CREATE TABLE `salud_archivo_consultas_temp` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de cosnultas AC';
 
 
-DROP TABLE IF EXISTS `salud_archivo_control_glosas_respuestas`;
 CREATE TABLE `salud_archivo_control_glosas_respuestas` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -549,7 +717,6 @@ CREATE TABLE `salud_archivo_control_glosas_respuestas` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo Control de glosas y respuestas';
 
 
-DROP TABLE IF EXISTS `salud_archivo_control_glosas_respuestas_temp`;
 CREATE TABLE `salud_archivo_control_glosas_respuestas_temp` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -584,7 +751,6 @@ CREATE TABLE `salud_archivo_control_glosas_respuestas_temp` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo Control de glosas y respuestas';
 
 
-DROP TABLE IF EXISTS `salud_archivo_ct`;
 CREATE TABLE `salud_archivo_ct` (
   `ID` int(20) NOT NULL AUTO_INCREMENT,
   `cod_prest_servicio` bigint(12) NOT NULL COMMENT 'Código del prestador de servicios de salud " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -599,7 +765,6 @@ CREATE TABLE `salud_archivo_ct` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de control';
 
 
-DROP TABLE IF EXISTS `salud_archivo_facturacion_mov_generados`;
 CREATE TABLE `salud_archivo_facturacion_mov_generados` (
   `id_fac_mov_generados` int(20) NOT NULL AUTO_INCREMENT,
   `cod_prest_servicio` bigint(12) NOT NULL COMMENT 'Código del prestador de servicios de salud " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -635,6 +800,7 @@ CREATE TABLE `salud_archivo_facturacion_mov_generados` (
   `CuentaGlobal` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
   `CuentaRIPS` int(6) unsigned zerofill NOT NULL,
   `EstadoGlosa` int(2) NOT NULL DEFAULT '8',
+  `CuentaContable` bigint(20) NOT NULL,
   `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`id_fac_mov_generados`),
@@ -642,11 +808,14 @@ CREATE TABLE `salud_archivo_facturacion_mov_generados` (
   KEY `estado` (`estado`),
   KEY `tipo_negociacion` (`tipo_negociacion`),
   KEY `Updated` (`Updated`),
-  KEY `EstadoCobro` (`EstadoCobro`)
+  KEY `EstadoCobro` (`EstadoCobro`),
+  KEY `CuentaContable` (`CuentaContable`),
+  KEY `CuentaGlobal` (`CuentaGlobal`),
+  KEY `CuentaContable_2` (`CuentaContable`),
+  KEY `CuentaGlobal_2` (`CuentaGlobal`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de transacciones_AF_generadas';
 
 
-DROP TABLE IF EXISTS `salud_archivo_facturacion_mov_pagados`;
 CREATE TABLE `salud_archivo_facturacion_mov_pagados` (
   `id_pagados` bigint(20) NOT NULL AUTO_INCREMENT,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura ',
@@ -673,15 +842,15 @@ CREATE TABLE `salud_archivo_facturacion_mov_pagados` (
   `idUser` int(11) NOT NULL,
   `Arma030Anterior` enum('S','N') COLLATE utf8_spanish_ci NOT NULL DEFAULT 'N',
   `NumeroFacturaAdres` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `SubeDesde` varchar(15) COLLATE utf8_spanish_ci NOT NULL,
   `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`id_pagados`),
   KEY `num_factura` (`num_factura`),
   KEY `nom_cargue` (`nom_cargue`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de transacciones_AF_pagadas';
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de transacciones_AF_pagadas';
 
 
-DROP TABLE IF EXISTS `salud_archivo_facturacion_mov_pagados_temp`;
 CREATE TABLE `salud_archivo_facturacion_mov_pagados_temp` (
   `id_pagados` varchar(1) COLLATE utf8_spanish_ci NOT NULL,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura ',
@@ -710,7 +879,6 @@ CREATE TABLE `salud_archivo_facturacion_mov_pagados_temp` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo temporal de rips pagados';
 
 
-DROP TABLE IF EXISTS `salud_archivo_hospitalizaciones`;
 CREATE TABLE `salud_archivo_hospitalizaciones` (
   `id_hospitalizacion` int(20) NOT NULL AUTO_INCREMENT,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -741,10 +909,9 @@ CREATE TABLE `salud_archivo_hospitalizaciones` (
   PRIMARY KEY (`id_hospitalizacion`),
   KEY `num_factura` (`num_factura`),
   KEY `nom_cargue` (`nom_cargue`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de hospitalización AH';
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de hospitalización AH';
 
 
-DROP TABLE IF EXISTS `salud_archivo_hospitalizaciones_temp`;
 CREATE TABLE `salud_archivo_hospitalizaciones_temp` (
   `id_hospitalizacion` varchar(1) COLLATE utf8_spanish_ci NOT NULL,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -778,7 +945,6 @@ CREATE TABLE `salud_archivo_hospitalizaciones_temp` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de hospitalización AH';
 
 
-DROP TABLE IF EXISTS `salud_archivo_medicamentos`;
 CREATE TABLE `salud_archivo_medicamentos` (
   `id_medicamentos` bigint(20) NOT NULL AUTO_INCREMENT,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -808,7 +974,6 @@ CREATE TABLE `salud_archivo_medicamentos` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de medicamentos AM';
 
 
-DROP TABLE IF EXISTS `salud_archivo_medicamentos_temp`;
 CREATE TABLE `salud_archivo_medicamentos_temp` (
   `id_medicamentos` varchar(1) COLLATE utf8_spanish_ci NOT NULL,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -840,7 +1005,6 @@ CREATE TABLE `salud_archivo_medicamentos_temp` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de medicamentos AM';
 
 
-DROP TABLE IF EXISTS `salud_archivo_nacidos`;
 CREATE TABLE `salud_archivo_nacidos` (
   `id_recien_nacido` int(20) NOT NULL AUTO_INCREMENT,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -864,10 +1028,9 @@ CREATE TABLE `salud_archivo_nacidos` (
   `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`id_recien_nacido`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de recien nacidos AN';
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de recien nacidos AN';
 
 
-DROP TABLE IF EXISTS `salud_archivo_nacidos_temp`;
 CREATE TABLE `salud_archivo_nacidos_temp` (
   `id_recien_nacido` varchar(1) COLLATE utf8_spanish_ci NOT NULL,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -894,7 +1057,6 @@ CREATE TABLE `salud_archivo_nacidos_temp` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de recien nacidos AN';
 
 
-DROP TABLE IF EXISTS `salud_archivo_otros_servicios`;
 CREATE TABLE `salud_archivo_otros_servicios` (
   `id_otro_servicios` int(20) NOT NULL AUTO_INCREMENT,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -921,7 +1083,6 @@ CREATE TABLE `salud_archivo_otros_servicios` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de otros servicios AT';
 
 
-DROP TABLE IF EXISTS `salud_archivo_otros_servicios_temp`;
 CREATE TABLE `salud_archivo_otros_servicios_temp` (
   `id_otro_servicios` varchar(1) COLLATE utf8_spanish_ci NOT NULL,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -948,7 +1109,6 @@ CREATE TABLE `salud_archivo_otros_servicios_temp` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de otros servicios AT';
 
 
-DROP TABLE IF EXISTS `salud_archivo_procedimientos`;
 CREATE TABLE `salud_archivo_procedimientos` (
   `id_procedimiento` int(20) NOT NULL AUTO_INCREMENT,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -979,7 +1139,6 @@ CREATE TABLE `salud_archivo_procedimientos` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de procedimientos AP';
 
 
-DROP TABLE IF EXISTS `salud_archivo_procedimientos_temp`;
 CREATE TABLE `salud_archivo_procedimientos_temp` (
   `id_procedimiento` varchar(1) COLLATE utf8_spanish_ci NOT NULL,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -1010,7 +1169,6 @@ CREATE TABLE `salud_archivo_procedimientos_temp` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de procedimientos AP';
 
 
-DROP TABLE IF EXISTS `salud_archivo_urgencias`;
 CREATE TABLE `salud_archivo_urgencias` (
   `id_urgencias` int(20) NOT NULL AUTO_INCREMENT,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -1037,10 +1195,9 @@ CREATE TABLE `salud_archivo_urgencias` (
   `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`id_urgencias`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de urgencias AU';
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de urgencias AU';
 
 
-DROP TABLE IF EXISTS `salud_archivo_urgencias_temp`;
 CREATE TABLE `salud_archivo_urgencias_temp` (
   `id_urgencias` varchar(1) COLLATE utf8_spanish_ci NOT NULL,
   `num_factura` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Número de la factura " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -1069,7 +1226,6 @@ CREATE TABLE `salud_archivo_urgencias_temp` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de urgencias AU';
 
 
-DROP TABLE IF EXISTS `salud_archivo_usuarios`;
 CREATE TABLE `salud_archivo_usuarios` (
   `id_usuarios_salud` int(20) NOT NULL AUTO_INCREMENT,
   `tipo_ident_usuario` enum('CC','CE','PA','RC','TI','AS','MS') COLLATE utf8_spanish_ci NOT NULL COMMENT 'Tipo de identificación del usuario " Ver Alineamientos tecnicos para ips ver pag 14"',
@@ -1098,10 +1254,9 @@ CREATE TABLE `salud_archivo_usuarios` (
   KEY `primer_nom_usuario` (`primer_nom_usuario`),
   KEY `segundo_nom_usuario` (`segundo_nom_usuario`),
   KEY `num_ident_usuario_2` (`num_ident_usuario`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci ROW_FORMAT=COMPACT COMMENT='Archivo de usuarios US';
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci ROW_FORMAT=COMPACT COMMENT='Archivo de usuarios US';
 
 
-DROP TABLE IF EXISTS `salud_archivo_usuarios_temp`;
 CREATE TABLE `salud_archivo_usuarios_temp` (
   `id_usuarios_salud` varchar(1) COLLATE utf8_spanish_ci NOT NULL DEFAULT '',
   `tipo_ident_usuario` enum('CC','CE','PA','RC','TI','AS','MS') COLLATE utf8_spanish_ci NOT NULL COMMENT 'Tipo de identificación del usuario " Ver Alineamientos tecnicos para ips ver pag 14"',
@@ -1132,7 +1287,6 @@ CREATE TABLE `salud_archivo_usuarios_temp` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci ROW_FORMAT=COMPACT COMMENT='Archivo de usuarios US';
 
 
-DROP TABLE IF EXISTS `salud_bancos`;
 CREATE TABLE `salud_bancos` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `nit_banco` bigint(12) NOT NULL COMMENT 'NIT del banco',
@@ -1148,7 +1302,6 @@ CREATE TABLE `salud_bancos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de banco';
 
 
-DROP TABLE IF EXISTS `salud_cartera_x_edades_temp`;
 CREATE TABLE `salud_cartera_x_edades_temp` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `idEPS` varchar(25) COLLATE utf8_spanish_ci NOT NULL,
@@ -1169,13 +1322,14 @@ CREATE TABLE `salud_cartera_x_edades_temp` (
   `Valor_360` double NOT NULL,
   `TotalFacturas` int(11) NOT NULL,
   `Total` double NOT NULL,
+  `RegimenEPS` varchar(25) COLLATE utf8_spanish_ci NOT NULL,
+  `NIT_EPS` varchar(20) COLLATE utf8_spanish_ci NOT NULL,
   `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_cie10`;
 CREATE TABLE `salud_cie10` (
   `ID` int(20) NOT NULL,
   `codigo_sistema` varchar(4) COLLATE utf8_spanish_ci DEFAULT NULL COMMENT 'SubCategoria de diagnostico ',
@@ -1189,7 +1343,6 @@ CREATE TABLE `salud_cie10` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de Clasificacion internacional de Emfermedades CIE10';
 
 
-DROP TABLE IF EXISTS `salud_circular030_inicial`;
 CREATE TABLE `salud_circular030_inicial` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `TipoRegistro` int(1) NOT NULL,
@@ -1217,13 +1370,13 @@ CREATE TABLE `salud_circular030_inicial` (
   `fecha_cargue` datetime NOT NULL,
   `idUser` int(11) NOT NULL,
   `Cod_Entidad_Administradora` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `CuentaContable` bigint(20) NOT NULL,
   `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`ID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Circular 030 inicial, esta debe ser otorgada por el cliente';
 
 
-DROP TABLE IF EXISTS `salud_circular_030_control`;
 CREATE TABLE `salud_circular_030_control` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `TipoRegistro` int(1) NOT NULL,
@@ -1241,7 +1394,6 @@ CREATE TABLE `salud_circular_030_control` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_cobros_prejuridicos`;
 CREATE TABLE `salud_cobros_prejuridicos` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `TipoCobro` enum('1','2','3','4') COLLATE utf8_spanish_ci NOT NULL,
@@ -1256,7 +1408,6 @@ CREATE TABLE `salud_cobros_prejuridicos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_cobros_prejuridicos_relaciones`;
 CREATE TABLE `salud_cobros_prejuridicos_relaciones` (
   `idCobroPrejuridico` int(11) NOT NULL,
   `num_factura` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
@@ -1267,7 +1418,6 @@ CREATE TABLE `salud_cobros_prejuridicos_relaciones` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_conciliaciones_masivas_temp`;
 CREATE TABLE `salud_conciliaciones_masivas_temp` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `FechaConciliacion` date NOT NULL,
@@ -1285,7 +1435,6 @@ CREATE TABLE `salud_conciliaciones_masivas_temp` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_control_generacion_respuestas_excel`;
 CREATE TABLE `salud_control_generacion_respuestas_excel` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `CuentaRIPS` int(6) unsigned zerofill NOT NULL,
@@ -1299,7 +1448,6 @@ CREATE TABLE `salud_control_generacion_respuestas_excel` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_control_glosas_masivas`;
 CREATE TABLE `salud_control_glosas_masivas` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `Fecha` date NOT NULL,
@@ -1313,7 +1461,6 @@ CREATE TABLE `salud_control_glosas_masivas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_cups`;
 CREATE TABLE `salud_cups` (
   `ID` int(20) NOT NULL AUTO_INCREMENT,
   `grupo` varchar(2) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Grupo de diagnostico ',
@@ -1334,7 +1481,6 @@ CREATE TABLE `salud_cups` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de cups';
 
 
-DROP TABLE IF EXISTS `salud_dias_habiles`;
 CREATE TABLE `salud_dias_habiles` (
   `fecha_dia` date NOT NULL COMMENT 'fecha del dia',
   `dia` enum('lunes','martes','miercoles','jueves','viernes','sabado','domingo') COLLATE utf8_spanish_ci NOT NULL COMMENT 'dia de la semana',
@@ -1345,11 +1491,11 @@ CREATE TABLE `salud_dias_habiles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='tabla para controlar los días hábiles';
 
 
-DROP TABLE IF EXISTS `salud_eps`;
 CREATE TABLE `salud_eps` (
   `ID` int(20) NOT NULL AUTO_INCREMENT,
   `cod_pagador_min` varchar(6) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Codigo del pagador ante el ministerio de salud ',
   `nit` bigint(20) NOT NULL,
+  `TipoEntidad` varchar(5) COLLATE utf8_spanish_ci NOT NULL,
   `sigla_nombre` varchar(120) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Nombre corto del pagador del servicio salud',
   `nombre_completo` varchar(50) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Nombre completo del pagador del servicio',
   `direccion` varchar(100) COLLATE utf8_spanish_ci NOT NULL,
@@ -1361,14 +1507,16 @@ CREATE TABLE `salud_eps` (
   `RepresentanteLegal` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
   `NumeroRepresentanteLegal` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
   `Genera030` varchar(1) COLLATE utf8_spanish_ci NOT NULL DEFAULT 'S',
+  `Genera014` varchar(1) COLLATE utf8_spanish_ci NOT NULL DEFAULT 'S',
+  `Genera07` varchar(1) COLLATE utf8_spanish_ci NOT NULL DEFAULT 'S',
   `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`ID`),
-  UNIQUE KEY `cod_pagador_min` (`cod_pagador_min`)
+  UNIQUE KEY `cod_pagador_min` (`cod_pagador_min`),
+  KEY `TipoEntidad` (`TipoEntidad`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='directorio de empresas promotoras de salud (EPS)';
 
 
-DROP TABLE IF EXISTS `salud_estado_glosas`;
 CREATE TABLE `salud_estado_glosas` (
   `ID` int(2) NOT NULL AUTO_INCREMENT COMMENT 'Id del estado glosa',
   `Estado_glosa` varchar(50) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Descripcion del estado',
@@ -1379,7 +1527,6 @@ CREATE TABLE `salud_estado_glosas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_facturas_radicacion_numero`;
 CREATE TABLE `salud_facturas_radicacion_numero` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `idFactura` bigint(20) NOT NULL,
@@ -1390,7 +1537,6 @@ CREATE TABLE `salud_facturas_radicacion_numero` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_glosas_iniciales`;
 CREATE TABLE `salud_glosas_iniciales` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `FechaIPS` date NOT NULL,
@@ -1406,6 +1552,7 @@ CREATE TABLE `salud_glosas_iniciales` (
   `ValorAceptado` double NOT NULL,
   `ValorXConciliar` double NOT NULL,
   `ValorConciliado` double NOT NULL,
+  `EstadoReporteXMLFTP` int(11) NOT NULL,
   `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`ID`),
@@ -1413,10 +1560,9 @@ CREATE TABLE `salud_glosas_iniciales` (
   KEY `CodigoActividad` (`CodigoActividad`),
   KEY `CodigoGlosa` (`CodigoGlosa`),
   KEY `EstadoGlosa` (`EstadoGlosa`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_glosas_iniciales_temp`;
 CREATE TABLE `salud_glosas_iniciales_temp` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `FechaIPS` date NOT NULL,
@@ -1448,7 +1594,6 @@ CREATE TABLE `salud_glosas_iniciales_temp` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_glosas_masivas_temp`;
 CREATE TABLE `salud_glosas_masivas_temp` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `FechaIPS` date NOT NULL,
@@ -1472,15 +1617,66 @@ CREATE TABLE `salud_glosas_masivas_temp` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_manuales_tarifarios`;
 CREATE TABLE `salud_manuales_tarifarios` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Nombre` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_pagos_temporal`;
+CREATE TABLE `salud_pagos_contributivo` (
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+  `Proceso` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `NitEPS` bigint(20) NOT NULL,
+  `CodigoEps` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `NombreEPS` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `FechaPago` date NOT NULL,
+  `numero_factura` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `PrefijoFactura` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `NumeroFactura` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `FechaFactura` date NOT NULL,
+  `FormaContratacion` varchar(30) COLLATE utf8_spanish_ci NOT NULL,
+  `ValorGiro` double NOT NULL,
+  `fecha_cargue` datetime NOT NULL,
+  `Soporte` text COLLATE utf8_spanish_ci NOT NULL,
+  `Estado` int(11) NOT NULL,
+  `idUser` int(11) NOT NULL,
+  `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`ID`),
+  KEY `NitEPS` (`NitEPS`),
+  KEY `numero_factura` (`numero_factura`),
+  KEY `idUser` (`idUser`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
+CREATE TABLE `salud_pagos_contributivo_temp` (
+  `ID` varchar(1) COLLATE utf8_spanish_ci NOT NULL,
+  `Proceso` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `NitEPS` bigint(20) NOT NULL,
+  `CodigoEps` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `NombreEPS` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `FechaPago` date NOT NULL,
+  `numero_factura` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `PrefijoFactura` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `NumeroFactura` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `FechaFactura` date NOT NULL,
+  `FormaContratacion` varchar(30) COLLATE utf8_spanish_ci NOT NULL,
+  `ValorGiro` double NOT NULL,
+  `fecha_cargue` datetime NOT NULL,
+  `Soporte` text COLLATE utf8_spanish_ci NOT NULL,
+  `Estado` int(11) NOT NULL,
+  `idUser` int(11) NOT NULL,
+  `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  KEY `NitEPS` (`NitEPS`),
+  KEY `numero_factura` (`numero_factura`),
+  KEY `idUser` (`idUser`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
 CREATE TABLE `salud_pagos_temporal` (
   `id_temp_rips_generados` varchar(1) COLLATE utf8_spanish_ci NOT NULL,
   `Proceso` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
@@ -1505,7 +1701,6 @@ CREATE TABLE `salud_pagos_temporal` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_parametros_generales`;
 CREATE TABLE `salud_parametros_generales` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Nombre` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
@@ -1518,7 +1713,6 @@ CREATE TABLE `salud_parametros_generales` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_procesos_gerenciales`;
 CREATE TABLE `salud_procesos_gerenciales` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Fecha` date NOT NULL,
@@ -1533,7 +1727,6 @@ CREATE TABLE `salud_procesos_gerenciales` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_procesos_gerenciales_archivos`;
 CREATE TABLE `salud_procesos_gerenciales_archivos` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `idProceso` int(11) NOT NULL,
@@ -1546,7 +1739,6 @@ CREATE TABLE `salud_procesos_gerenciales_archivos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_procesos_gerenciales_conceptos`;
 CREATE TABLE `salud_procesos_gerenciales_conceptos` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Concepto` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
@@ -1558,15 +1750,15 @@ CREATE TABLE `salud_procesos_gerenciales_conceptos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_regimen`;
 CREATE TABLE `salud_regimen` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Regimen` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_registro_devoluciones_facturas`;
 CREATE TABLE `salud_registro_devoluciones_facturas` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `FechaDevolucion` date NOT NULL,
@@ -1584,7 +1776,6 @@ CREATE TABLE `salud_registro_devoluciones_facturas` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_registro_glosas`;
 CREATE TABLE `salud_registro_glosas` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `num_factura` varchar(30) COLLATE utf8_spanish_ci NOT NULL,
@@ -1607,7 +1798,6 @@ CREATE TABLE `salud_registro_glosas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_rips_facturas_generadas_historico`;
 CREATE TABLE `salud_rips_facturas_generadas_historico` (
   `id_fac_mov_generados` varchar(20) COLLATE utf8_spanish_ci NOT NULL,
   `cod_prest_servicio` bigint(12) NOT NULL COMMENT 'Código del prestador de servicios de salud " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -1643,6 +1833,7 @@ CREATE TABLE `salud_rips_facturas_generadas_historico` (
   `CuentaGlobal` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
   `CuentaRIPS` int(6) unsigned zerofill NOT NULL,
   `EstadoGlosa` int(2) NOT NULL,
+  `CuentaContable` bigint(20) NOT NULL,
   `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   KEY `estado` (`estado`),
@@ -1652,7 +1843,6 @@ CREATE TABLE `salud_rips_facturas_generadas_historico` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de transacciones_AF_generadas';
 
 
-DROP TABLE IF EXISTS `salud_rips_facturas_generadas_temp`;
 CREATE TABLE `salud_rips_facturas_generadas_temp` (
   `id_temp_rips_generados` varchar(1) COLLATE utf8_spanish_ci NOT NULL,
   `cod_prest_servicio` bigint(12) NOT NULL COMMENT 'Código del prestador de servicios de salud " Ver Alineamientos tecnicos para ips ver pag 12"',
@@ -1679,6 +1869,7 @@ CREATE TABLE `salud_rips_facturas_generadas_temp` (
   `Escenario` varchar(15) COLLATE utf8_spanish_ci NOT NULL,
   `CuentaGlobal` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
   `CuentaRIPS` int(6) unsigned zerofill NOT NULL,
+  `CuentaContable` bigint(20) NOT NULL,
   `nom_cargue` varchar(20) COLLATE utf8_spanish_ci NOT NULL,
   `fecha_cargue` datetime NOT NULL,
   `idUser` int(11) NOT NULL,
@@ -1690,7 +1881,6 @@ CREATE TABLE `salud_rips_facturas_generadas_temp` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo temporal de rips generados';
 
 
-DROP TABLE IF EXISTS `salud_subir_rips_pago_control`;
 CREATE TABLE `salud_subir_rips_pago_control` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `ArchivoActual` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
@@ -1711,7 +1901,6 @@ CREATE TABLE `salud_subir_rips_pago_control` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_tesoreria`;
 CREATE TABLE `salud_tesoreria` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `cod_enti_administradora` varchar(6) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Código entidad que paga',
@@ -1721,17 +1910,30 @@ CREATE TABLE `salud_tesoreria` (
   `banco_transaccion` varchar(10) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Nombre del banco donde entra la transaccion',
   `num_cuenta_banco` varchar(30) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Numero de cuenta en la cual entra la transaccion',
   `valor_transaccion` double(15,2) NOT NULL COMMENT 'Valor de transaccion ',
+  `valor_legalizado` double NOT NULL,
+  `valor_legalizar` double NOT NULL,
   `Soporte` varchar(200) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Soporte que argumenta  o justifica el pago',
   `observacion` text COLLATE utf8_spanish_ci COMMENT 'observaciones de diagnostico ',
+  `observaciones_cartera` text COLLATE utf8_spanish_ci NOT NULL,
+  `legalizado` varchar(2) COLLATE utf8_spanish_ci NOT NULL,
   `fecha_hora_registro` datetime DEFAULT NULL COMMENT 'fecha y hora del registro',
+  `TipoPago` int(11) NOT NULL,
   `idUser` int(11) DEFAULT NULL COMMENT 'usuario que registra',
   `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`ID`),
+  KEY `TipoPago` (`TipoPago`),
+  KEY `TipoPago_2` (`TipoPago`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de tesoreria';
+
+
+CREATE TABLE `salud_tesoreria_tipos_pago` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `TipoPago` varchar(25) COLLATE utf8_spanish_ci NOT NULL,
   PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci COMMENT='Archivo de tesoreria';
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_tipo_glosas`;
 CREATE TABLE `salud_tipo_glosas` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `TipoGlosa` varchar(15) COLLATE utf8_spanish_ci NOT NULL,
@@ -1741,7 +1943,6 @@ CREATE TABLE `salud_tipo_glosas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_upload_control`;
 CREATE TABLE `salud_upload_control` (
   `id_upload_control` bigint(20) NOT NULL AUTO_INCREMENT,
   `nom_cargue` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
@@ -1756,7 +1957,6 @@ CREATE TABLE `salud_upload_control` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `salud_upload_control_ct`;
 CREATE TABLE `salud_upload_control_ct` (
   `id_upload_control` bigint(20) NOT NULL AUTO_INCREMENT,
   `nom_cargue` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
@@ -1771,7 +1971,6 @@ CREATE TABLE `salud_upload_control_ct` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `servidores`;
 CREATE TABLE `servidores` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `IP` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
@@ -1779,13 +1978,14 @@ CREATE TABLE `servidores` (
   `Usuario` varchar(100) COLLATE utf8_spanish_ci NOT NULL,
   `Password` varchar(100) COLLATE utf8_spanish_ci NOT NULL,
   `DataBase` varchar(200) COLLATE utf8_spanish_ci NOT NULL,
+  `Puerto` int(11) NOT NULL,
+  `TipoServidor` varchar(10) COLLATE utf8_spanish_ci NOT NULL,
   `Updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `Sync` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `subcuentas`;
 CREATE TABLE `subcuentas` (
   `PUC` int(11) NOT NULL,
   `Nombre` varchar(45) COLLATE utf8_spanish_ci DEFAULT NULL,
@@ -1797,7 +1997,6 @@ CREATE TABLE `subcuentas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `tablas_campos_control`;
 CREATE TABLE `tablas_campos_control` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `NombreTabla` varchar(100) COLLATE utf8_spanish_ci NOT NULL,
@@ -1813,7 +2012,16 @@ CREATE TABLE `tablas_campos_control` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `usuarios`;
+CREATE TABLE `temporal_actualizacion_facturas` (
+  `ID` varchar(1) COLLATE utf8_spanish_ci NOT NULL,
+  `FacturaAnterior` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `FacturaNueva` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `Observaciones` text COLLATE utf8_spanish_ci NOT NULL,
+  `idUser` int(11) NOT NULL,
+  `FechaRegistro` datetime NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
 CREATE TABLE `usuarios` (
   `idUsuarios` int(11) NOT NULL AUTO_INCREMENT,
   `Nombre` varchar(45) COLLATE utf8_spanish_ci DEFAULT NULL,
@@ -1832,7 +2040,6 @@ CREATE TABLE `usuarios` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `usuarios_tipo`;
 CREATE TABLE `usuarios_tipo` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Tipo` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
@@ -1842,99 +2049,81 @@ CREATE TABLE `usuarios_tipo` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP VIEW IF EXISTS `vista_af`;
 CREATE TABLE `vista_af` (`id_fac_mov_generados` int(20), `cod_prest_servicio` bigint(12), `razon_social` varchar(60), `tipo_ident_prest_servicio` enum('NI','CC','CE','PA'), `num_ident_prest_servicio` bigint(20), `num_factura` varchar(20), `fecha_factura` date, `fecha_inicio` date, `fecha_final` date, `cod_enti_administradora` varchar(6), `nom_enti_administradora` varchar(200), `num_contrato` varchar(15), `plan_beneficios` varchar(30), `num_poliza` varchar(10), `valor_total_pago` double(15,2), `valor_comision` double(15,2), `valor_descuentos` double(15,2), `valor_neto_pagar` double(15,2), `tipo_negociacion` enum('evento','capita'), `nom_cargue` varchar(20), `fecha_cargue` datetime, `idUser` int(11), `eps_radicacion` varchar(50), `dias_pactados` int(2), `fecha_radicado` date, `numero_radicado` varchar(20), `Soporte` varchar(200), `estado` varchar(50), `EstadoCobro` varchar(20), `Arma030Anterior` enum('S','N'), `Escenario` varchar(15), `CuentaGlobal` varchar(45), `CuentaRIPS` int(6) unsigned zerofill, `EstadoGlosa` int(2), `Updated` timestamp, `Sync` datetime, `GeneraCircular` varchar(1));
 
 
-DROP VIEW IF EXISTS `vista_af_devueltos`;
 CREATE TABLE `vista_af_devueltos` (`ID` int(20), `num_factura` varchar(20), `fecha_factura` date, `LineaArchivo` int(11), `CuentaGlobal` varchar(45), `CuentaRIPS` int(6) unsigned zerofill, `EstadoGlosa` int(2), `fecha_cargue` datetime);
 
 
-DROP VIEW IF EXISTS `vista_af_duplicados`;
 CREATE TABLE `vista_af_duplicados` (`ID` int(20), `num_factura` varchar(20), `fecha_factura` date, `LineaArchivo` int(11), `CuentaGlobal` varchar(45), `CuentaRIPS` int(6) unsigned zerofill, `EstadoGlosa` int(2), `fecha_cargue` datetime);
 
 
-DROP VIEW IF EXISTS `vista_af_semaforo`;
 CREATE TABLE `vista_af_semaforo` (`id_fac_mov_generados` int(20), `cod_prest_servicio` bigint(12), `razon_social` varchar(60), `tipo_ident_prest_servicio` enum('NI','CC','CE','PA'), `num_ident_prest_servicio` bigint(20), `num_factura` varchar(20), `fecha_factura` date, `fecha_inicio` date, `fecha_final` date, `cod_enti_administradora` varchar(6), `nom_enti_administradora` varchar(200), `num_contrato` varchar(15), `plan_beneficios` varchar(30), `num_poliza` varchar(10), `valor_total_pago` double(15,2), `valor_comision` double(15,2), `valor_descuentos` double(15,2), `valor_neto_pagar` double(15,2), `tipo_negociacion` enum('evento','capita'), `nom_cargue` varchar(20), `fecha_cargue` datetime, `idUser` int(11), `eps_radicacion` varchar(50), `dias_pactados` int(2), `fecha_radicado` date, `numero_radicado` varchar(20), `Soporte` varchar(200), `estado` varchar(50), `EstadoCobro` varchar(20), `Arma030Anterior` enum('S','N'), `Escenario` varchar(15), `CuentaGlobal` varchar(45), `CuentaRIPS` int(6) unsigned zerofill, `EstadoGlosa` int(2), `Updated` timestamp, `Sync` datetime, `Dias` bigint(11), `identificacion_usuario` bigint(20));
 
 
-DROP VIEW IF EXISTS `vista_cartera_x_edades`;
+CREATE TABLE `vista_ar_listado` (`id_pagados` bigint(20), `num_factura` varchar(20), `idEPS` varchar(25), `nom_enti_administradora` varchar(100), `fecha_pago_factura` date, `num_pago` int(10), `valor_bruto_pagar` double(15,2), `valor_descuento` double(15,2), `valor_iva` double(15,2), `valor_retefuente` double(15,2), `valor_reteiva` double(15,2), `valor_reteica` double(15,2), `valor_otrasretenciones` double(15,2), `valor_cruces` double(15,2), `valor_anticipos` double(15,2), `valor_pagado` double(15,2), `tipo_negociacion` varchar(25), `nom_cargue` varchar(20), `fecha_cargue` datetime, `Proceso` varchar(25), `Estado` varchar(10), `Soporte` text, `idUser` int(11), `Arma030Anterior` enum('S','N'), `NumeroFacturaAdres` varchar(45), `SubeDesde` varchar(15), `Updated` timestamp, `Sync` datetime, `CuentaContable` bigint(20));
+
+
 CREATE TABLE `vista_cartera_x_edades` (`RangoDias` varchar(7), `idEPS` varchar(6), `nom_enti_administradora` varchar(200), `TotalCartera` double(19,2), `TotalItems` bigint(21), `DiasPactados` int(11));
 
 
-DROP VIEW IF EXISTS `vista_cartera_x_edades_organizada`;
 CREATE TABLE `vista_cartera_x_edades_organizada` (`CodEPS` varchar(6), `TotalCartera` double(19,2));
 
 
-DROP VIEW IF EXISTS `vista_circular_07`;
 CREATE TABLE `vista_circular_07` (`id_factura_generada` int(20), `DiasMora` bigint(12), `CuentaRIPS` int(6) unsigned zerofill, `CuentaGlobal` varchar(45), `cod_prest_servicio` bigint(12), `razon_social` varchar(60), `num_factura` varchar(20), `fecha_factura` date, `fecha_radicado` date, `numero_radicado` varchar(20), `FechaVencimiento` date, `cod_enti_administradora` varchar(6), `nom_enti_administradora` varchar(200), `RegimenEPS` varchar(22), `valor_neto_pagar` double(15,2), `tipo_negociacion` enum('evento','capita'), `dias_pactados` int(2), `Soporte` varchar(200), `EstadoCobro` varchar(20), `ValorGlosaInicial` double, `ValorGlosaLevantada` double, `ValorGlosaAceptada` double, `ValorGlosaXConciliar` double, `TotalPagos` double(19,2), `SaldoFinalFactura` double);
 
 
-DROP VIEW IF EXISTS `vista_glosas_iniciales`;
 CREATE TABLE `vista_glosas_iniciales` (`ID` bigint(20), `FechaIPS` date, `FechaAuditoria` date, `FechaRegistro` date, `CodigoGlosa` int(3), `num_factura` varchar(20), `CodigoActividad` varchar(20), `EstadoGlosa` int(11), `ValorActividad` double, `ValorGlosado` double, `ValorLevantado` double, `ValorAceptado` double, `ValorXConciliar` double, `ValorConciliado` double, `Updated` timestamp, `Sync` datetime, `DiasTranscurridos` int(7), `CuentaRIPS` bigint(10) unsigned);
 
 
-DROP VIEW IF EXISTS `vista_glosas_iniciales_reportes`;
 CREATE TABLE `vista_glosas_iniciales_reportes` (`ID` bigint(20), `FechaIPS` date, `FechaAuditoria` date, `FechaRegistro` date, `CodigoGlosa` int(3), `num_factura` varchar(20), `CodigoActividad` varchar(20), `EstadoGlosa` int(11), `ValorActividad` double, `ValorGlosado` double, `ValorLevantado` double, `ValorAceptado` double, `ValorXConciliar` double, `ValorConciliado` double, `Updated` timestamp, `Sync` datetime, `DescripcionGlosa` mediumtext, `cod_administrador` varchar(6), `fecha_factura` date, `nombre_prestador` varchar(60), `cod_prestador` bigint(20), `nit_prestador` bigint(20), `nit_administrador` bigint(20), `nombre_administrador` varchar(50), `regimen_eps` varchar(22));
 
 
-DROP VIEW IF EXISTS `vista_salud_consolidaciones_masivas`;
+CREATE TABLE `vista_prefactura_reservas` (`ID` bigint(20), `idPaciente` bigint(20), `TipoDocumento` varchar(2), `NumeroDocumento` bigint(20), `NombreCompleto` varchar(403), `Sexo` varchar(1), `Telefono` varchar(200), `Direccion` varchar(200), `CodEPS` varchar(15), `CodigoDANE` int(5), `NumeroAutorizacion` varchar(45), `Cie10` varchar(45), `Observaciones` text, `Municipio` varchar(255), `Departamento` varchar(255), `Estado` int(11), `NombreEstado` varchar(45));
+
+
 CREATE TABLE `vista_salud_consolidaciones_masivas` (`ID` int(11), `FechaConciliacion` date, `CuentaRIPSTemp` int(6) unsigned zerofill, `num_factura` varchar(45), `CodigoActividad` varchar(20), `ValorLevantado` double, `ValorAceptado` double, `Observaciones` text, `Soporte` varchar(200), `Conciliada` int(11), `Extemporanea` int(1), `ValorLevantadoPositivo` int(1), `ValorAceptadoPositivo` int(1), `Factura` varchar(20), `CuentaRIPS` bigint(10) unsigned, `CodigoActividadAM` varchar(20), `NombreActividadAM` varchar(30), `EstadoGlosaAM` bigint(11), `TotalAM` double(19,2), `CodigoActividadAT` varchar(20), `NombreActividadAT` varchar(30), `EstadoGlosaAT` bigint(11), `TotalAT` double(19,2), `CodigoActividadAP` varchar(7), `EstadoGlosaAP` bigint(11), `TotalAP` double(19,2), `NombreActividad` varchar(255), `CodigoActividadAC` varchar(7), `EstadoGlosaAC` bigint(11), `TotalAC` double(19,2));
 
 
-DROP VIEW IF EXISTS `vista_salud_cuentas_rips`;
 CREATE TABLE `vista_salud_cuentas_rips` (`CuentaRIPS` int(6) unsigned zerofill, `CuentaGlobal` varchar(45), `cod_enti_administradora` varchar(6), `nom_enti_administradora` varchar(200), `FechaDesde` date, `NombreCortoEPS` varchar(120), `FechaHasta` date, `fecha_radicado` date, `numero_radicado` varchar(20), `NumFacturas` bigint(21), `Total` double(19,2), `idEstadoGlosa` int(2), `EstadoGlosa` varchar(50), `Dias` bigint(11));
 
 
-DROP VIEW IF EXISTS `vista_salud_facturas_diferencias`;
 CREATE TABLE `vista_salud_facturas_diferencias` (`id_factura_generada` int(20), `CuentaRIPS` int(6) unsigned zerofill, `CuentaGlobal` varchar(45), `cod_prest_servicio` bigint(12), `razon_social` varchar(60), `num_factura` varchar(20), `fecha_factura` date, `cod_enti_administradora` varchar(6), `nom_enti_administradora` varchar(200), `valor_neto_pagar` double(15,2), `id_factura_pagada` bigint(20), `fecha_pago_factura` date, `valor_pagado` double(15,2), `num_pago` int(10), `DiferenciaEnPago` double(19,2), `tipo_negociacion` enum('evento','capita'), `dias_pactados` int(2), `fecha_radicado` date, `numero_radicado` varchar(20), `Soporte` varchar(200));
 
 
-DROP VIEW IF EXISTS `vista_salud_facturas_glosas`;
 CREATE TABLE `vista_salud_facturas_glosas` (`CuentaRIPS` int(6) unsigned zerofill, `CuentaGlobal` varchar(45), `cod_enti_administradora` varchar(6), `nom_enti_administradora` varchar(200), `FechaRadicado` date, `numero_radicado` varchar(20), `num_factura` varchar(20), `fecha_factura` date, `fecha_radicado` date, `EstadoGlosa` int(2), `TipoID` varchar(2), `NumIdentificacion` bigint(20));
 
 
-DROP VIEW IF EXISTS `vista_salud_facturas_no_pagas`;
 CREATE TABLE `vista_salud_facturas_no_pagas` (`id_factura_generada` int(20), `DiasMora` bigint(12), `CuentaRIPS` int(6) unsigned zerofill, `CuentaGlobal` varchar(45), `cod_prest_servicio` bigint(12), `razon_social` varchar(60), `num_factura` varchar(20), `fecha_factura` date, `fecha_radicado` date, `numero_radicado` varchar(20), `cod_enti_administradora` varchar(6), `nom_enti_administradora` varchar(200), `valor_neto_pagar` double(15,2), `tipo_negociacion` enum('evento','capita'), `dias_pactados` int(2), `Soporte` varchar(200), `EstadoCobro` varchar(20));
 
 
-DROP VIEW IF EXISTS `vista_salud_facturas_pagas`;
 CREATE TABLE `vista_salud_facturas_pagas` (`id_factura_generada` int(20), `CuentaRIPS` int(6) unsigned zerofill, `CuentaGlobal` varchar(45), `cod_prest_servicio` bigint(12), `razon_social` varchar(60), `num_factura` varchar(20), `fecha_factura` date, `cod_enti_administradora` varchar(6), `nom_enti_administradora` varchar(200), `valor_neto_pagar` double(15,2), `id_factura_pagada` bigint(20), `fecha_pago_factura` date, `valor_pagado` double(15,2), `num_pago` int(10), `tipo_negociacion` enum('evento','capita'), `dias_pactados` int(2), `fecha_radicado` date, `numero_radicado` varchar(20), `Soporte` varchar(200));
 
 
-DROP VIEW IF EXISTS `vista_salud_facturas_prejuridicos`;
 CREATE TABLE `vista_salud_facturas_prejuridicos` (`ID` int(20), `idCobroPrejuridico` int(11), `num_factura` varchar(20), `cod_prest_servicio` bigint(12), `razon_social` varchar(60), `num_ident_prest_servicio` bigint(20), `fecha_factura` date, `cod_enti_administradora` varchar(6), `nom_enti_administradora` varchar(200), `valor_neto_pagar` double(15,2), `tipo_negociacion` enum('evento','capita'), `fecha_radicado` date, `numero_radicado` varchar(20), `SoporteRadicado` varchar(200), `SoporteCobro` varchar(50), `EstadoFactura` varchar(50), `EstadoCobro` varchar(20));
 
 
-DROP VIEW IF EXISTS `vista_salud_facturas_usuarios`;
 CREATE TABLE `vista_salud_facturas_usuarios` (`num_factura` varchar(20), `num_ident_usuario` bigint(20));
 
 
-DROP VIEW IF EXISTS `vista_salud_glosas_masivas`;
 CREATE TABLE `vista_salud_glosas_masivas` (`ID` bigint(20), `FechaIPS` date, `FechaAuditoria` date, `ValorGlosado` double, `Analizado` int(1), `GlosaInicial` int(1), `GlosaControlRespuestas` int(1), `CodigoActividad` varchar(45), `Observaciones` text, `Soporte` varchar(200), `Factura` varchar(20), `CuentaRIPS` bigint(10) unsigned, `CodEps` varchar(6), `NIT` bigint(20), `CodigoGlosa` bigint(11), `CodigoActividadAM` varchar(20), `NombreActividadAM` varchar(30), `TotalAM` double(19,2), `CodigoActividadAT` varchar(20), `NombreActividadAT` varchar(30), `TotalAT` double(19,2), `CodigoActividadAP` varchar(7), `NombreActividad` varchar(255), `TotalAP` double(19,2), `CodigoActividadAC` varchar(7), `TotalAC` double(19,2), `idGlosa` bigint(20), `idGlosaTemp` bigint(20));
 
 
-DROP VIEW IF EXISTS `vista_salud_pagas_no_generadas`;
 CREATE TABLE `vista_salud_pagas_no_generadas` (`id_pagados` bigint(20), `num_factura` varchar(20), `idEPS` varchar(25), `nom_enti_administradora` varchar(100), `fecha_pago_factura` date, `num_pago` int(10), `valor_bruto_pagar` double(15,2), `valor_descuento` double(15,2), `valor_iva` double(15,2), `valor_retefuente` double(15,2), `valor_reteiva` double(15,2), `valor_reteica` double(15,2), `valor_otrasretenciones` double(15,2), `valor_cruces` double(15,2), `valor_anticipos` double(15,2), `valor_pagado` double(15,2), `tipo_negociacion` varchar(25), `nom_cargue` varchar(20), `fecha_cargue` datetime, `Proceso` varchar(25), `Estado` varchar(10), `Soporte` text, `idUser` int(11), `Arma030Anterior` enum('S','N'), `NumeroFacturaAdres` varchar(45), `Updated` timestamp, `Sync` datetime);
 
 
-DROP VIEW IF EXISTS `vista_salud_procesos_gerenciales`;
 CREATE TABLE `vista_salud_procesos_gerenciales` (`ID` bigint(20), `idProceso` int(11), `Fecha` date, `IPS` varchar(45), `EPS` varchar(50), `NombreProceso` text, `Concepto` varchar(45), `Observaciones` text, `Soporte` varchar(200));
 
 
-DROP VIEW IF EXISTS `vista_salud_respuestas`;
 CREATE TABLE `vista_salud_respuestas` (`ID` bigint(20), `cuenta` int(6) unsigned zerofill, `factura` varchar(20), `Tratado` int(1), `Soporte` varchar(200), `valor_glosado_eps` double, `valor_levantado_eps` double, `valor_aceptado_ips` double, `cod_estado` int(2), `valor_x_conciliar` double, `observacion_auditor` text, `fecha_respuesta` date, `cod_glosa_respuesta` bigint(12), `cod_actividad` varchar(20), `descripcion_actividad` text, `valor_total_actividad` double, `id_glosa_inicial` bigint(20), `EstadoGlosaHistorico` int(3), `fecha_factura` date, `numero_radicado` varchar(20), `fecha_radicado` date, `valor_factura` double(15,2), `cod_administrador` varchar(6), `nombre_administrador` varchar(200), `cod_prestador` bigint(20), `nombre_prestador` varchar(60), `nit_prestador` bigint(20), `nit_administrador` bigint(20), `regimen_eps` varchar(22), `identificacion` bigint(20), `tipo_identificacion` varchar(2), `edad_usuario` bigint(11), `unidad_medida_edad` varchar(1), `sexo_usuario` varchar(1), `cod_glosa_inicial` bigint(11), `descripcion_glosa_inicial` mediumtext, `descripcion_glosa_respuesta` mediumtext, `descripcion_estado` varchar(50), `descripcion_estado_historico` varchar(50));
 
 
-DROP VIEW IF EXISTS `vista_salud_respuestas_excel`;
 CREATE TABLE `vista_salud_respuestas_excel` (`ID` bigint(20), `cuenta` int(6) unsigned zerofill, `factura` varchar(20), `Tratado` int(1), `Soporte` varchar(200), `valor_glosado_eps` double, `valor_levantado_eps` double, `valor_aceptado_ips` double, `cod_estado` int(2), `valor_x_conciliar` double, `observacion_auditor` text, `fecha_respuesta` date, `cod_glosa_respuesta` bigint(12), `cod_actividad` varchar(20), `descripcion_actividad` text, `valor_total_actividad` double, `id_glosa_inicial` bigint(20), `EstadoGlosaHistorico` int(3), `fecha_factura` date, `numero_radicado` varchar(20), `fecha_radicado` date, `valor_factura` double(15,2), `cod_administrador` varchar(6), `nombre_administrador` varchar(200), `cod_prestador` bigint(20), `nombre_prestador` varchar(60), `nit_prestador` bigint(20), `nit_administrador` bigint(20), `regimen_eps` varchar(22), `identificacion` bigint(20), `tipo_identificacion` varchar(2), `edad_usuario` bigint(11), `unidad_medida_edad` varchar(1), `sexo_usuario` varchar(1), `cod_glosa_inicial` bigint(11), `descripcion_glosa_inicial` mediumtext, `descripcion_glosa_respuesta` mediumtext, `descripcion_estado` varchar(50), `descripcion_estado_historico` varchar(50));
 
 
-DROP VIEW IF EXISTS `vista_siho`;
 CREATE TABLE `vista_siho` (`id_factura_generada` int(20), `diasPago` bigint(11), `DiasMora` bigint(12), `cod_prest_servicio` bigint(12), `razon_social` varchar(60), `num_factura` varchar(20), `fecha_factura` date, `fecha_radicado` date, `numero_radicado` varchar(20), `cod_enti_administradora` varchar(6), `nom_enti_administradora` varchar(200), `valor_neto_pagar` double(15,2), `tipo_negociacion` enum('evento','capita'), `estado` varchar(50));
 
 
-DROP VIEW IF EXISTS `vista_temporal_actividades_af`;
 CREATE TABLE `vista_temporal_actividades_af` (`Archivo` varchar(2), `idArchivo` bigint(20), `Codigo` varchar(20), `Descripcion` varchar(255), `ValorUnitario` double, `Cantidad` varbinary(33), `Total` double, `EstadoGlosa` int(11), `Estado` varchar(50));
 
 
@@ -1950,6 +2139,9 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_af_duplicados` AS se
 DROP TABLE IF EXISTS `vista_af_semaforo`;
 CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_af_semaforo` AS select `salud_archivo_facturacion_mov_generados`.`id_fac_mov_generados` AS `id_fac_mov_generados`,`salud_archivo_facturacion_mov_generados`.`cod_prest_servicio` AS `cod_prest_servicio`,`salud_archivo_facturacion_mov_generados`.`razon_social` AS `razon_social`,`salud_archivo_facturacion_mov_generados`.`tipo_ident_prest_servicio` AS `tipo_ident_prest_servicio`,`salud_archivo_facturacion_mov_generados`.`num_ident_prest_servicio` AS `num_ident_prest_servicio`,`salud_archivo_facturacion_mov_generados`.`num_factura` AS `num_factura`,`salud_archivo_facturacion_mov_generados`.`fecha_factura` AS `fecha_factura`,`salud_archivo_facturacion_mov_generados`.`fecha_inicio` AS `fecha_inicio`,`salud_archivo_facturacion_mov_generados`.`fecha_final` AS `fecha_final`,`salud_archivo_facturacion_mov_generados`.`cod_enti_administradora` AS `cod_enti_administradora`,`salud_archivo_facturacion_mov_generados`.`nom_enti_administradora` AS `nom_enti_administradora`,`salud_archivo_facturacion_mov_generados`.`num_contrato` AS `num_contrato`,`salud_archivo_facturacion_mov_generados`.`plan_beneficios` AS `plan_beneficios`,`salud_archivo_facturacion_mov_generados`.`num_poliza` AS `num_poliza`,`salud_archivo_facturacion_mov_generados`.`valor_total_pago` AS `valor_total_pago`,`salud_archivo_facturacion_mov_generados`.`valor_comision` AS `valor_comision`,`salud_archivo_facturacion_mov_generados`.`valor_descuentos` AS `valor_descuentos`,`salud_archivo_facturacion_mov_generados`.`valor_neto_pagar` AS `valor_neto_pagar`,`salud_archivo_facturacion_mov_generados`.`tipo_negociacion` AS `tipo_negociacion`,`salud_archivo_facturacion_mov_generados`.`nom_cargue` AS `nom_cargue`,`salud_archivo_facturacion_mov_generados`.`fecha_cargue` AS `fecha_cargue`,`salud_archivo_facturacion_mov_generados`.`idUser` AS `idUser`,`salud_archivo_facturacion_mov_generados`.`eps_radicacion` AS `eps_radicacion`,`salud_archivo_facturacion_mov_generados`.`dias_pactados` AS `dias_pactados`,`salud_archivo_facturacion_mov_generados`.`fecha_radicado` AS `fecha_radicado`,`salud_archivo_facturacion_mov_generados`.`numero_radicado` AS `numero_radicado`,`salud_archivo_facturacion_mov_generados`.`Soporte` AS `Soporte`,`salud_archivo_facturacion_mov_generados`.`estado` AS `estado`,`salud_archivo_facturacion_mov_generados`.`EstadoCobro` AS `EstadoCobro`,`salud_archivo_facturacion_mov_generados`.`Arma030Anterior` AS `Arma030Anterior`,`salud_archivo_facturacion_mov_generados`.`Escenario` AS `Escenario`,`salud_archivo_facturacion_mov_generados`.`CuentaGlobal` AS `CuentaGlobal`,`salud_archivo_facturacion_mov_generados`.`CuentaRIPS` AS `CuentaRIPS`,`salud_archivo_facturacion_mov_generados`.`EstadoGlosa` AS `EstadoGlosa`,`salud_archivo_facturacion_mov_generados`.`Updated` AS `Updated`,`salud_archivo_facturacion_mov_generados`.`Sync` AS `Sync`,(select max(`vista_glosas_iniciales`.`DiasTranscurridos`) from `vista_glosas_iniciales` where ((`vista_glosas_iniciales`.`num_factura` = `salud_archivo_facturacion_mov_generados`.`num_factura`) and (`vista_glosas_iniciales`.`EstadoGlosa` = 1))) AS `Dias`,(select `vista_salud_facturas_usuarios`.`num_ident_usuario` from `vista_salud_facturas_usuarios` where (`vista_salud_facturas_usuarios`.`num_factura` = `salud_archivo_facturacion_mov_generados`.`num_factura`) limit 1) AS `identificacion_usuario` from `salud_archivo_facturacion_mov_generados`;
 
+DROP TABLE IF EXISTS `vista_ar_listado`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_ar_listado` AS select `t1`.`id_pagados` AS `id_pagados`,`t1`.`num_factura` AS `num_factura`,`t1`.`idEPS` AS `idEPS`,`t1`.`nom_enti_administradora` AS `nom_enti_administradora`,`t1`.`fecha_pago_factura` AS `fecha_pago_factura`,`t1`.`num_pago` AS `num_pago`,`t1`.`valor_bruto_pagar` AS `valor_bruto_pagar`,`t1`.`valor_descuento` AS `valor_descuento`,`t1`.`valor_iva` AS `valor_iva`,`t1`.`valor_retefuente` AS `valor_retefuente`,`t1`.`valor_reteiva` AS `valor_reteiva`,`t1`.`valor_reteica` AS `valor_reteica`,`t1`.`valor_otrasretenciones` AS `valor_otrasretenciones`,`t1`.`valor_cruces` AS `valor_cruces`,`t1`.`valor_anticipos` AS `valor_anticipos`,`t1`.`valor_pagado` AS `valor_pagado`,`t1`.`tipo_negociacion` AS `tipo_negociacion`,`t1`.`nom_cargue` AS `nom_cargue`,`t1`.`fecha_cargue` AS `fecha_cargue`,`t1`.`Proceso` AS `Proceso`,`t1`.`Estado` AS `Estado`,`t1`.`Soporte` AS `Soporte`,`t1`.`idUser` AS `idUser`,`t1`.`Arma030Anterior` AS `Arma030Anterior`,`t1`.`NumeroFacturaAdres` AS `NumeroFacturaAdres`,`t1`.`SubeDesde` AS `SubeDesde`,`t1`.`Updated` AS `Updated`,`t1`.`Sync` AS `Sync`,(select `t2`.`CuentaContable` from `salud_archivo_facturacion_mov_generados` `t2` where (`t1`.`num_factura` = `t2`.`num_factura`) limit 1) AS `CuentaContable` from `salud_archivo_facturacion_mov_pagados` `t1`;
+
 DROP TABLE IF EXISTS `vista_cartera_x_edades`;
 CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_cartera_x_edades` AS select 'T' AS `RangoDias`,`vista_salud_facturas_no_pagas`.`cod_enti_administradora` AS `idEPS`,`vista_salud_facturas_no_pagas`.`nom_enti_administradora` AS `nom_enti_administradora`,sum(`vista_salud_facturas_no_pagas`.`valor_neto_pagar`) AS `TotalCartera`,count(`vista_salud_facturas_no_pagas`.`num_factura`) AS `TotalItems`,(select `salud_eps`.`dias_convenio` from `salud_eps` where (`salud_eps`.`cod_pagador_min` = `vista_salud_facturas_no_pagas`.`cod_enti_administradora`) limit 1) AS `DiasPactados` from `vista_salud_facturas_no_pagas` group by `vista_salud_facturas_no_pagas`.`cod_enti_administradora` union all select '1' AS `RangoDias`,`vista_salud_facturas_no_pagas`.`cod_enti_administradora` AS `idEPS`,`vista_salud_facturas_no_pagas`.`nom_enti_administradora` AS `nom_enti_administradora`,sum(`vista_salud_facturas_no_pagas`.`valor_neto_pagar`) AS `TotalCartera`,count(`vista_salud_facturas_no_pagas`.`num_factura`) AS `TotalItems`,(select `salud_eps`.`dias_convenio` from `salud_eps` where (`salud_eps`.`cod_pagador_min` = `vista_salud_facturas_no_pagas`.`cod_enti_administradora`) limit 1) AS `DiasPactados` from `vista_salud_facturas_no_pagas` where (`vista_salud_facturas_no_pagas`.`DiasMora` < 1) group by `vista_salud_facturas_no_pagas`.`cod_enti_administradora` union all select '1_30' AS `RangoDias`,`vista_salud_facturas_no_pagas`.`cod_enti_administradora` AS `idEPS`,`vista_salud_facturas_no_pagas`.`nom_enti_administradora` AS `nom_enti_administradora`,sum(`vista_salud_facturas_no_pagas`.`valor_neto_pagar`) AS `TotalCartera`,count(`vista_salud_facturas_no_pagas`.`num_factura`) AS `TotalItems`,(select `salud_eps`.`dias_convenio` from `salud_eps` where (`salud_eps`.`cod_pagador_min` = `vista_salud_facturas_no_pagas`.`cod_enti_administradora`) limit 1) AS `DiasPactados` from `vista_salud_facturas_no_pagas` where ((`vista_salud_facturas_no_pagas`.`DiasMora` >= 1) and (`vista_salud_facturas_no_pagas`.`DiasMora` <= 30)) group by `vista_salud_facturas_no_pagas`.`cod_enti_administradora` union all select '31_60' AS `RangoDias`,`vista_salud_facturas_no_pagas`.`cod_enti_administradora` AS `idEPS`,`vista_salud_facturas_no_pagas`.`nom_enti_administradora` AS `nom_enti_administradora`,sum(`vista_salud_facturas_no_pagas`.`valor_neto_pagar`) AS `TotalCartera`,count(`vista_salud_facturas_no_pagas`.`num_factura`) AS `TotalItems`,(select `salud_eps`.`dias_convenio` from `salud_eps` where (`salud_eps`.`cod_pagador_min` = `vista_salud_facturas_no_pagas`.`cod_enti_administradora`) limit 1) AS `DiasPactados` from `vista_salud_facturas_no_pagas` where ((`vista_salud_facturas_no_pagas`.`DiasMora` >= 31) and (`vista_salud_facturas_no_pagas`.`DiasMora` <= 60)) group by `vista_salud_facturas_no_pagas`.`cod_enti_administradora` union all select '61_90' AS `RangoDias`,`vista_salud_facturas_no_pagas`.`cod_enti_administradora` AS `idEPS`,`vista_salud_facturas_no_pagas`.`nom_enti_administradora` AS `nom_enti_administradora`,sum(`vista_salud_facturas_no_pagas`.`valor_neto_pagar`) AS `TotalCartera`,count(`vista_salud_facturas_no_pagas`.`num_factura`) AS `TotalItems`,(select `salud_eps`.`dias_convenio` from `salud_eps` where (`salud_eps`.`cod_pagador_min` = `vista_salud_facturas_no_pagas`.`cod_enti_administradora`) limit 1) AS `DiasPactados` from `vista_salud_facturas_no_pagas` where ((`vista_salud_facturas_no_pagas`.`DiasMora` >= 61) and (`vista_salud_facturas_no_pagas`.`DiasMora` <= 90)) group by `vista_salud_facturas_no_pagas`.`cod_enti_administradora` union all select '91_120' AS `RangoDias`,`vista_salud_facturas_no_pagas`.`cod_enti_administradora` AS `idEPS`,`vista_salud_facturas_no_pagas`.`nom_enti_administradora` AS `nom_enti_administradora`,sum(`vista_salud_facturas_no_pagas`.`valor_neto_pagar`) AS `TotalCartera`,count(`vista_salud_facturas_no_pagas`.`num_factura`) AS `TotalItems`,(select `salud_eps`.`dias_convenio` from `salud_eps` where (`salud_eps`.`cod_pagador_min` = `vista_salud_facturas_no_pagas`.`cod_enti_administradora`) limit 1) AS `DiasPactados` from `vista_salud_facturas_no_pagas` where ((`vista_salud_facturas_no_pagas`.`DiasMora` >= 91) and (`vista_salud_facturas_no_pagas`.`DiasMora` <= 120)) group by `vista_salud_facturas_no_pagas`.`cod_enti_administradora` union all select '121_180' AS `RangoDias`,`vista_salud_facturas_no_pagas`.`cod_enti_administradora` AS `idEPS`,`vista_salud_facturas_no_pagas`.`nom_enti_administradora` AS `nom_enti_administradora`,sum(`vista_salud_facturas_no_pagas`.`valor_neto_pagar`) AS `TotalCartera`,count(`vista_salud_facturas_no_pagas`.`num_factura`) AS `TotalItems`,(select `salud_eps`.`dias_convenio` from `salud_eps` where (`salud_eps`.`cod_pagador_min` = `vista_salud_facturas_no_pagas`.`cod_enti_administradora`) limit 1) AS `DiasPactados` from `vista_salud_facturas_no_pagas` where ((`vista_salud_facturas_no_pagas`.`DiasMora` >= 121) and (`vista_salud_facturas_no_pagas`.`DiasMora` <= 180)) group by `vista_salud_facturas_no_pagas`.`cod_enti_administradora` union all select '181_360' AS `RangoDias`,`vista_salud_facturas_no_pagas`.`cod_enti_administradora` AS `idEPS`,`vista_salud_facturas_no_pagas`.`nom_enti_administradora` AS `nom_enti_administradora`,sum(`vista_salud_facturas_no_pagas`.`valor_neto_pagar`) AS `TotalCartera`,count(`vista_salud_facturas_no_pagas`.`num_factura`) AS `TotalItems`,(select `salud_eps`.`dias_convenio` from `salud_eps` where (`salud_eps`.`cod_pagador_min` = `vista_salud_facturas_no_pagas`.`cod_enti_administradora`) limit 1) AS `DiasPactados` from `vista_salud_facturas_no_pagas` where ((`vista_salud_facturas_no_pagas`.`DiasMora` >= 181) and (`vista_salud_facturas_no_pagas`.`DiasMora` <= 360)) group by `vista_salud_facturas_no_pagas`.`cod_enti_administradora` union all select '360' AS `RangoDias`,`vista_salud_facturas_no_pagas`.`cod_enti_administradora` AS `idEPS`,`vista_salud_facturas_no_pagas`.`nom_enti_administradora` AS `nom_enti_administradora`,sum(`vista_salud_facturas_no_pagas`.`valor_neto_pagar`) AS `TotalCartera`,count(`vista_salud_facturas_no_pagas`.`num_factura`) AS `TotalItems`,(select `salud_eps`.`dias_convenio` from `salud_eps` where (`salud_eps`.`cod_pagador_min` = `vista_salud_facturas_no_pagas`.`cod_enti_administradora`) limit 1) AS `DiasPactados` from `vista_salud_facturas_no_pagas` where (`vista_salud_facturas_no_pagas`.`DiasMora` >= 360) group by `vista_salud_facturas_no_pagas`.`cod_enti_administradora`;
 
@@ -1964,6 +2156,9 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_glosas_iniciales` AS
 
 DROP TABLE IF EXISTS `vista_glosas_iniciales_reportes`;
 CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_glosas_iniciales_reportes` AS select `salud_glosas_iniciales`.`ID` AS `ID`,`salud_glosas_iniciales`.`FechaIPS` AS `FechaIPS`,`salud_glosas_iniciales`.`FechaAuditoria` AS `FechaAuditoria`,`salud_glosas_iniciales`.`FechaRegistro` AS `FechaRegistro`,`salud_glosas_iniciales`.`CodigoGlosa` AS `CodigoGlosa`,`salud_glosas_iniciales`.`num_factura` AS `num_factura`,`salud_glosas_iniciales`.`CodigoActividad` AS `CodigoActividad`,`salud_glosas_iniciales`.`EstadoGlosa` AS `EstadoGlosa`,`salud_glosas_iniciales`.`ValorActividad` AS `ValorActividad`,`salud_glosas_iniciales`.`ValorGlosado` AS `ValorGlosado`,`salud_glosas_iniciales`.`ValorLevantado` AS `ValorLevantado`,`salud_glosas_iniciales`.`ValorAceptado` AS `ValorAceptado`,`salud_glosas_iniciales`.`ValorXConciliar` AS `ValorXConciliar`,`salud_glosas_iniciales`.`ValorConciliado` AS `ValorConciliado`,`salud_glosas_iniciales`.`Updated` AS `Updated`,`salud_glosas_iniciales`.`Sync` AS `Sync`,(select `salud_archivo_conceptos_glosas`.`descrpcion_concep_especifico` from `salud_archivo_conceptos_glosas` where (`salud_archivo_conceptos_glosas`.`cod_glosa` = `salud_glosas_iniciales`.`CodigoGlosa`) limit 1) AS `DescripcionGlosa`,(select `salud_archivo_facturacion_mov_generados`.`cod_enti_administradora` from `salud_archivo_facturacion_mov_generados` where (`salud_glosas_iniciales`.`num_factura` = `salud_archivo_facturacion_mov_generados`.`num_factura`) limit 1) AS `cod_administrador`,(select `salud_archivo_facturacion_mov_generados`.`fecha_factura` from `salud_archivo_facturacion_mov_generados` where (`salud_glosas_iniciales`.`num_factura` = `salud_archivo_facturacion_mov_generados`.`num_factura`) limit 1) AS `fecha_factura`,(select `salud_archivo_facturacion_mov_generados`.`razon_social` from `salud_archivo_facturacion_mov_generados` where (`salud_glosas_iniciales`.`num_factura` = `salud_archivo_facturacion_mov_generados`.`num_factura`) limit 1) AS `nombre_prestador`,(select `salud_archivo_facturacion_mov_generados`.`cod_prest_servicio` from `salud_archivo_facturacion_mov_generados` where (`salud_glosas_iniciales`.`num_factura` = `salud_archivo_facturacion_mov_generados`.`num_factura`) limit 1) AS `cod_prestador`,(select `salud_archivo_facturacion_mov_generados`.`num_ident_prest_servicio` from `salud_archivo_facturacion_mov_generados` where (`salud_glosas_iniciales`.`num_factura` = `salud_archivo_facturacion_mov_generados`.`num_factura`) limit 1) AS `nit_prestador`,(select `salud_eps`.`nit` from `salud_eps` where (`salud_eps`.`cod_pagador_min` = (select `cod_administrador`)) limit 1) AS `nit_administrador`,(select `salud_eps`.`nombre_completo` from `salud_eps` where (`salud_eps`.`cod_pagador_min` = (select `cod_administrador`)) limit 1) AS `nombre_administrador`,(select `salud_eps`.`tipo_regimen` from `salud_eps` where (`salud_eps`.`cod_pagador_min` = (select `cod_administrador`)) limit 1) AS `regimen_eps` from `salud_glosas_iniciales` where (`salud_glosas_iniciales`.`EstadoGlosa` <= 7);
+
+DROP TABLE IF EXISTS `vista_prefactura_reservas`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_prefactura_reservas` AS select `t1`.`ID` AS `ID`,`t1`.`idPaciente` AS `idPaciente`,`t2`.`TipoDocumento` AS `TipoDocumento`,`t2`.`NumeroDocumento` AS `NumeroDocumento`,concat(`t2`.`PrimerNombre`,' ',`t2`.`SegundoNombre`,' ',`t2`.`PrimerApellido`,' ',`t2`.`SegundoApellido`) AS `NombreCompleto`,`t2`.`Sexo` AS `Sexo`,`t2`.`Telefono` AS `Telefono`,`t2`.`Direccion` AS `Direccion`,`t2`.`CodEPS` AS `CodEPS`,`t2`.`CodigoDANE` AS `CodigoDANE`,`t1`.`NumeroAutorizacion` AS `NumeroAutorizacion`,`t1`.`Cie10` AS `Cie10`,`t1`.`Observaciones` AS `Observaciones`,(select `t3`.`Nombre` from `catalogo_municipios` `t3` where (`t3`.`CodigoDANE` = `t2`.`CodigoDANE`)) AS `Municipio`,(select `t3`.`Departamento` from `catalogo_municipios` `t3` where (`t3`.`CodigoDANE` = `t2`.`CodigoDANE`)) AS `Departamento`,`t1`.`Estado` AS `Estado`,(select `t4`.`EstadoReserva` from `prefactura_reservas_estados` `t4` where (`t4`.`ID` = `t1`.`Estado`)) AS `NombreEstado` from (`prefactura_reservas` `t1` join `prefactura_paciente` `t2` on((`t1`.`idPaciente` = `t2`.`ID`)));
 
 DROP TABLE IF EXISTS `vista_salud_consolidaciones_masivas`;
 CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_salud_consolidaciones_masivas` AS select `salud_conciliaciones_masivas_temp`.`ID` AS `ID`,`salud_conciliaciones_masivas_temp`.`FechaConciliacion` AS `FechaConciliacion`,`salud_conciliaciones_masivas_temp`.`CuentaRIPS` AS `CuentaRIPSTemp`,`salud_conciliaciones_masivas_temp`.`num_factura` AS `num_factura`,`salud_conciliaciones_masivas_temp`.`CodigoActividad` AS `CodigoActividad`,`salud_conciliaciones_masivas_temp`.`ValorLevantado` AS `ValorLevantado`,`salud_conciliaciones_masivas_temp`.`ValorAceptado` AS `ValorAceptado`,`salud_conciliaciones_masivas_temp`.`Observaciones` AS `Observaciones`,`salud_conciliaciones_masivas_temp`.`Soporte` AS `Soporte`,`salud_conciliaciones_masivas_temp`.`Conciliada` AS `Conciliada`,(select (`salud_conciliaciones_masivas_temp`.`FechaConciliacion` > now())) AS `Extemporanea`,(select (`salud_conciliaciones_masivas_temp`.`ValorLevantado` >= 0)) AS `ValorLevantadoPositivo`,(select (`salud_conciliaciones_masivas_temp`.`ValorAceptado` >= 0)) AS `ValorAceptadoPositivo`,(select `salud_archivo_facturacion_mov_generados`.`num_factura` from `salud_archivo_facturacion_mov_generados` where (`salud_conciliaciones_masivas_temp`.`num_factura` = `salud_archivo_facturacion_mov_generados`.`num_factura`)) AS `Factura`,(select `salud_archivo_facturacion_mov_generados`.`CuentaRIPS` from `salud_archivo_facturacion_mov_generados` where ((`salud_conciliaciones_masivas_temp`.`num_factura` = `salud_archivo_facturacion_mov_generados`.`num_factura`) and (`salud_conciliaciones_masivas_temp`.`CuentaRIPS` = `salud_archivo_facturacion_mov_generados`.`CuentaRIPS`))) AS `CuentaRIPS`,(select `salud_archivo_medicamentos`.`cod_medicamento` from `salud_archivo_medicamentos` where ((`salud_archivo_medicamentos`.`num_factura` = `salud_conciliaciones_masivas_temp`.`num_factura`) and (`salud_archivo_medicamentos`.`cod_medicamento` = `salud_conciliaciones_masivas_temp`.`CodigoActividad`)) limit 1) AS `CodigoActividadAM`,(select `salud_archivo_medicamentos`.`nom_medicamento` from `salud_archivo_medicamentos` where ((`salud_archivo_medicamentos`.`num_factura` = `salud_conciliaciones_masivas_temp`.`num_factura`) and (`salud_archivo_medicamentos`.`cod_medicamento` = `salud_conciliaciones_masivas_temp`.`CodigoActividad`)) limit 1) AS `NombreActividadAM`,(select `salud_archivo_medicamentos`.`EstadoGlosa` from `salud_archivo_medicamentos` where ((`salud_archivo_medicamentos`.`num_factura` = `salud_conciliaciones_masivas_temp`.`num_factura`) and (`salud_archivo_medicamentos`.`cod_medicamento` = `salud_conciliaciones_masivas_temp`.`CodigoActividad`)) limit 1) AS `EstadoGlosaAM`,(select sum(`salud_archivo_medicamentos`.`valor_total_medic`) from `salud_archivo_medicamentos` where ((`salud_archivo_medicamentos`.`num_factura` = `salud_conciliaciones_masivas_temp`.`num_factura`) and (`salud_archivo_medicamentos`.`cod_medicamento` = `salud_conciliaciones_masivas_temp`.`CodigoActividad`)) limit 1) AS `TotalAM`,(select `salud_archivo_otros_servicios`.`cod_servicio` from `salud_archivo_otros_servicios` where ((`salud_archivo_otros_servicios`.`num_factura` = `salud_conciliaciones_masivas_temp`.`num_factura`) and (`salud_archivo_otros_servicios`.`cod_servicio` = `salud_conciliaciones_masivas_temp`.`CodigoActividad`)) limit 1) AS `CodigoActividadAT`,(select `salud_archivo_otros_servicios`.`nom_servicio` from `salud_archivo_otros_servicios` where ((`salud_archivo_otros_servicios`.`num_factura` = `salud_conciliaciones_masivas_temp`.`num_factura`) and (`salud_archivo_otros_servicios`.`cod_servicio` = `salud_conciliaciones_masivas_temp`.`CodigoActividad`)) limit 1) AS `NombreActividadAT`,(select `salud_archivo_otros_servicios`.`EstadoGlosa` from `salud_archivo_otros_servicios` where ((`salud_archivo_otros_servicios`.`num_factura` = `salud_conciliaciones_masivas_temp`.`num_factura`) and (`salud_archivo_otros_servicios`.`cod_servicio` = `salud_conciliaciones_masivas_temp`.`CodigoActividad`)) limit 1) AS `EstadoGlosaAT`,(select sum(`salud_archivo_otros_servicios`.`valor_total_material`) from `salud_archivo_otros_servicios` where ((`salud_archivo_otros_servicios`.`num_factura` = `salud_conciliaciones_masivas_temp`.`num_factura`) and (`salud_archivo_otros_servicios`.`cod_servicio` = `salud_conciliaciones_masivas_temp`.`CodigoActividad`)) limit 1) AS `TotalAT`,(select `salud_archivo_procedimientos`.`cod_procedimiento` from `salud_archivo_procedimientos` where ((`salud_archivo_procedimientos`.`num_factura` = `salud_conciliaciones_masivas_temp`.`num_factura`) and (`salud_archivo_procedimientos`.`cod_procedimiento` = `salud_conciliaciones_masivas_temp`.`CodigoActividad`)) limit 1) AS `CodigoActividadAP`,(select `salud_archivo_procedimientos`.`EstadoGlosa` from `salud_archivo_procedimientos` where ((`salud_archivo_procedimientos`.`num_factura` = `salud_conciliaciones_masivas_temp`.`num_factura`) and (`salud_archivo_procedimientos`.`cod_procedimiento` = `salud_conciliaciones_masivas_temp`.`CodigoActividad`)) limit 1) AS `EstadoGlosaAP`,(select sum(`salud_archivo_procedimientos`.`valor_procedimiento`) from `salud_archivo_procedimientos` where ((`salud_archivo_procedimientos`.`num_factura` = `salud_conciliaciones_masivas_temp`.`num_factura`) and (`salud_archivo_procedimientos`.`cod_procedimiento` = `salud_conciliaciones_masivas_temp`.`CodigoActividad`)) limit 1) AS `TotalAP`,(select `salud_cups`.`descripcion_cups` from `salud_cups` where (`salud_cups`.`codigo_sistema` = `salud_conciliaciones_masivas_temp`.`CodigoActividad`) limit 1) AS `NombreActividad`,(select `salud_archivo_consultas`.`cod_consulta` from `salud_archivo_consultas` where ((`salud_archivo_consultas`.`num_factura` = `salud_conciliaciones_masivas_temp`.`num_factura`) and (`salud_archivo_consultas`.`cod_consulta` = `salud_conciliaciones_masivas_temp`.`CodigoActividad`)) limit 1) AS `CodigoActividadAC`,(select `salud_archivo_consultas`.`EstadoGlosa` from `salud_archivo_consultas` where ((`salud_archivo_consultas`.`num_factura` = `salud_conciliaciones_masivas_temp`.`num_factura`) and (`salud_archivo_consultas`.`cod_consulta` = `salud_conciliaciones_masivas_temp`.`CodigoActividad`)) limit 1) AS `EstadoGlosaAC`,(select sum(`salud_archivo_consultas`.`valor_consulta`) from `salud_archivo_consultas` where ((`salud_archivo_consultas`.`num_factura` = `salud_conciliaciones_masivas_temp`.`num_factura`) and (`salud_archivo_consultas`.`cod_consulta` = `salud_conciliaciones_masivas_temp`.`CodigoActividad`)) limit 1) AS `TotalAC` from `salud_conciliaciones_masivas_temp`;
@@ -2010,4 +2205,4 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_siho` AS select `t1`
 DROP TABLE IF EXISTS `vista_temporal_actividades_af`;
 CREATE ALGORITHM=UNDEFINED DEFINER=`techno`@`%` SQL SECURITY DEFINER VIEW `vista_temporal_actividades_af` AS select 'AC' AS `Archivo`,`salud_archivo_consultas`.`id_consultas` AS `idArchivo`,`salud_archivo_consultas`.`cod_consulta` AS `Codigo`,(select `salud_cups`.`descripcion_cups` from `salud_cups` where (`salud_cups`.`codigo_sistema` = `salud_archivo_consultas`.`cod_consulta`)) AS `Descripcion`,`salud_archivo_consultas`.`valor_consulta` AS `ValorUnitario`,'1' AS `Cantidad`,`salud_archivo_consultas`.`valor_consulta` AS `Total`,`salud_archivo_consultas`.`EstadoGlosa` AS `EstadoGlosa`,(select `salud_estado_glosas`.`Estado_glosa` from `salud_estado_glosas` where (`salud_estado_glosas`.`ID` = `salud_archivo_consultas`.`EstadoGlosa`)) AS `Estado` from `salud_archivo_consultas` where (`salud_archivo_consultas`.`num_factura` = 'FV-1011420') union select 'AP' AS `Archivo`,`salud_archivo_procedimientos`.`id_procedimiento` AS `idArchivo`,`salud_archivo_procedimientos`.`cod_procedimiento` AS `Codigo`,(select `salud_cups`.`descripcion_cups` from `salud_cups` where (`salud_cups`.`codigo_sistema` = `salud_archivo_procedimientos`.`cod_procedimiento`)) AS `Descripcion`,(sum(`salud_archivo_procedimientos`.`valor_procedimiento`) / count(`salud_archivo_procedimientos`.`id_procedimiento`)) AS `ValorUnitario`,count(`salud_archivo_procedimientos`.`id_procedimiento`) AS `Cantidad`,sum(`salud_archivo_procedimientos`.`valor_procedimiento`) AS `Total`,`salud_archivo_procedimientos`.`EstadoGlosa` AS `EstadoGlosa`,(select `salud_estado_glosas`.`Estado_glosa` from `salud_estado_glosas` where (`salud_estado_glosas`.`ID` = `salud_archivo_procedimientos`.`EstadoGlosa`)) AS `Estado` from `salud_archivo_procedimientos` where (`salud_archivo_procedimientos`.`num_factura` = 'FV-1011420') group by `salud_archivo_procedimientos`.`cod_procedimiento` union select 'AT' AS `Archivo`,`salud_archivo_otros_servicios`.`id_otro_servicios` AS `idArchivo`,`salud_archivo_otros_servicios`.`cod_servicio` AS `Codigo`,`salud_archivo_otros_servicios`.`nom_servicio` AS `Descripcion`,`salud_archivo_otros_servicios`.`valor_unit_material` AS `ValorUnitario`,sum(`salud_archivo_otros_servicios`.`cantidad`) AS `Cantidad`,sum(`salud_archivo_otros_servicios`.`valor_total_material`) AS `Total`,`salud_archivo_otros_servicios`.`EstadoGlosa` AS `EstadoGlosa`,(select `salud_estado_glosas`.`Estado_glosa` from `salud_estado_glosas` where (`salud_estado_glosas`.`ID` = `salud_archivo_otros_servicios`.`EstadoGlosa`)) AS `Estado` from `salud_archivo_otros_servicios` where (`salud_archivo_otros_servicios`.`num_factura` = 'FV-1011420') group by `salud_archivo_otros_servicios`.`cod_servicio` union select 'AM' AS `Archivo`,`salud_archivo_medicamentos`.`id_medicamentos` AS `idArchivo`,`salud_archivo_medicamentos`.`cod_medicamento` AS `Codigo`,`salud_archivo_medicamentos`.`nom_medicamento` AS `Descripcion`,`salud_archivo_medicamentos`.`valor_unit_medic` AS `ValorUnitario`,sum(`salud_archivo_medicamentos`.`num_und_medic`) AS `Cantidad`,sum(`salud_archivo_medicamentos`.`valor_total_medic`) AS `Total`,`salud_archivo_medicamentos`.`EstadoGlosa` AS `EstadoGlosa`,(select `salud_estado_glosas`.`Estado_glosa` from `salud_estado_glosas` where (`salud_estado_glosas`.`ID` = `salud_archivo_medicamentos`.`EstadoGlosa`)) AS `Estado` from `salud_archivo_medicamentos` where (`salud_archivo_medicamentos`.`num_factura` = 'FV-1011420') group by `salud_archivo_medicamentos`.`cod_medicamento`;
 
--- 2019-01-10 11:21:06
+-- 2020-04-01 13:55:09
