@@ -903,6 +903,10 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                     print("<td>");
                                         print('<button type="button" class="btn btn-primary btn-sm" onclick=FormularioAdjuntarDocumentosCita(`'.$idItem.'`)><i class="fa fa-paperclip"></i></button>');
                                     print("</td>");
+                                    print("<td>");
+                                        $Ruta="../../general/Consultas/PDF_Documentos.draw.php?idDocumento=2000&ID=".$idItem;
+                                        print('<a class="btn btn-danger btn-sm" href="'.$Ruta.'" target="_blank"><i class="fa fa-file-pdf-o"></i></a>');
+                                    print("</td>");
                                     print("<td class='mailbox-name'>");
                                         print($RegistrosTabla["ID"]);
                                     print("</td>");
@@ -1314,7 +1318,8 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                     print("</td>");
                                     
                                     print("<td>");
-                                        print('<a class="btn btn-danger btn-sm" href="#" target="_blank"><i class="fa fa-file-pdf-o"></i></a>');
+                                        $Ruta="../../general/Consultas/PDF_Documentos.draw.php?idDocumento=2000&ID=".$idItem;
+                                        print('<a class="btn btn-danger btn-sm" href="'.$Ruta.'" target="_blank"><i class="fa fa-file-pdf-o"></i></a>');
                                     print("</td>");
                                     
                                     print("<td class='mailbox-name'>");

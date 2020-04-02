@@ -2291,6 +2291,173 @@ $tbl.= "</table>";
 
     }
     
+    
+    public function ReporteAsistenciaPDF($idCita) {
+        
+        $obCon=new conexion(1);
+        $idFormato=2000;
+        $DatosFormato=$obCon->DevuelveValores("formatos_calidad", "ID", $idFormato);
+        $Documento=$DatosFormato["Nombre"]." $idCita";
+        $this->PDF_Ini($Documento, 8, "");
+        $DatosCita=$this->obCon->DevuelveValores("prefactura_reservas_citas", "ID", $idCita);
+        $this->PDF_Encabezado($DatosCita["Fecha"],1, $idFormato, "",$Documento);
+        
+        $DatosReserva=$obCon->DevuelveValores("prefactura_reservas", "ID", $DatosCita["idReserva"]);
+        $DatosPaciente=$obCon->DevuelveValores("prefactura_paciente", "ID", $DatosReserva["idPaciente"]);
+        $DatosHospital=$obCon->DevuelveValores("ips", "ID", $DatosCita["idHospital"]);
+        
+        $this->EncabezadoReporteAsistencia($DatosPaciente,$DatosReserva, $DatosCita, $DatosHospital);
+        
+        $html="<pre><strong>HORA DE SALIDA:</strong>    ______________________ </pre>";
+        $html.="<pre><strong>HORA DE LLEGADA:</strong>   ______________________<BR><BR></pre>";
+        $html.="<pre>                                              <strong>DATOS DEL TRASLADO:</strong><BR><BR></pre>";
+        
+        $html.="<pre><strong>SITIO DE ORIGEN:</strong>    ___________________________________________________________________________________</pre>";
+        $html.="<pre><strong>SITIO DE DESTINO:</strong>   ___________________________________________________________________________________</pre>";
+        $html.="<pre><strong>RECORRIDO:</strong>          ___________________________________________________________________________________ </pre>";
+        $html.="<pre><strong>CONDUCTOR:</strong>          _____________________________________________________________ <strong>MOVIL:</strong>_______________<BR><BR><BR><BR><BR><BR></pre>";
+        
+        $html.="<pre><strong>OBSERVACIONES:</strong>      ___________________________________________________________________________________</pre>";
+        $html.="<pre><strong>                    ___________________________________________________________________________________</pre>";
+        $html.="<pre><strong>                    ___________________________________________________________________________________<BR><BR><BR><BR><BR><BR><BR><BR><BR><BR><BR><BR><BR><BR><BR><BR></pre>";
+        
+        
+        $html.="<pre><strong>      _____________________________________                    _____________________________________
+        FIRMA Y SELLO DE LA INSTITUCION                             FIRMA O HUELLA DEL PACIENTE
+
+                                    </pre>";
+        
+        
+        $this->PDF_Write("<br><br><br><br><br><br><br><br><br><br><br><br>".$html);
+        
+        $this->PDF_Output("Comprobante_$idCita");
+         
+    }
+    
+    
+    public function EncabezadoReporteAsistencia($DatosPaciente,$DatosReserva,$DatosCita,$DatosHospital) {
+        $obCon=new conexion(1);
+        $Paciente= utf8_encode($DatosPaciente["PrimerNombre"]." ".$DatosPaciente["SegundoNombre"]." ".$DatosPaciente["PrimerApellido"]." ".$DatosPaciente["SegundoApellido"] );
+        $DireccionPaciente=utf8_encode($DatosPaciente["Direccion"]);
+        $FechaHora=$DatosCita["Fecha"]." ".$DatosCita["Hora"];
+        $Observaciones=utf8_encode($DatosCita["Observaciones"]);
+        $idUsuario=$DatosCita["idUser"];
+        $DatosUsuario=$this->obCon->ValorActual("usuarios", " Nombre , Apellido ", " idUsuarios='$idUsuario'");
+        $NombreUsuario=$DatosUsuario["Nombre"]." ".$DatosUsuario["Apellido"];
+        $DatosMunicipio= $obCon->DevuelveValores("catalogo_municipios", "CodigoDANE", $DatosPaciente["CodigoDANE"]);
+        $Municipio= utf8_encode($DatosMunicipio["Nombre"]." ".$DatosMunicipio["Departamento"]);
+        $DatosEPS=$obCon->DevuelveValores("salud_eps", "cod_pagador_min", $DatosPaciente["CodEPS"]);
+        $EPS=utf8_encode($DatosEPS["nombre_completo"]);
+        $Hospital=utf8_encode($DatosHospital["Nombre"]." ".$DatosHospital["Direccion"]." ".$DatosHospital["Municipio"]." ".$DatosHospital["Departamento"]);
+        $DatosDiagnostico= $obCon->DevuelveValores("salud_cie10", "codigo_sistema", $DatosReserva["Cie10"]);
+        $Diagnostico=utf8_encode($DatosDiagnostico["descripcion_cups"]." (".$DatosReserva["Cie10"].")");
+        $DatosEdad= $this->CalcularEdad($DatosPaciente["FechaNacimiento"]);
+        $Edad=$DatosEdad["Edad"];
+        $Unidad= ($DatosEdad["NombreUnidad"]);
+        $tbl = <<<EOD
+<table cellspacing="0" cellpadding="2" border="1">
+    <tr>
+        <td><strong>Paciente:</strong></td>
+        <td colspan="3">$Paciente</td>
+        
+    </tr>
+    <tr>
+    	<td><strong>Identificacion:</strong></td>
+        <td colspan="3">$DatosPaciente[TipoDocumento] - $DatosPaciente[NumeroDocumento]</td>
+    </tr>
+    <tr>
+        <td colspan="2"><strong>Dirección:</strong></td>
+        <td><strong>Ciudad:</strong></td>
+        <td><strong>Teléfono:</strong></td>
+    </tr>
+    <tr>
+        <td colspan="2">$DireccionPaciente</td>
+        <td>$Municipio</td>
+        <td>$DatosPaciente[Telefono]</td>
+    </tr>
+    <tr>
+        <td colspan="4"><strong>Fecha y Hora de la cita:</strong> $FechaHora</td>
+        
+    </tr>
+    
+</table>
+        
+EOD;
+
+
+$this->PDF->MultiCell(93, 25, $tbl, 0, 'L', 1, 0, '', '', true,0, true, true, 10, 'M');
+
+$tbl = <<<EOD
+<table cellspacing="0" cellpadding="2" border="1">
+    <tr>
+        <td><strong>EPS:</strong></td>
+        <td colspan="3">$EPS</td>
+        
+    </tr>
+    <tr>
+    	<td><strong>Diagnostico:</strong></td>
+        <td colspan="3">$Diagnostico</td>
+    </tr>
+    <tr>
+        <td colspan="2"><strong>Fecha Nacimiento:</strong></td>
+        <td><strong>Edad:</strong></td>
+        <td><strong>Unidad:</strong></td>
+    </tr>
+    <tr>
+        <td colspan="2">$DatosPaciente[FechaNacimiento]</td>
+        <td>$Edad</td>
+        <td>$Unidad</td>
+    </tr>
+    <tr>
+        <td colspan="4"><strong>Hospital:</strong> $Hospital</td>
+        
+    </tr>
+    
+</table>
+        
+EOD;
+
+$this->PDF->MultiCell(93, 25, $tbl, 0, 'L', 1, 0, '', '', true,0, true, true, 10, 'M');
+
+    
+    }
+    
+    public function CalcularEdad($FechaNacimiento) {
+        $FechaActual=date("Y-m-d");
+        $datetime1 = new DateTime($FechaNacimiento);
+        $datetime2 = new DateTime($FechaActual);
+        $interval = $datetime1->diff($datetime2);
+        $FechaMayor=$interval->format('%R');
+        $Dias=$interval->format('%d');
+        $Anios=$interval->format('%y');
+        $Meses=$interval->format('%m');
+        $Salte=0;
+        if($Anios>0 and $Salte==0){
+            $EdadCalculada=$Anios;
+            $Unidad=1;
+            $Salte=1;
+            $NombreUnidad="AÑOS";
+        }
+        
+        if($Meses>0 and $Salte==0){
+            $EdadCalculada=$Meses;
+            $Unidad=2;
+            $Salte=1;
+            $NombreUnidad="MESES";
+        }
+        
+        if($Dias>0 and $Salte==0){
+            $EdadCalculada=$Dias;
+            $Unidad=3;
+            $Salte=1;
+            $NombreUnidad="DIAS";
+        }
+        
+        $DatosEdad["Edad"]=$EdadCalculada;
+        $DatosEdad["Unidad"]=$Unidad;
+        $DatosEdad["NombreUnidad"]=$NombreUnidad;
+        return($DatosEdad);
+    }
    //Fin Clases
 }
     

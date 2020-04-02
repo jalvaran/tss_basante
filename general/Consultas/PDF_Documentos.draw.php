@@ -2,12 +2,12 @@
 if(isset($_REQUEST["idDocumento"])){
     $myPage="PDF_Documentos.draw.php";
     include_once("../../modelo/php_conexion.php");
-    include_once("../../modelo/PrintPos.php");
+    //include_once("../../modelo/PrintPos.php");
     include_once("../clases/ClasesPDFDocumentos.class.php");
     session_start();
     $idUser=$_SESSION["idUser"];
     $obCon = new conexion($idUser);
-    $obPrint=new PrintPos($idUser);
+    //$obPrint=new PrintPos($idUser);
     $obDoc = new Documento($db);
     $idDocumento=$obCon->normalizar($_REQUEST["idDocumento"]);
     
@@ -91,6 +91,11 @@ if(isset($_REQUEST["idDocumento"])){
         case 35: //PDF de un comprobante de prestamo
             $idPrestamo=$obCon->normalizar($_REQUEST["ID"]);
             $obDoc->ComprobantePrestamoPDF($idPrestamo,"");            
+            break;//Fin caso 35
+        
+        case 2000: //PDF para un reporte de asistencia
+            $idCita=$obCon->normalizar($_REQUEST["ID"]);
+            $obDoc->ReporteAsistenciaPDF($idCita,"");            
             break;//Fin caso 35
     }
 }else{
