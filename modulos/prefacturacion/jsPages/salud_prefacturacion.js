@@ -29,6 +29,12 @@ function MostrarListadoSegunID(){
     if(idListado==3){
         ListarCitas();
     }
+    if(idListado==4){
+        ListarPendientesPorFacturar();
+    }
+    if(idListado==5){
+        ListarFacturas();
+    }
 }
 function ListarPacientes(Page=1){
     var idDiv="DivGeneralDraw";
@@ -357,6 +363,12 @@ function CambiePagina(Funcion,Page=""){
     }
     if(Funcion==3){
         ListarCitas(Page);
+    }
+    if(Funcion==4){
+        ListarPendientesPorFacturar(Page);
+    }
+    if(Funcion==5){
+        ListarFacturas(Page);
     }
     
 }
@@ -1100,5 +1112,108 @@ function ListarCitas(Page=1){
           }
       });
 }
+
+function ListarPendientesPorFacturar(Page=1){
+    var idDiv="DivGeneralDraw";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+    
+    var Busquedas =document.getElementById("TxtBusquedas").value;    
+    var FechaInicialRangos =document.getElementById("FechaInicialRangos").value;
+    var FechaFinalRangos =document.getElementById("FechaFinalRangos").value;
+    
+    var form_data = new FormData();
+        form_data.append('Accion', 14);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('Page', Page);
+        form_data.append('Busquedas', Busquedas);        
+        form_data.append('FechaInicialRangos', FechaInicialRangos);
+        form_data.append('FechaFinalRangos', FechaFinalRangos);
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos                      
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+
+function FormularioCrearFactura(idReserva){
+    var idDiv="DivGeneralDraw";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+    
+    var Fecha =document.getElementById("FechaFinalRangos").value;
+    
+    var form_data = new FormData();
+        form_data.append('Accion', 15);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('idReserva', idReserva);
+        form_data.append('Fecha', Fecha);
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data;
+            
+            $('.SelectServicio').select2({
+		
+                placeholder: 'Servicio',
+                ajax: {
+                  url: 'buscadores/catalogo_servicios.search.php',
+                  dataType: 'json',
+                  delay: 250,
+                                    
+                  processResults: function (data) {
+                      
+                    return {                     
+                      results: data
+                    };
+                  },
+                 cache: true
+                }
+              }); 
+              
+              $('.SelectColaborador').select2({
+		
+                placeholder: 'Colaborador',
+                ajax: {
+                  url: 'buscadores/colaboradores.search.php',
+                  dataType: 'json',
+                  delay: 250,
+                                    
+                  processResults: function (data) {
+                      
+                    return {                     
+                      results: data
+                    };
+                  },
+                 cache: true
+                }
+              }); 
+              
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
 MostrarListadoSegunID();
 

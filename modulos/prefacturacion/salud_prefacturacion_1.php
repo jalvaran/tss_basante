@@ -37,7 +37,6 @@ $css->PageInit($myTitulo);
     $css->section("", "content", "", "");
         $css->CrearDiv("", "row", "left", 1, 1);
          $css->CrearDiv("", "col-md-2", "left", 1, 1);
-         /*
             $css->CrearBotonEvento("BtnPacientes", "Pacientes", 1, "onclick", "ListarPacientes();idListado=1;", "verde");
             print("<br><br>");
             $css->CrearBotonEvento("BtnReservas", "Reservas", 1, "onclick", "ListarReservas();idListado=2;", "azul");
@@ -47,46 +46,6 @@ $css->PageInit($myTitulo);
             $css->CrearDiv("DivFiltrosReservas", "box box-solid", "left", 1, 1);
              $css->CrearDiv("", "box-header with-border", "left", 1, 1);
                 
-          * 
-          */
-            $css->CrearDiv("", "box box-solid", "left", 1, 1);
-    $css->CrearDiv("", "box-header with-border", "left", 1, 1);
-    print('<h3 class="box-title">Carpetas</h3>');
-    $css->CrearDiv("", "box-tools", "left", 1, 1);    
-    print('  <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
-                </button>
-              </div>
-            </div>
-            <div class="box-body no-padding" style="">
-              <ul class="nav nav-pills nav-stacked">
-                <li>
-                    <a href="#" onclick="ListarPacientes();idListado=1;">
-                        <i class="fa fa-user-md"></i>Pacientes</a>
-                </li>
-                <li>
-                    <a href="#" onclick="ListarReservas();idListado=2;">
-                        <i class="fa fa-ambulance"></i>Reservas</a>
-                </li>
-                <li>
-                    <a href="#" onclick="ListarCitas();idListado=3;">
-                        <i class="fa fa-medkit"></i>Citas</a>
-                </li>
-                <li>
-                    <a href="#" onclick="ListarPendientesPorFacturar();idListado=4;">
-                        <i class="fa fa-list-alt"></i>Pendiente por Facturar</a>
-                </li>
-                <li>
-                    <a href="#" onclick="ListarFacturas();idListado=5;">
-                        <i class="fa fa-list"></i>Historial de Facturas</a>
-                </li>
-               
-              </ul>
-            </div>
-            <!-- /.box-body -->
-          </div>
-          <!-- /. box -->
-          <div class="box box-solid">
-            <div class="box-header with-border">');
                print('<h3 class="box-title">Filtros Reservas</h3>');
                
                $css->CrearDiv("", "box-tools", "left", 1, 1);    

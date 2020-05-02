@@ -12,7 +12,7 @@ if($idUser==''){
 $obRest=new conexion($idUser);
 $key=$obRest->normalizar($_REQUEST['q']);
 
-$sql = "SELECT * FROM catalogo_municipios WHERE Nombre like '%$key%' or CodigoDANE like '%$key%' LIMIT 100"; 
+$sql = "SELECT * FROM colaboradores WHERE Identificacion = '$key' or Nombre like '%$key%' LIMIT 100"; 
 
 $result = $obRest->Query($sql);
 
@@ -20,7 +20,7 @@ $json = [];
 
 while($row = $obRest->FetchAssoc($result)){
     
-    $Texto= utf8_encode($row['Nombre']." || ".$row['Departamento']." || ".$row['CodigoDANE']);
-    $json[] = ['id'=>$row['CodigoDANE'], 'text'=>$Texto];
+    $Texto= utf8_encode($row['Identificacion']." || ".$row['Nombre']);
+    $json[] = ['id'=>$row['Identificacion'], 'text'=>$Texto];
 }
 echo json_encode($json);

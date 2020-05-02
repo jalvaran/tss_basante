@@ -95,7 +95,29 @@ class Prefacturacion extends conexion{
         $this->Query($sql);
     }
     
-   
+    public function CrearVistaPendientesPorFacturar($FechaInicial,$FechaFinal) {
+        $sql="DROP VIEW IF EXISTS `vista_pendiente_por_facturar`;";
+        $this->Query($sql);
+        $Condicion="";
+        if($FechaInicial<>''){
+            $Condicion.=" AND t2.Fecha>='$FechaInicial'";
+        }
+        if($FechaFinal<>''){
+            $Condicion.=" AND t2.Fecha<='$FechaFinal'";
+        }
+        $sql="CREATE VIEW vista_pendiente_por_facturar AS 
+                SELECT t1.ID,t1.Created as FechaReserva,t1.NumeroAutorizacion,t1.idPaciente,
+
+                (SELECT t5.TipoDocumento FROM prefactura_paciente t5 WHERE t5.ID=t1.idPaciente) as TipoDocumento,
+                (SELECT t5.NumeroDocumento FROM prefactura_paciente t5 WHERE t5.ID=t1.idPaciente) as NumeroDocumento,
+                (SELECT CONCAT(t5.PrimerNombre,' ',t5.SegundoNombre,' ',t5.PrimerApellido,' ',t5.SegundoApellido) FROM prefactura_paciente t5 WHERE t5.ID=t1.idPaciente) as NombrePaciente,
+                (SELECT t5.Telefono FROM prefactura_paciente t5 WHERE t5.ID=t1.idPaciente) as Telefono,
+                (SELECT t5.Direccion FROM prefactura_paciente t5 WHERE t5.ID=t1.idPaciente) as Direccion    
+
+            FROM prefactura_reservas t1 WHERE t1.Estado=3 AND EXISTS 
+                (SELECT 1 FROM prefactura_reservas_citas t2 WHERE t2.idReserva=t1.ID AND t2.Estado=3 $Condicion);";
+        $this->Query($sql);
+    }
     /**
      * Fin Clase
      */

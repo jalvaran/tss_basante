@@ -1360,6 +1360,334 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                 $css->Cdiv();
             $css->Cdiv();
         break;//fin caso 13
+        
+        case 14://dibuja el listado de pendientes por facturar
+                        
+            $Limit=20;
+            $Page=$obCon->normalizar($_REQUEST["Page"]);
+            $NumPage=$obCon->normalizar($_REQUEST["Page"]);
+            if($Page==''){
+                $Page=1;
+                $NumPage=1;
+            }
+            $Busquedas=$obCon->normalizar($_REQUEST["Busquedas"]);            
+            $FechaInicialRangos=$obCon->normalizar($_REQUEST["FechaInicialRangos"]);
+            $FechaFinalRangos=$obCon->normalizar($_REQUEST["FechaFinalRangos"]);
+            $obCon->CrearVistaPendientesPorFacturar($FechaInicialRangos, $FechaFinalRangos);
+            $Condicion=" WHERE ID>0 ";
+            
+            if($Busquedas<>''){
+                $Condicion.=" AND ( NumeroAutorizacion like '%$Busquedas%' or NumeroDocumento like '%$Busquedas%' or NombrePaciente like '%$Busquedas%')";
+            }
+            
+            $PuntoInicio = ($Page * $Limit) - $Limit;
+            
+            $sql = "SELECT COUNT(ID) as Items 
+                   FROM vista_pendiente_por_facturar t1 $Condicion;";
+            
+            $Consulta=$obCon->Query($sql);
+            $totales = $obCon->FetchAssoc($Consulta);
+            $ResultadosTotales = $totales['Items'];
+                        
+            $sql="SELECT *
+                  FROM vista_pendiente_por_facturar $Condicion ORDER BY ID ASC LIMIT $PuntoInicio,$Limit;";
+            $Consulta=$obCon->Query($sql);
+            
+            
+            $css->CrearTitulo("Pendientes por Facturar", "azul");
+            
+            $css->div("", "box-body no-padding", "", "", "", "", "");
+                $css->div("", "mailbox-controls", "", "", "", "", "");
+                    print('<span class="badge bg-blue" style="font-size:14px">'.$ResultadosTotales.'</span>');
+                    $css->div("", "pull-right", "", "", "", "", "");
+                        if($ResultadosTotales>$Limit){
+                            $TotalPaginas= ceil($ResultadosTotales/$Limit);                               
+                            print('<div class="input-group" style=width:150px>');
+                            if($NumPage>1){
+                                $NumPage1=$NumPage-1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`4`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-left"></i></span>');
+                            }
+                            $FuncionJS="onchange=CambiePagina(`4`);";
+                            $css->select("CmbPage", "form-control", "CmbPage", "", "", $FuncionJS, "");
+
+                                for($p=1;$p<=$TotalPaginas;$p++){
+                                    if($p==$NumPage){
+                                        $sel=1;
+                                    }else{
+                                        $sel=0;
+                                    }
+
+                                    $css->option("", "", "", $p, "", "",$sel);
+                                        print($p);
+                                    $css->Coption();
+
+                                }
+
+                            $css->Cselect();
+                            if($ResultadosTotales>($PuntoInicio+$Limit)){
+                                $NumPage1=$NumPage+1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`4`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-right" ></i></span>');
+                            }
+                            print("</div>");
+                        }    
+                    $css->Cdiv();
+                $css->Cdiv();
+                   
+                $css->CrearDiv("", "table-responsive mailbox-messages", "", 1, 1);
+                    print('<table class="table table-hover table-striped">');
+                        print('<tbody>');
+                            while($RegistrosTabla=$obCon->FetchAssoc($Consulta)){
+                                
+                                $idItem=$RegistrosTabla["ID"];
+                                $NombreCompleto= utf8_encode($RegistrosTabla["NombrePaciente"]);
+                                print('<tr>');
+                                    
+                                    print("<td>");
+                                        print('<button type="button" class="btn btn-success btn-sm" onclick=FormularioCrearFactura(`'.$idItem.'`)><i class="fa fa-credit-card"></i></button>');
+                                    print("</td>");
+                                                                  
+                                    print("<td class='mailbox-name'>");
+                                        print($RegistrosTabla["ID"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print(($RegistrosTabla["FechaReserva"]));
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".($RegistrosTabla["NumeroAutorizacion"])."</strong>");
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".$NombreCompleto."</strong>");
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print($RegistrosTabla["TipoDocumento"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print($RegistrosTabla["NumeroDocumento"]);
+                                    print("</td>");                                     
+                                    print("<td class='mailbox-subject'>");
+                                        print(($RegistrosTabla["Telefono"]));
+                                    print("</td>");
+                                                                                                            
+                                print('</tr>');
+
+                            }
+
+                        print('</tbody>');
+                    print('</table>');
+                $css->Cdiv();
+            $css->Cdiv();
+        break;//fin caso 14
+        
+        case 15://Dibujo el formulario para hacer la factura
+            $idReserva=$obCon->normalizar($_REQUEST["idReserva"]);
+            $Fecha=$obCon->normalizar($_REQUEST["Fecha"]); 
+            if($Fecha==''){
+                $css->CrearTitulo("<strong>SELECCIONE UNA FECHA DE CORTE</strong>", "rojo");
+                exit();
+            }
+            $idFactura=$obCon->getUniqId("fv_");
+            $DatosReserva=$obCon->DevuelveValores("prefactura_reservas", "ID", $idReserva);
+            $DatosPaciente=$obCon->DevuelveValores("prefactura_paciente", "ID", $DatosReserva["idPaciente"]);
+            $DatosRegimenPaciente=$obCon->DevuelveValores("prefactura_regimen_paciente", "ID", $DatosPaciente["idRegimenPaciente"]);
+            $DatosEPS=$obCon->DevuelveValores("salud_eps", "cod_pagador_min", $DatosPaciente["CodEPS"]);
+            $DatosEdad=$obCon->CalcularEdad($DatosPaciente["FechaNacimiento"]);
+            $Edad=$DatosEdad["Edad"]." ".$DatosEdad["NombreUnidad"];            
+            $NombreCompleto= utf8_encode($DatosPaciente["PrimerNombre"]." ".$DatosPaciente["SegundoNombre"]." ".$DatosPaciente["PrimerApellido"]." ".$DatosPaciente["SegundoApellido"]);
+            $sql="SELECT Fecha FROM prefactura_reservas_citas WHERE Estado=3 AND idReserva='$idReserva' AND Fecha<='$Fecha' ORDER BY Fecha DESC LIMIT 1";
+            $DatosFechaVencimiento=$obCon->FetchAssoc($obCon->Query($sql));
+            $FechaVencimiento=$DatosFechaVencimiento["Fecha"];
+            $css->form("frmFactura", "form-class", "frmTrasladarCuentas", "post", "procesadores/salud_prefacturacion.php", "#", "", "onsubmit=ConfirmaGuardarFactura();return false;");
+            
+                $css->CrearTabla();
+                    $back="#e6e5e3";
+                    $css->FilaTabla(16);
+                        print("<td colspan='6' style='background-color:$back;text-align:center'>");
+                            print("<strong>FACTURA PARA AUTORIZACIÓN ".$DatosReserva["NumeroAutorizacion"]."</strong>");
+                        print("</td>");
+                        //$css->ColTabla("<strong>FACTURA PARA AUTORIZACIÓN ".$DatosReserva["NumeroAutorizacion"]."</strong>", 6, "C");
+                    $css->CierraFilaTabla();
+                $css->CerrarTabla();
+                $css->CrearTabla();    
+                    $back="#f1efee";
+                    $css->FilaTabla(16);
+
+                        print("<td style='background-color:$back;text-align:center'>");
+                            print("<strong>RESOLUCIÓN:</strong>");
+                        print("</td>");
+                        print("<td style='background-color:$back;text-align:center'>");
+                            print("<strong>TIPO DE FACTURA:</strong>");
+                        print("</td>");
+                        print("<td style='background-color:$back;text-align:center'>");
+                            print("<strong>RESOLUCIÓN DE LA FACTURA:</strong>");
+                        print("</td>");
+
+                    $css->CierraFilaTabla();
+                    $back="#faf9f8";
+                    $css->FilaTabla(16);    
+                        print("<td style='background-color:$back;text-align:center'>");
+                            $sql="SELECT ID,NombreInterno FROM empresapro_resoluciones_facturacion WHERE Completada='NO'";
+                            $Consulta=$obCon->Query($sql);
+                            $css->select("cmbResolucionDIAN", "form-control", "cmbResolucionDIAN", "", "", "", "");
+                            while($DatosResolucion=$obCon->FetchAssoc($Consulta)){
+                                $css->option("", "", "", $DatosResolucion["ID"], "", "");
+                                    print($DatosResolucion["NombreInterno"]);
+                                $css->Coption();
+                            }    
+
+                            $css->Cselect();
+                        print("</td>");
+
+                        print("<td style='background-color:$back;text-align:center'>");
+                            $sql="SELECT * FROM facturas_tipo ";
+                            $Consulta=$obCon->Query($sql);
+                            $css->select("cmbTipoFactura", "form-control", "cmbTipoFactura", "", "", "onchange=MuestraOcultaReferenciaTutela();", "");
+                                $css->option("", "", "", "", "", "");
+                                    print("Seleccione el tipo de factura");
+                                $css->Coption();
+                                while($DatosConsulta=$obCon->FetchAssoc($Consulta)){
+                                    $css->option("", "", "", $DatosConsulta["ID"], "", "");
+                                        print(utf8_encode($DatosConsulta["TipoFactura"]));
+                                    $css->Coption();
+                                }    
+
+                            $css->Cselect();
+                            $css->CrearDiv("divReferenciaTutela", "", "left", 1, 1);
+                                $css->input("text", "ReferenciaTutela", "form-control", "ReferenciaTutela", "", "", "Referencia Tutela", "off", "", "", "");
+                            $css->CerrarDiv();
+                        print("</td>");
+
+                        print("<td style='background-color:$back;text-align:center'>");
+                            $sql="SELECT * FROM facturas_regimen ";
+                            $Consulta=$obCon->Query($sql);
+                            $css->select("cmbRegimenFactura", "form-control", "cmbRegimenFactura", "", "", "", "");
+                                $css->option("", "", "", "", "", "");
+                                    print("Seleccione el regimen de la factura");
+                                $css->Coption();
+                                while($DatosConsulta=$obCon->FetchAssoc($Consulta)){
+                                    $css->option("", "", "", $DatosConsulta["ID"], "", "");
+                                        print($DatosConsulta["RegimenFactura"]);
+                                    $css->Coption();
+                                }    
+
+                            $css->Cselect();
+                        print("</td>");
+                    $css->CierraFilaTabla();
+                $css->CerrarTabla();
+                //datos del paciente
+                $css->CrearTabla();  
+                    $back="#f1efee";
+                    $css->FilaTabla(16);
+                        print("<td colspan='6' style='background-color:$back;text-align:center'>");
+                            print("<strong>DATOS DEL PACIENTE</strong>");
+                        print("</td>");                    
+                    $css->CierraFilaTabla();
+
+                    $css->FilaTabla(16);
+                        $css->ColTabla("Paciente", 1);  
+                        $css->ColTabla("<strong>".$NombreCompleto."</strong>", 1); 
+                        $css->ColTabla("No. Autorización", 1);  
+                        $css->ColTabla("<strong>".$DatosReserva["NumeroAutorizacion"]."</strong>", 1);  
+                    $css->CierraFilaTabla();
+
+                    $css->FilaTabla(16);
+                        $css->ColTabla("No. Identificación", 1);  
+                        $css->ColTabla("<strong>".$DatosPaciente["NumeroDocumento"]."</strong>", 1); 
+                        $css->ColTabla("Fecha Vencimiento", 1);  
+                        $css->ColTabla("<strong>".$FechaVencimiento."</strong>", 1);  
+                    $css->CierraFilaTabla();
+
+                    $css->FilaTabla(16);
+                        $css->ColTabla("Fecha de Nacimiento", 1);  
+                        $css->ColTabla("<strong>".$DatosPaciente["FechaNacimiento"]." || ".$Edad."</strong>", 1); 
+                        $css->ColTabla("Tipo de Afiliado", 1);  
+                        $css->ColTabla("<strong>".$DatosRegimenPaciente["NombreRegimen"]."</strong>", 1);  
+                    $css->CierraFilaTabla();
+
+                    $css->FilaTabla(16);
+                        $css->ColTabla("Dirección", 1);  
+                        $css->ColTabla("<strong>".$DatosPaciente["Direccion"]."</strong>", 1); 
+                        $css->ColTabla("Teléfono", 1);  
+                        $css->ColTabla("<strong>".$DatosPaciente["Telefono"]."</strong>", 1);  
+                    $css->CierraFilaTabla();
+
+                    $css->FilaTabla(16);
+                        $css->ColTabla("EPS", 1);  
+                        $css->ColTabla("<strong>".$DatosEPS["sigla_nombre"]." (".$DatosEPS["cod_pagador_min"].")</strong>", 1); 
+                        $css->ColTabla("NIT EPS", 1);  
+                        $css->ColTabla("<strong>".$DatosEPS["nit"]."</strong>", 1);  
+                    $css->CierraFilaTabla();
+                $css->CerrarTabla();
+
+
+                $css->CrearTabla();  
+                    $back="#f1efee";
+                    $css->FilaTabla(16);
+                        print("<td colspan='6' style='background-color:$back;text-align:center'>");
+                            print("<strong>CITAS DISPONIBLES PARA FACTURAR</strong>");
+                        print("</td>");                    
+                    $css->CierraFilaTabla();
+                    $css->FilaTabla(16);
+                        $css->ColTabla("<strong>FECHA Y HORA</strong>", 1);
+                        $css->ColTabla("<strong>HOSPITAL</strong>", 1);
+                        $css->ColTabla("<strong>SERVICIO</strong>", 1);
+                        $css->ColTabla("<strong>COLABORADOR</strong>", 1);
+                        $css->ColTabla("<strong>RECORRIDO</strong>", 1);
+                        $css->ColTabla("<strong>VALOR</strong>", 1);
+                    $css->CierraFilaTabla();
+
+                    $sql="SELECT t1.*,
+                            (SELECT t2.Nombre FROM ips t2 WHERE t2.ID=t1.idHospital) as NombreHospital,
+                            (SELECT t2.Direccion FROM ips t2 WHERE t2.ID=t1.idHospital) as DireccionHospital,
+                            (SELECT t2.Municipio FROM ips t2 WHERE t2.ID=t1.idHospital) as MunicipioHospital,
+                            (SELECT t2.Departamento FROM ips t2 WHERE t2.ID=t1.idHospital) as DepartamentoHospital
+
+                        FROM prefactura_reservas_citas t1 WHERE Estado=3 AND idReserva='$idReserva';";
+                    $Consulta=$obCon->Query($sql);
+                    while($DatosConsulta=$obCon->FetchAssoc($Consulta)){
+                        $idItem=$DatosConsulta["ID"];
+                        
+                        $css->ColTabla($DatosConsulta["Fecha"]." ".$DatosConsulta["Hora"], 1);
+                        $css->ColTabla($DatosConsulta["NombreHospital"]." || ".$DatosConsulta["MunicipioHospital"]." || ".$DatosConsulta["DepartamentoHospital"], 1);
+                        print("<td>");
+                            
+                            $css->select("cmbServicio_".$idItem, "SelectServicio", "cmbServicio[$idItem]", "", "", "", "style=width:250px;",0);
+                                $css->option("", "", "", "", "", "");
+                                    print("Servicio");
+                                $css->Coption();
+                            $css->Cselect();
+                        print("</td>");
+                        print("<td>");
+                            $css->select("cmbColaborador_".$idItem, "SelectColaborador", "cmbColaborador[$idItem]", "", "", "", "style=width:250px;",0);
+                                $css->option("", "", "", "", "", "");
+                                    print("Colaborador");
+                                $css->Coption();
+                            $css->Cselect();
+                        print("</td>");
+                        print("<td>");
+                            $css->select("cmbRecorrido_".$idItem, "form-control", "cmbRecorrido_[$idItem]", "", "", "", "",0);
+                                $css->option("", "", "", "", "", "");
+                                    print("Recorrido");
+                                $css->Coption();
+                                $css->option("", "", "", "1", "", "");
+                                    print("IDA");
+                                $css->Coption();
+                                $css->option("", "", "", "2", "", "");
+                                    print("VUELTA");
+                                $css->Coption();
+                                $css->option("", "", "", "3", "", "");
+                                    print("COMPLETO");
+                                $css->Coption();
+                            $css->Cselect();
+                        print("</td>");
+                        print("<td>");
+                            $css->input("text", "TxtTarifa_".$idItem, "form-control", "TxtTarifa_[$idItem]", "", "", "", "", "", "");
+                            
+                        print("</td>");
+                    }
+                $css->CerrarTabla();  
+                
+            $css->Cform();    
+        break;//Fin caso 15    
  }
     
           
