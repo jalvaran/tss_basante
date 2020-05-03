@@ -720,6 +720,7 @@ class PageConstruct extends html_estruct_class{
         print('<script src="../../componentes/select2/dist/js/select2.full.min.js"></script>');
         print('<script src="../../general/js/tablas.js"></script>');  //script genrral de la pagina
         print('<script src="../../general/js/formularios.js"></script>');  //script genrral de la pagina
+        print('<script src="../../general/js/number_format.js"></script>');
         //print('<script type="text/javascript" src="../ext/jquery/jquery-1.11.0.min.js"></script>');
         
     }

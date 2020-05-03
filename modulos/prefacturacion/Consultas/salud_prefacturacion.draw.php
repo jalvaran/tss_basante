@@ -1485,7 +1485,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                 $css->CrearTitulo("<strong>SELECCIONE UNA FECHA DE CORTE</strong>", "rojo");
                 exit();
             }
-            $idFactura=$obCon->getUniqId("fv_");
+            
             $DatosReserva=$obCon->DevuelveValores("prefactura_reservas", "ID", $idReserva);
             $DatosPaciente=$obCon->DevuelveValores("prefactura_paciente", "ID", $DatosReserva["idPaciente"]);
             $DatosRegimenPaciente=$obCon->DevuelveValores("prefactura_regimen_paciente", "ID", $DatosPaciente["idRegimenPaciente"]);
@@ -1497,7 +1497,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             $DatosFechaVencimiento=$obCon->FetchAssoc($obCon->Query($sql));
             $FechaVencimiento=$DatosFechaVencimiento["Fecha"];
             $css->form("frmFactura", "form-class", "frmTrasladarCuentas", "post", "procesadores/salud_prefacturacion.php", "#", "", "onsubmit=ConfirmaGuardarFactura();return false;");
-            
+                $css->input("text", "idReserva", "idReserva", "idReserva", "", $idReserva, "", "", "", "");
                 $css->CrearTabla();
                     $back="#e6e5e3";
                     $css->FilaTabla(16);
@@ -1644,27 +1644,29 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                         FROM prefactura_reservas_citas t1 WHERE Estado=3 AND idReserva='$idReserva';";
                     $Consulta=$obCon->Query($sql);
                     while($DatosConsulta=$obCon->FetchAssoc($Consulta)){
+                        print("<tr>");
                         $idItem=$DatosConsulta["ID"];
                         
                         $css->ColTabla($DatosConsulta["Fecha"]." ".$DatosConsulta["Hora"], 1);
                         $css->ColTabla($DatosConsulta["NombreHospital"]." || ".$DatosConsulta["MunicipioHospital"]." || ".$DatosConsulta["DepartamentoHospital"], 1);
+                        
                         print("<td>");
                             
-                            $css->select("cmbServicio_".$idItem, "SelectServicio", "cmbServicio[$idItem]", "", "", "", "style=width:250px;",0);
+                            $css->select("cmbServicio_".$idItem, "SelectServicio", "cmbServicio[$idItem]", "", "", "onchange=CalculeTotalItem(`$idItem`)", "style=width:200px;",0);
                                 $css->option("", "", "", "", "", "");
                                     print("Servicio");
                                 $css->Coption();
                             $css->Cselect();
                         print("</td>");
                         print("<td>");
-                            $css->select("cmbColaborador_".$idItem, "SelectColaborador", "cmbColaborador[$idItem]", "", "", "", "style=width:250px;",0);
+                            $css->select("cmbColaborador_".$idItem, "SelectColaborador", "cmbColaborador[$idItem]", "", "", "", "style=width:200px;",0);
                                 $css->option("", "", "", "", "", "");
                                     print("Colaborador");
                                 $css->Coption();
                             $css->Cselect();
                         print("</td>");
                         print("<td>");
-                            $css->select("cmbRecorrido_".$idItem, "form-control", "cmbRecorrido_[$idItem]", "", "", "", "",0);
+                            $css->select("cmbRecorrido_".$idItem, "form-control", "cmbRecorrido[$idItem]", "", "", "onchange=CalculeTotalItem(`$idItem`)", "",0);
                                 $css->option("", "", "", "", "", "");
                                     print("Recorrido");
                                 $css->Coption();
@@ -1680,11 +1682,27 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                             $css->Cselect();
                         print("</td>");
                         print("<td>");
-                            $css->input("text", "TxtTarifa_".$idItem, "form-control", "TxtTarifa_[$idItem]", "", "", "", "", "", "");
+                            $css->input("text", "TxtTarifa_".$idItem, "form-control texttarifa", "TxtTarifa[$idItem]", "", "", "", "", "", "onkeyup=calcularTotal()");
                             
                         print("</td>");
+                        print("</tr>");
                     }
-                $css->CerrarTabla();  
+                    print("<tr>");
+                        print("<td colspan=5 style='text-align:right;font-size:25px;'>");
+                            print("<strong>TOTAL</strong>");
+
+                        print("</td>");
+                        print("<td colspan='1' >");
+                            print("<span id='spTotalFactura' style='color:blue;font-size:25px;'>0</span>");
+                        print("</td>");
+                    print("</tr>");
+                    
+                $css->CerrarTabla(); 
+                
+                $css->textarea("ObservacionesFactura", "form-control", "ObservacionesFactura", "", "Observaciones", "", "");
+                $css->Ctextarea();
+                print("<br>");
+                $css->CrearBotonEvento("btnGuardar", "Guardar", 1, "onclick", "confirmaGuardarFactura()", "rojo");
                 
             $css->Cform();    
         break;//Fin caso 15    

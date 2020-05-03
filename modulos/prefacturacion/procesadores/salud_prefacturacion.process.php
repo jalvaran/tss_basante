@@ -389,6 +389,92 @@ if( !empty($_REQUEST["Accion"]) ){
             
             
         break;//Fin caso 11
+        
+        case 12://Calcule el valor del servicio
+            $Servicio=$obCon->normalizar($_REQUEST["Servicio"]);
+            $Recorrido=$obCon->normalizar($_REQUEST["Recorrido"]);
+            
+            $DatosTarifas=$obCon->DevuelveValores("catalogo_servicios", "CUPS", $Servicio);
+            $Valor="";
+            if($Recorrido=='1' or $Recorrido=='2'){
+                $Valor=$DatosTarifas["TarifaSencilla"];
+            }
+            if($Recorrido=='3'){
+                $Valor=$DatosTarifas["TarifaDoble"];
+            }
+            
+            print("OK;$Valor");
+            
+        break;//Fin caso 12    
+        
+        case 13://Guardo Factura
+            $Fecha=$obCon->normalizar($_REQUEST["Fecha"]);
+            $jsonForm= $_REQUEST["jsonFormularioFactura"];
+            $idFactura=$obCon->getUniqId("fv_");
+            
+            parse_str($jsonForm,$DatosFormulario);
+            print_r($DatosFormulario);
+            foreach ($DatosFormulario as $key => $value) {
+                $DatosFormulario[$key]=$obCon->normalizar($value);
+            }
+            if($DatosFormulario["idReserva"]==''){
+                exit("No se recibió el id de la reserva;idReserva");
+            }
+            
+            if($DatosFormulario["cmbResolucionDIAN"]==''){
+                exit("Debe seleccionar una Resolucion de facturación;cmbResolucionDIAN");
+            }
+            if($DatosFormulario["cmbTipoFactura"]==''){
+                exit("Debe seleccionar un tipo de Factura;cmbTipoFactura");
+            }
+            
+            if($DatosFormulario["ReferenciaTutela"]==''){
+                exit("Debe seleccionar una referencia de tutela;ReferenciaTutela");
+            }
+            if($DatosFormulario["cmbRegimenFactura"]==''){
+                exit("Debe seleccionar un Regimen para la Factura;cmbRegimenFactura");
+            }
+            
+            foreach($DatosFormulario["cmbServicio"] as $key => $value) {
+                if($DatosFormulario["cmbServicio"][$key]==''){
+                    exit("Debe seleccionar un servicio;cmbServicio_$key");
+                }else{
+                    $DatosItemsFactura["Servicio"][$key]=$value;
+                    if($DatosFormulario["cmbColaborador"][$key]==''){
+                        exit("Debe seleccionar un Colaborador;cmbColaborador_$key");
+                    }
+                    $DatosItemsFactura["Colaborador"][$key]=$DatosFormulario["cmbColaborador"][$key];
+                    
+                    if($DatosFormulario["cmbRecorrido"][$key]==''){
+                        exit("Debe seleccionar un Recorrido;cmbRecorrido_$key");
+                    }
+                    $DatosItemsFactura["Recorrido"][$key]=$DatosFormulario["cmbRecorrido"][$key];
+                    
+                    if(!is_numeric($DatosFormulario["TxtTarifa"][$key]) or $DatosFormulario["TxtTarifa"][$key]<0){
+                        exit("El valor de la tarifa debe ser un numero mayor o igual a cero;TxtTarifa_$key");
+                    }
+                    $DatosItemsFactura["Tarifa"][$key]=$DatosFormulario["TxtTarifa"][$key];
+                }
+            }
+            $idResolucion=($DatosFormulario["cmbResolucionDIAN"]);
+            $DatosResolucion=$obCon->DevuelveValores("empresapro_resoluciones_facturacion", "ID", $idResolucion);
+            $NumeroFactura= $obCon->ObtenerMAX("facturas", "NumeroFactura", "idResolucion", $idResolucion);
+            $NumeroFactura=$NumeroFactura+1;
+            if($DatosResolucion["Hasta"]<$NumeroFactura){
+                $obCon->ActualizaRegistro("empresapro_resoluciones_facturacion", "Completada", "SI", "ID", $idResolucion);
+                exit("E1;La resolucion fué completada");
+            }
+            
+            $obCon->CrearFactura($idFactura, $Fecha,$NumeroFactura, $DatosFormulario["cmbResolucionDIAN"], $DatosFormulario["cmbTipoFactura"], $DatosFormulario["cmbRegimenFactura"], $DatosFormulario["ReferenciaTutela"], $DatosFormulario["idReserva"],$DatosFormulario["ObservacionesFactura"], $idUser);
+            
+            foreach ($DatosItemsFactura["Servicio"] as $key => $value) {
+                $obCon->AgregarItemFactura($idFactura, $key, $value, $DatosItemsFactura["Colaborador"][$key], $DatosItemsFactura["Recorrido"][$key], $DatosItemsFactura["Tarifa"][$key]);
+            }
+            
+            print("OK;Factura Creada;$idFactura");
+            
+        break;//Fin caso 13    
+        
     }
     
     

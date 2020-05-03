@@ -118,6 +118,43 @@ class Prefacturacion extends conexion{
                 (SELECT 1 FROM prefactura_reservas_citas t2 WHERE t2.idReserva=t1.ID AND t2.Estado=3 $Condicion);";
         $this->Query($sql);
     }
+    
+    public function CrearFactura($idFactura,$Fecha,$NumeroFactura,$idResolucion, $TipoFactura, $idRegimenFactura,$ReferenciaTutela,$idReserva,$Observaciones, $idUser) {
+        
+        $tab="facturas";        
+        $Datos["ID"]=$idFactura;        
+        $Datos["Fecha"]=$Fecha;    
+        $Datos["NumeroFactura"]=$NumeroFactura;
+        $Datos["idResolucion"]=$idResolucion;    
+        $Datos["TipoFactura"]=$TipoFactura; 
+        $Datos["idRegimenFactura"]=$idRegimenFactura; 
+        $Datos["ReferenciaTutela"]=$ReferenciaTutela; 
+        $Datos["idReserva"]=$idReserva;   
+        $Datos["Observaciones"]=$Observaciones;
+        $Datos["Estado"]=1;         
+        $Datos["idUser"]=$idUser;		
+        $Datos["Created"]=date("Y-m-d H:i:s");        
+        $sql=$this->getSQLInsert($tab, $Datos);
+        $this->Query($sql);
+        
+    }
+    
+    public function AgregarItemFactura($idFactura,$idCita,$idServicio,$idColaborador, $idRecorrido, $Valor) {
+        
+        $tab="facturas_items";        
+             
+        $Datos["idFactura"]=$idFactura;    
+        $Datos["idCita"]=$idCita;
+        $Datos["idServicio"]=$idServicio;    
+        $Datos["idColaborador"]=$idColaborador; 
+        $Datos["idRecorrido"]=$idRecorrido; 
+        $Datos["Valor"]=$Valor;         
+        $Datos["Estado"]=1;
+        $sql=$this->getSQLInsert($tab, $Datos);
+        $this->Query($sql);
+        
+    }
+    
     /**
      * Fin Clase
      */

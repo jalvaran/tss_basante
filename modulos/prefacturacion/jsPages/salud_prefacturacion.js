@@ -174,7 +174,7 @@ function ValidaDocumentoPaciente(){
     
     }
     
-    function CalculeEdad(){
+function CalculeEdad(){
     var idDivMensajes='DivMensajes';
     
     var FechaNacimiento=document.getElementById("FechaNacimiento").value;    
@@ -1213,6 +1213,150 @@ function FormularioCrearFactura(idReserva){
             alert(thrownError);
           }
       });
+}
+
+
+function CalculeTotalItem(idItem){
+    var idServicio="cmbServicio_"+idItem;
+    var idRecorrido="cmbRecorrido_"+idItem;
+    var idCajaTotalItem="TxtTarifa_"+idItem;
+    var Servicio=document.getElementById(idServicio).value;    
+    var Recorrido=document.getElementById(idRecorrido).value;
+    
+    var form_data = new FormData();
+        form_data.append('Accion', '12'); 
+        form_data.append('Servicio', Servicio);
+        form_data.append('Recorrido', Recorrido);
+               
+        $.ajax({
+        url: './procesadores/salud_prefacturacion.process.php',
+        //dataType: 'json',
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post',
+        success: function(data){
+            var respuestas = data.split(';'); //Armamos un vector separando los punto y coma de la cadena de texto
+            
+            if(respuestas[0]=="OK"){                
+                
+                var TotalItem=respuestas[1];                
+                document.getElementById(idCajaTotalItem).value=TotalItem;
+                calcularTotal();                
+            }else if(respuestas[0]=="E1"){  
+                
+                MarqueErrorElemento(respuestas[2]);
+                
+            }else{
+                alertify.alert(data);
+                
+            }
+                   
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+    
+    }
+    
+function calcularTotal(){
+    
+    var Total=0;
+    $(".texttarifa").each(function(){
+        if($(this).val()!=''){
+            Total=Total+parseFloat($(this).val());
+        }
+        
+    });
+    console.log(Total);
+    document.getElementById("spTotalFactura").innerHTML=number_format(Total,2);
+    
+}    
+
+function confirmaGuardarFactura(){
+    var idBoton='btnGuardar';
+    document.getElementById(idBoton).disabled=true;
+    document.getElementById(idBoton).value="Guardando...";
+    
+    alertify.confirm('Está seguro que desea guardar esta factura?',
+        function (e) {
+            if (e) {             
+                GuardarFactura();
+            }else{
+                alertify.error("Se canceló el proceso");                
+                document.getElementById(idBoton).disabled=false;
+                document.getElementById(idBoton).value="Guardar";
+                return;
+            }
+        });
+}
+    
+    
+function GuardarFactura(){
+        var Fecha=document.getElementById('FechaFinalRangos').value;
+        
+        var btnEnviar = $("#btnGuardar");
+        var jsonFormularioFactura=$('#frmFactura').serialize();
+        
+        //console.log(jsonFormularioFactura);
+        var form_data = new FormData();
+        
+            form_data.append('Accion', 13);
+            form_data.append('Fecha', Fecha);            
+            form_data.append('jsonFormularioFactura',jsonFormularioFactura);
+        
+        $.ajax({
+            url: './procesadores/salud_prefacturacion.process.php',
+            //dataType: 'json',
+            cache: false,
+            contentType: false,
+            processData: false,
+            //data: form_data,
+            type: 'post',
+            data: form_data,
+            beforeSend: function(){
+                /*
+                * Esta función se ejecuta durante el envió de la petición al
+                * servidor.
+                * */
+                // btnEnviar.text("Enviando"); Para button 
+                btnEnviar.val("Enviando"); // Para input de tipo button
+                btnEnviar.attr("disabled","disabled");
+            },
+            complete:function(data){
+                /*
+                * Se ejecuta al termino de la petición
+                * */
+                btnEnviar.val("Guardar");
+                btnEnviar.removeAttr("disabled");
+            },
+            success: function(data){
+               var respuestas = data.split(';'); 
+                if (respuestas[0] == "OK"){                 
+                    alertify.success(respuestas[1]);
+                    //MostrarListadoSegunID();
+                }else if(respuestas[0] == "E1"){
+                    alertify.error(respuestas[1]);
+                    MarqueErrorElemento(respuestas[2]);
+                }else{
+                    alertify.alert(data);
+
+              }
+
+            },
+            error: function(data){
+                alert(xhr.status);
+                alert(thrownError);
+            }
+        });
+        // Nos permite cancelar el envio del formulario
+        return false;
+    
+
 }
 
 MostrarListadoSegunID();
