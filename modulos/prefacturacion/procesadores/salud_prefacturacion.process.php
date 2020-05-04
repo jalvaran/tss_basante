@@ -413,45 +413,45 @@ if( !empty($_REQUEST["Accion"]) ){
             $idFactura=$obCon->getUniqId("fv_");
             
             parse_str($jsonForm,$DatosFormulario);
-            print_r($DatosFormulario);
+            
             foreach ($DatosFormulario as $key => $value) {
                 $DatosFormulario[$key]=$obCon->normalizar($value);
             }
             if($DatosFormulario["idReserva"]==''){
-                exit("No se recibió el id de la reserva;idReserva");
+                exit("E1;No se recibió el id de la reserva;idReserva");
             }
             
             if($DatosFormulario["cmbResolucionDIAN"]==''){
-                exit("Debe seleccionar una Resolucion de facturación;cmbResolucionDIAN");
+                exit("E1;Debe seleccionar una Resolucion de facturación;cmbResolucionDIAN");
             }
             if($DatosFormulario["cmbTipoFactura"]==''){
-                exit("Debe seleccionar un tipo de Factura;cmbTipoFactura");
+                exit("E1;Debe seleccionar un tipo de Factura;cmbTipoFactura");
             }
             
             if($DatosFormulario["ReferenciaTutela"]==''){
-                exit("Debe seleccionar una referencia de tutela;ReferenciaTutela");
+                exit("E1;Debe seleccionar una referencia de tutela;ReferenciaTutela");
             }
             if($DatosFormulario["cmbRegimenFactura"]==''){
-                exit("Debe seleccionar un Regimen para la Factura;cmbRegimenFactura");
+                exit("E1;Debe seleccionar un Regimen para la Factura;cmbRegimenFactura");
             }
             
             foreach($DatosFormulario["cmbServicio"] as $key => $value) {
                 if($DatosFormulario["cmbServicio"][$key]==''){
-                    exit("Debe seleccionar un servicio;cmbServicio_$key");
+                    exit("E1;Debe seleccionar un servicio;cmbServicio_$key");
                 }else{
                     $DatosItemsFactura["Servicio"][$key]=$value;
                     if($DatosFormulario["cmbColaborador"][$key]==''){
-                        exit("Debe seleccionar un Colaborador;cmbColaborador_$key");
+                        exit("E1;Debe seleccionar un Colaborador;cmbColaborador_$key");
                     }
                     $DatosItemsFactura["Colaborador"][$key]=$DatosFormulario["cmbColaborador"][$key];
                     
                     if($DatosFormulario["cmbRecorrido"][$key]==''){
-                        exit("Debe seleccionar un Recorrido;cmbRecorrido_$key");
+                        exit("E1;Debe seleccionar un Recorrido;cmbRecorrido_$key");
                     }
                     $DatosItemsFactura["Recorrido"][$key]=$DatosFormulario["cmbRecorrido"][$key];
                     
                     if(!is_numeric($DatosFormulario["TxtTarifa"][$key]) or $DatosFormulario["TxtTarifa"][$key]<0){
-                        exit("El valor de la tarifa debe ser un numero mayor o igual a cero;TxtTarifa_$key");
+                        exit("E1;El valor de la tarifa debe ser un numero mayor o igual a cero;TxtTarifa_$key");
                     }
                     $DatosItemsFactura["Tarifa"][$key]=$DatosFormulario["TxtTarifa"][$key];
                 }
@@ -469,9 +469,11 @@ if( !empty($_REQUEST["Accion"]) ){
             
             foreach ($DatosItemsFactura["Servicio"] as $key => $value) {
                 $obCon->AgregarItemFactura($idFactura, $key, $value, $DatosItemsFactura["Colaborador"][$key], $DatosItemsFactura["Recorrido"][$key], $DatosItemsFactura["Tarifa"][$key]);
+                $obCon->ActualizaRegistro("prefactura_reservas_citas", "Estado", 4, "ID", $key);//Marco la cita cómo facturada
             }
-            
-            print("OK;Factura Creada;$idFactura");
+            $Link="../../general/Consultas/PDF_Documentos.draw.php?idDocumento=2001&idFactura=".$idFactura;
+            $Ver="<a href='$Link' target='_blank'>Imprimir PDF</a>";
+            print("OK;Factura Creada $Ver;$idFactura");
             
         break;//Fin caso 13    
         

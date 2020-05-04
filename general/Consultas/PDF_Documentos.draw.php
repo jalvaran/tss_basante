@@ -96,7 +96,12 @@ if(isset($_REQUEST["idDocumento"])){
         case 2000: //PDF para un reporte de asistencia
             $idCita=$obCon->normalizar($_REQUEST["ID"]);
             $obDoc->ReporteAsistenciaPDF($idCita,"");            
-            break;//Fin caso 35
+        break;//Fin caso 2000
+    
+        case 2001: //PDF de una factura basante
+            $idFactura=$obCon->normalizar($_REQUEST["idFactura"]);
+            $obDoc->FacturaBasantePDF($idFactura,"");            
+        break;//Fin caso 2001
     }
 }else{
     print("No se recibió parametro de documento");

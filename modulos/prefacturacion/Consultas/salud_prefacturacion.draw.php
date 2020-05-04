@@ -1497,7 +1497,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             $DatosFechaVencimiento=$obCon->FetchAssoc($obCon->Query($sql));
             $FechaVencimiento=$DatosFechaVencimiento["Fecha"];
             $css->form("frmFactura", "form-class", "frmTrasladarCuentas", "post", "procesadores/salud_prefacturacion.php", "#", "", "onsubmit=ConfirmaGuardarFactura();return false;");
-                $css->input("text", "idReserva", "idReserva", "idReserva", "", $idReserva, "", "", "", "");
+                $css->input("hidden", "idReserva", "idReserva", "idReserva", "", $idReserva, "", "", "", "");
                 $css->CrearTabla();
                     $back="#e6e5e3";
                     $css->FilaTabla(16);
@@ -1706,6 +1706,138 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                 
             $css->Cform();    
         break;//Fin caso 15    
+        
+        case 16://dibuja el listado de facturas
+                        
+            $Limit=20;
+            $Page=$obCon->normalizar($_REQUEST["Page"]);
+            $NumPage=$obCon->normalizar($_REQUEST["Page"]);
+            if($Page==''){
+                $Page=1;
+                $NumPage=1;
+            }
+            $Busquedas=$obCon->normalizar($_REQUEST["Busquedas"]);            
+            $FechaInicialRangos=$obCon->normalizar($_REQUEST["FechaInicialRangos"]);
+            $FechaFinalRangos=$obCon->normalizar($_REQUEST["FechaFinalRangos"]);
+            $obCon->CrearVistaFacturas();
+            $Condicion=" WHERE ID<>'' ";
+            
+            if($Busquedas<>''){
+                $Condicion.=" AND ( NumeroFactura='$Busquedas'  or NumeroAutorizacion like '%$Busquedas%' or NumeroDocumento like '%$Busquedas%' or NombrePaciente like '%$Busquedas%')";
+            }
+            if($FechaInicialRangos<>''){
+                $Condicion.=" AND Fecha>='$FechaInicialRangos'";
+            }
+            if($FechaFinalRangos<>''){
+                $Condicion.=" AND Fecha<='$FechaFinalRangos'";
+            }
+            $PuntoInicio = ($Page * $Limit) - $Limit;
+            
+            $sql = "SELECT COUNT(ID) as Items,SUM(TotalFactura) AS TotalFacturas  
+                   FROM vista_facturas_basante t1 $Condicion;";
+            
+            $Consulta=$obCon->Query($sql);
+            $totales = $obCon->FetchAssoc($Consulta);
+            $ResultadosTotales = $totales['Items'];
+            $TotalFacturas=$totales['TotalFacturas'];        
+            $sql="SELECT * 
+                  FROM vista_facturas_basante $Condicion LIMIT $PuntoInicio,$Limit;";
+            $Consulta=$obCon->Query($sql);
+            
+            
+            $css->CrearTitulo("Lista de Facturas", "azul");
+            
+            $css->div("", "box-body no-padding", "", "", "", "", "");
+                $css->div("", "mailbox-controls", "", "", "", "", "");
+                    print('Facturas: <span class="badge bg-blue" style="font-size:14px">'.$ResultadosTotales.'</span>');
+                    print(' || Total Facturado: <span class="badge bg-green" style="font-size:14px">'.number_format($TotalFacturas,2).'</span>');
+                    $css->div("", "pull-right", "", "", "", "", "");
+                        if($ResultadosTotales>$Limit){
+                            $TotalPaginas= ceil($ResultadosTotales/$Limit);                               
+                            print('<div class="input-group" style=width:150px>');
+                            if($NumPage>1){
+                                $NumPage1=$NumPage-1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`5`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-left"></i></span>');
+                            }
+                            $FuncionJS="onchange=CambiePagina(`5`);";
+                            $css->select("CmbPage", "form-control", "CmbPage", "", "", $FuncionJS, "");
+
+                                for($p=1;$p<=$TotalPaginas;$p++){
+                                    if($p==$NumPage){
+                                        $sel=1;
+                                    }else{
+                                        $sel=0;
+                                    }
+
+                                    $css->option("", "", "", $p, "", "",$sel);
+                                        print($p);
+                                    $css->Coption();
+
+                                }
+
+                            $css->Cselect();
+                            if($ResultadosTotales>($PuntoInicio+$Limit)){
+                                $NumPage1=$NumPage+1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`5`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-right" ></i></span>');
+                            }
+                            print("</div>");
+                        }    
+                    $css->Cdiv();
+                $css->Cdiv();
+                   
+                $css->CrearDiv("", "table-responsive mailbox-messages", "", 1, 1);
+                    print('<table class="table table-hover table-striped">');
+                        print('<tbody>');
+                            while($RegistrosTabla=$obCon->FetchAssoc($Consulta)){
+                                
+                                $idItem=$RegistrosTabla["ID"];
+                                
+                                print('<tr>');
+                                    
+                                    print("<td>");
+                                        $Link="../../general/Consultas/PDF_Documentos.draw.php?idDocumento=2001&idFactura=".$idItem;
+                                        
+                                        print('<a href='.$Link.' target="_blank"><button type="button" class="btn btn-danger btn-sm"><i class="fa fa-file-pdf-o"></i></button></a>');
+                                    print("</td>");
+                                                                  
+                                    print("<td class='mailbox-name'>");
+                                        print($RegistrosTabla["Fecha"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print(($RegistrosTabla["NumeroFactura"]));
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".($RegistrosTabla["NumeroAutorizacion"])."</strong>");
+                                    print("</td>");
+                                    
+                                    print("<td class='mailbox-subject'>");
+                                        print(number_format($RegistrosTabla["TotalFactura"]));
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".$RegistrosTabla["NombrePaciente"]."</strong>");
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".$RegistrosTabla["NumeroDocumento"]."</strong>");
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print($RegistrosTabla["NombreTipoFactura"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print($RegistrosTabla["NombreResolucionFactura"]);
+                                    print("</td>");                                     
+                                    print("<td class='mailbox-subject'>");
+                                        print(($RegistrosTabla["Observaciones"]));
+                                    print("</td>");
+                                                                                                            
+                                print('</tr>');
+
+                            }
+
+                        print('</tbody>');
+                    print('</table>');
+                $css->Cdiv();
+            $css->Cdiv();
+        break;//fin caso 16
  }
     
           

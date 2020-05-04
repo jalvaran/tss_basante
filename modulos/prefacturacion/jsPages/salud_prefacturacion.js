@@ -1337,8 +1337,9 @@ function GuardarFactura(){
             success: function(data){
                var respuestas = data.split(';'); 
                 if (respuestas[0] == "OK"){                 
-                    alertify.success(respuestas[1]);
-                    //MostrarListadoSegunID();
+                    //alertify.success(respuestas[1]);
+                    alertify.alert(respuestas[1]);
+                    MostrarListadoSegunID();
                 }else if(respuestas[0] == "E1"){
                     alertify.error(respuestas[1]);
                     MarqueErrorElemento(respuestas[2]);
@@ -1357,6 +1358,41 @@ function GuardarFactura(){
         return false;
     
 
+}
+
+
+function ListarFacturas(Page=1){
+    var idDiv="DivGeneralDraw";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+    
+    var Busquedas =document.getElementById("TxtBusquedas").value;    
+    var FechaInicialRangos =document.getElementById("FechaInicialRangos").value;
+    var FechaFinalRangos =document.getElementById("FechaFinalRangos").value;
+    
+    var form_data = new FormData();
+        form_data.append('Accion', 16);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('Page', Page);
+        form_data.append('Busquedas', Busquedas);        
+        form_data.append('FechaInicialRangos', FechaInicialRangos);
+        form_data.append('FechaFinalRangos', FechaFinalRangos);
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos                      
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
 }
 
 MostrarListadoSegunID();

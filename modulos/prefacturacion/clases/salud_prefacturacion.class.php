@@ -155,6 +155,27 @@ class Prefacturacion extends conexion{
         
     }
     
+    
+    public function CrearVistaFacturas() {
+        $sql="DROP VIEW IF EXISTS `vista_facturas_basante`;";
+        $this->Query($sql);
+        
+        $sql="CREATE VIEW vista_facturas_basante AS 
+                SELECT t2.*,t1.NumeroAutorizacion,
+                
+                (SELECT IFNULL((SELECT SUM(Valor) FROM facturas_items t3 WHERE t3.idFactura=t2.ID),0)) as TotalFactura,
+                (SELECT t5.TipoDocumento FROM prefactura_paciente t5 WHERE t5.ID=t1.idPaciente) as TipoDocumento,
+                (SELECT t5.NumeroDocumento FROM prefactura_paciente t5 WHERE t5.ID=t1.idPaciente) as NumeroDocumento,
+                (SELECT CONCAT(t5.PrimerNombre,' ',t5.SegundoNombre,' ',t5.PrimerApellido,' ',t5.SegundoApellido) FROM prefactura_paciente t5 WHERE t5.ID=t1.idPaciente) as NombrePaciente,
+                (SELECT t5.Telefono FROM prefactura_paciente t5 WHERE t5.ID=t1.idPaciente) as Telefono,
+                (SELECT t5.Direccion FROM prefactura_paciente t5 WHERE t5.ID=t1.idPaciente) as Direccion,
+                (SELECT t6.TipoFactura FROM facturas_tipo t6 WHERE t6.ID=t2.TipoFactura) as NombreTipoFactura,
+                (SELECT t7.RegimenFactura FROM facturas_regimen t7 WHERE t7.ID=t2.idRegimenFactura) as NombreResolucionFactura  
+                
+            FROM facturas t2 INNER JOIN prefactura_reservas t1 ON t2.idReserva=t1.ID ORDER BY t2.Created DESC;";
+        $this->Query($sql);
+    }
+    
     /**
      * Fin Clase
      */
