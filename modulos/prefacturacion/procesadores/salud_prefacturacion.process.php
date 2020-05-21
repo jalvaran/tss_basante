@@ -477,6 +477,91 @@ if( !empty($_REQUEST["Accion"]) ){
             
         break;//Fin caso 13    
         
+        case 14://Generar AF
+            
+            $Condicion=$obCon->normalizar(base64_decode(urldecode($_REQUEST["q"])));
+            $FechaInicial=$obCon->normalizar($_REQUEST["FechaInicial"]);
+            $FechaFinal=$obCon->normalizar($_REQUEST["FechaFinal"]);
+            $idTipoFactura=$obCon->normalizar($_REQUEST["idTipoFactura"]);
+            
+            if($FechaInicial==""){
+                exit("E1;Debe seleccionar una Fecha Inicial;FechaInicialRangos");
+            }
+            if($FechaFinal==""){
+                exit("E1;Debe seleccionar una Fecha Final;FechaFinalRangos");
+            }
+            if($idTipoFactura==""){
+                exit("E1;Debe seleccionar un tipo de facturación;idTipoFactura");
+            }
+            
+            $CuentaRIPS=$obCon->CrearConsecutivoRips($idUser);
+            $CuentaRIPS=str_pad($CuentaRIPS, 4, "0", STR_PAD_LEFT);
+            
+            $RegistrosAF=$obCon->GenereRIPSAF($CuentaRIPS,$Condicion, $FechaInicial, $FechaFinal);
+            print("OK;AF Creado;$CuentaRIPS");
+            
+        break;//Fin Generacion de AF  
+        
+        case 15://Generar AD
+            
+            $Condicion=$obCon->normalizar(base64_decode(urldecode($_REQUEST["q"])));
+            $FechaInicial=$obCon->normalizar($_REQUEST["FechaInicial"]);
+            $FechaFinal=$obCon->normalizar($_REQUEST["FechaFinal"]);
+            $CuentaRIPS=$obCon->normalizar($_REQUEST["CuentaRIPS"]);         
+            
+            
+            $RegistrosAD=$obCon->GenereRIPSAD($CuentaRIPS,$Condicion, $FechaInicial, $FechaFinal);
+            print("OK;AD Creado;$CuentaRIPS");
+            
+        break;//Fin Generacion de AD
+    
+        case 16://Generar AT
+            
+            $Condicion=$obCon->normalizar(base64_decode(urldecode($_REQUEST["q"])));
+            $FechaInicial=$obCon->normalizar($_REQUEST["FechaInicial"]);
+            $FechaFinal=$obCon->normalizar($_REQUEST["FechaFinal"]);
+            $CuentaRIPS=$obCon->normalizar($_REQUEST["CuentaRIPS"]);         
+            
+            
+            $RegistrosAD=$obCon->GenereRIPSAT($CuentaRIPS,$Condicion, $FechaInicial, $FechaFinal);
+            print("OK;AT Creado;$CuentaRIPS");
+            
+        break;//Fin Generacion de AT
+    
+        case 17://Generar US
+            
+            $Condicion=$obCon->normalizar(base64_decode(urldecode($_REQUEST["q"])));
+            $FechaInicial=$obCon->normalizar($_REQUEST["FechaInicial"]);
+            $FechaFinal=$obCon->normalizar($_REQUEST["FechaFinal"]);
+            $CuentaRIPS=$obCon->normalizar($_REQUEST["CuentaRIPS"]);         
+            
+            
+            $RegistrosAD=$obCon->GenereRIPSUS($CuentaRIPS,$Condicion, $FechaInicial, $FechaFinal);
+            print("OK;US Creado;$CuentaRIPS");
+            
+        break;//Fin Generacion de US
+    
+        case 18://Generar CT
+            
+            $Condicion=$obCon->normalizar(base64_decode(urldecode($_REQUEST["q"])));
+            $FechaInicio=$obCon->normalizar($_REQUEST["FechaInicial"]);
+            $FechaFin=$obCon->normalizar($_REQUEST["FechaFinal"]);
+            $CuentaRIPS=$obCon->normalizar($_REQUEST["CuentaRIPS"]); 
+            $idTipoFactura=$obCon->normalizar($_REQUEST["idTipoFactura"]);
+            $DatosTipoFactura=$obCon->DevuelveValores("facturas_tipo", "ID", $idTipoFactura);
+            $DatosRIPS=$obCon->DevuelveValores("rips_consecutivos", "CuentaRIPS", $CuentaRIPS);
+            $RegistrosAD=$obCon->GenereRIPSCT($CuentaRIPS);
+            $obCon->update("facturas", "CuentaRIPS", $CuentaRIPS, $Condicion);
+            $obCon->ActualizaRegistro("rips_consecutivos", "Estado", 1, "CuentaRIPS", $CuentaRIPS);
+            $FechaInicio=date("d-m-Y", strtotime($FechaInicio));
+            $FechaFin=date("d-m-Y", strtotime($FechaFin));
+            $NombreZIP=$CuentaRIPS."_".str_replace(" ", "", $DatosTipoFactura["TipoFactura"])."-".$FechaInicio."-".$FechaFin."-Val(". number_format($DatosRIPS["Valor"], 0, "", "_").")" ;
+            $NombreZIP.=".zip";
+            $obCon->ComprimaRIPS($CuentaRIPS,$NombreZIP);
+            print("OK;Todos los archivos han sido creados exitosamente;$CuentaRIPS");
+            
+        break;//Fin Generacion de CT fin caso 18
+        
     }
     
     

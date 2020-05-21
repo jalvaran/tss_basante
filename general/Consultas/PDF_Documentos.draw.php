@@ -102,6 +102,14 @@ if(isset($_REQUEST["idDocumento"])){
             $idFactura=$obCon->normalizar($_REQUEST["idFactura"]);
             $obDoc->FacturaBasantePDF($idFactura,"");            
         break;//Fin caso 2001
+        
+        case 2002: //PDF del Reporte de Facturación
+            $Condicion=$obCon->normalizar(base64_decode(urldecode($_REQUEST["q"])));
+            $FechaInicial=$obCon->normalizar($_REQUEST["FechaInicial"]);
+            $FechaFinal=$obCon->normalizar($_REQUEST["FechaFinal"]);
+            $idTipoFactura=$obCon->normalizar($_REQUEST["idTipoFactura"]);
+            $obDoc->RelacionFacturaBasante($Condicion,$idTipoFactura,$FechaInicial,$FechaFinal);            
+        break;//Fin caso 2001
     }
 }else{
     print("No se recibió parametro de documento");

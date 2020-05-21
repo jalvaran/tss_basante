@@ -1719,6 +1719,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             $Busquedas=$obCon->normalizar($_REQUEST["Busquedas"]);            
             $FechaInicialRangos=$obCon->normalizar($_REQUEST["FechaInicialRangos"]);
             $FechaFinalRangos=$obCon->normalizar($_REQUEST["FechaFinalRangos"]);
+            $idTipoFactura=$obCon->normalizar($_REQUEST["idTipoFactura"]);
             $obCon->CrearVistaFacturas();
             $Condicion=" WHERE ID<>'' ";
             
@@ -1730,6 +1731,9 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             }
             if($FechaFinalRangos<>''){
                 $Condicion.=" AND Fecha<='$FechaFinalRangos'";
+            }
+            if($idTipoFactura<>''){
+                $Condicion.=" AND TipoFactura='$idTipoFactura'";
             }
             $PuntoInicio = ($Page * $Limit) - $Limit;
             
@@ -1744,14 +1748,27 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                   FROM vista_facturas_basante $Condicion LIMIT $PuntoInicio,$Limit;";
             $Consulta=$obCon->Query($sql);
             
+            $CondicionURL= urlencode(base64_encode($Condicion));
             
             $css->CrearTitulo("Lista de Facturas", "azul");
             
             $css->div("", "box-body no-padding", "", "", "", "", "");
                 $css->div("", "mailbox-controls", "", "", "", "", "");
-                    print('Facturas: <span class="badge bg-blue" style="font-size:14px">'.$ResultadosTotales.'</span>');
-                    print(' || Total Facturado: <span class="badge bg-green" style="font-size:14px">'.number_format($TotalFacturas,2).'</span>');
-                    $css->div("", "pull-right", "", "", "", "", "");
+                    $Link="../../general/Consultas/PDF_Documentos.draw.php?idDocumento=2002&idTipoFactura=$idTipoFactura&FechaInicial=$FechaInicialRangos&FechaFinal=$FechaFinalRangos&q=".$CondicionURL;
+                                        
+                    $htmlReporte=('<strong>Reporte General:</strong> <a href='.$Link.' target="_blank"><button type="button" class="btn btn-success btn-lg"><i class="fa fa-file-pdf-o"></i></button></a>');
+                    
+                    $LinkRips="../../general/Consultas/PDF_Documentos.draw.php?idDocumento=2002&idTipoFactura=$idTipoFactura&FechaInicial=$FechaInicialRangos&FechaFinal=$FechaFinalRangos&q=".$CondicionURL;
+                                        
+                    $htmlReporteRips=('<strong>Generar RIPS:</strong> <button id="btnGenerarRIPS" data-condicion="'.$CondicionURL.'" class="btn btn-warning" onclick="ConfirmeGenerarRIPS(`'.$FechaInicialRangos.'`,`'.$FechaFinalRangos.'`);">Generar RIPS</button>');
+                                        
+                    print($htmlReporte.' || Facturas: <span class="badge bg-blue" style="font-size:14px">'.$ResultadosTotales.'</span>');
+                    
+                    print(' || Total Facturado: <span class="badge bg-green" style="font-size:14px">'.number_format($TotalFacturas,2).'</span> || '.$htmlReporteRips);
+                  
+                    
+                     
+                    $css->div("", "pull-center", "", "", "", "", "");
                         if($ResultadosTotales>$Limit){
                             $TotalPaginas= ceil($ResultadosTotales/$Limit);                               
                             print('<div class="input-group" style=width:150px>');
@@ -1787,6 +1804,24 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                    
                 $css->CrearDiv("", "table-responsive mailbox-messages", "", 1, 1);
                     print('<table class="table table-hover table-striped">');
+                        print('<thead>');
+                            $css->FilaTabla(16);
+                                $css->ColTabla("<strong>PDF</strong>", 1);
+                                $css->ColTabla("<strong>Fecha</strong>", 1);
+                                $css->ColTabla("<strong>NumeroFactura</strong>", 1);
+                                $css->ColTabla("<strong>Paciente</strong>", 1);
+                                $css->ColTabla("<strong>NumeroDocumento</strong>", 1);
+                                $css->ColTabla("<strong>NumeroAutorizacion</strong>", 1);
+                                $css->ColTabla("<strong>NumeroPrescripcion</strong>", 1);
+                                $css->ColTabla("<strong>Cantidad Citas</strong>", 1);
+                                $css->ColTabla("<strong>Valor Unitario</strong>", 1);
+                                $css->ColTabla("<strong>TotalFactura</strong>", 1);
+                                $css->ColTabla("<strong>Tipo Factura</strong>", 1);
+                                $css->ColTabla("<strong>Regimen</strong>", 1);
+                                $css->ColTabla("<strong>Observaciones</strong>", 1);
+                                
+                            $css->CierraFilaTabla();
+                        print('</thead>');
                         print('<tbody>');
                             while($RegistrosTabla=$obCon->FetchAssoc($Consulta)){
                                 
@@ -1807,18 +1842,31 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                         print(($RegistrosTabla["NumeroFactura"]));
                                     print("</td>");
                                     print("<td class='mailbox-subject'>");
-                                        print("<strong>".($RegistrosTabla["NumeroAutorizacion"])."</strong>");
-                                    print("</td>");
-                                    
-                                    print("<td class='mailbox-subject'>");
-                                        print(number_format($RegistrosTabla["TotalFactura"]));
-                                    print("</td>");
-                                    print("<td class='mailbox-subject'>");
                                         print("<strong>".$RegistrosTabla["NombrePaciente"]."</strong>");
                                     print("</td>");
                                     print("<td class='mailbox-subject'>");
                                         print("<strong>".$RegistrosTabla["NumeroDocumento"]."</strong>");
                                     print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".($RegistrosTabla["NumeroAutorizacion"])."</strong>");
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".($RegistrosTabla["ReferenciaTutela"])."</strong>");
+                                    print("</td>");
+                                    
+                                    print("<td class='mailbox-subject'>");
+                                        print(number_format($RegistrosTabla["CitasFacturadas"]));
+                                    print("</td>");
+                                    
+                                    print("<td class='mailbox-subject'>");
+                                        print(number_format($RegistrosTabla["TotalFactura"]));
+                                    print("</td>");
+                                    
+                                    print("<td class='mailbox-subject'>");
+                                        print(number_format($RegistrosTabla["TotalFactura"]));
+                                    print("</td>");
+                                    
+                                    
                                     print("<td class='mailbox-subject'>");
                                         print($RegistrosTabla["NombreTipoFactura"]);
                                     print("</td>");
@@ -1838,6 +1886,136 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                 $css->Cdiv();
             $css->Cdiv();
         break;//fin caso 16
+        
+        case 17://dibuja el listado de los rips
+                        
+            $Limit=20;
+            $Page=$obCon->normalizar($_REQUEST["Page"]);
+            $NumPage=$obCon->normalizar($_REQUEST["Page"]);
+            if($Page==''){
+                $Page=1;
+                $NumPage=1;
+            }
+            $Busquedas=$obCon->normalizar($_REQUEST["Busquedas"]);            
+            $FechaInicialRangos=$obCon->normalizar($_REQUEST["FechaInicialRangos"]);
+            $FechaFinalRangos=$obCon->normalizar($_REQUEST["FechaFinalRangos"]);
+            
+            $Condicion=" WHERE CuentaRIPS<>'' ";
+            
+            if($Busquedas<>''){
+                $Condicion.=" AND ( CuentaRIPS='$Busquedas' )";
+            }
+            if($FechaInicialRangos<>''){
+                $Condicion.=" AND Created>='$FechaInicialRangos'";
+            }
+            if($FechaFinalRangos<>''){
+                $Condicion.=" AND Created<='$FechaFinalRangos'";
+            }
+            
+            $PuntoInicio = ($Page * $Limit) - $Limit;
+            
+            $sql = "SELECT COUNT(*) as Items,SUM(Valor) as Total   
+                   FROM rips_consecutivos t1 $Condicion;";
+            
+            $Consulta=$obCon->Query($sql);
+            $totales = $obCon->FetchAssoc($Consulta);
+            $ResultadosTotales = $totales['Items'];
+            $TotalFacturas     = $totales['Total'];  
+            $sql="SELECT * 
+                  FROM rips_consecutivos $Condicion ORDER BY Created DESC LIMIT $PuntoInicio,$Limit;";
+            $Consulta=$obCon->Query($sql);
+            
+                       
+            $css->CrearTitulo("Lista de RIPS Generados", "verde");
+            
+            $css->div("", "box-body no-padding", "", "", "", "", "");
+                $css->div("", "mailbox-controls", "", "", "", "", "");
+                             
+                    print(' || RIPS: <span class="badge bg-blue" style="font-size:14px">'.$ResultadosTotales.'</span>');
+                    
+                    print(' || Valor Total : <span class="badge bg-green" style="font-size:14px">'.number_format($TotalFacturas,2).'</span> ');
+                  
+                    
+                     
+                    $css->div("", "pull-center", "", "", "", "", "");
+                        if($ResultadosTotales>$Limit){
+                            $TotalPaginas= ceil($ResultadosTotales/$Limit);                               
+                            print('<div class="input-group" style=width:150px>');
+                            if($NumPage>1){
+                                $NumPage1=$NumPage-1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`6`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-left"></i></span>');
+                            }
+                            $FuncionJS="onchange=CambiePagina(`6`);";
+                            $css->select("CmbPage", "form-control", "CmbPage", "", "", $FuncionJS, "");
+
+                                for($p=1;$p<=$TotalPaginas;$p++){
+                                    if($p==$NumPage){
+                                        $sel=1;
+                                    }else{
+                                        $sel=0;
+                                    }
+
+                                    $css->option("", "", "", $p, "", "",$sel);
+                                        print($p);
+                                    $css->Coption();
+
+                                }
+
+                            $css->Cselect();
+                            if($ResultadosTotales>($PuntoInicio+$Limit)){
+                                $NumPage1=$NumPage+1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`6`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-right" ></i></span>');
+                            }
+                            print("</div>");
+                        }    
+                    $css->Cdiv();
+                $css->Cdiv();
+                   
+                $css->CrearDiv("", "table-responsive mailbox-messages", "", 1, 1);
+                    print('<table class="table table-hover table-striped">');
+                        print('<thead>');
+                            $css->FilaTabla(16);
+                                $css->ColTabla("<strong>ZIP</strong>", 1);
+                                $css->ColTabla("<strong>Fecha</strong>", 1);
+                                $css->ColTabla("<strong>CuentaRIPS</strong>", 1);
+                                $css->ColTabla("<strong>Valor</strong>", 1);
+                                $css->ColTabla("<strong>id Usuario</strong>", 1);
+                                                               
+                            $css->CierraFilaTabla();
+                        print('</thead>');
+                        print('<tbody>');
+                            while($RegistrosTabla=$obCon->FetchAssoc($Consulta)){
+                                
+                                print('<tr>');
+                                    
+                                    print("<td>");
+                                        
+                                        print('<a href='."../../".str_replace("../","", $RegistrosTabla["Ruta"]).' target="_blank"><button type="button" class="btn btn-warning btn-sm"><i class="fa fa-file-archive-o"></i></button></a>');
+                                    print("</td>");
+                                                                  
+                                    print("<td class='mailbox-name'>");
+                                        print($RegistrosTabla["Created"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print(($RegistrosTabla["CuentaRIPS"]));
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".number_format($RegistrosTabla["Valor"])."</strong>");
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".$RegistrosTabla["idUser"]."</strong>");
+                                    print("</td>");
+                                    
+                                                                                                            
+                                print('</tr>');
+
+                            }
+
+                        print('</tbody>');
+                    print('</table>');
+                $css->Cdiv();
+            $css->Cdiv();
+        break;//fin caso 17
  }
     
           

@@ -79,6 +79,10 @@ $css->PageInit($myTitulo);
                     <a href="#" onclick="ListarFacturas();idListado=5;">
                         <i class="fa fa-list"></i>Historial de Facturas</a>
                 </li>
+                <li>
+                    <a href="#" onclick="ListarRIPS();idListado=6;">
+                        <i class="fa fa-dashboard"></i>RIPS Generados</a>
+                </li>
                
               </ul>
             </div>
@@ -142,8 +146,39 @@ $css->PageInit($myTitulo);
             
                     $css->Cdiv();
                 $css->Cdiv();
+                
+                $css->CrearDiv("DivFiltrosFacturas", "box box-solid", "left", 1, 1);
+             $css->CrearDiv("", "box-header with-border", "left", 1, 1);
+                
+               print('<h3 class="box-title">Filtros Facturas</h3>');
+               
+               $css->CrearDiv("", "box-tools", "left", 1, 1);    
+                  print('<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                        </button>
+                      </div>
+                  </div>');
+        
+                   $css->div("", "box-body no-padding", "", "", "", "", "");
+                                
+                                //Creamos el Selector que contiene las bases de datos
+                         $css->select("idTipoFactura", "form-control", "idTipoFactura", "", "", "onchange=ListarFacturas(`1`)", '');
+                        $css->option("", "", "", "", "", "");
+                            print("Seleccione el tipo de factura");
+                        $css->Coption();
+                        $sql="SELECT * FROM facturas_tipo";
+                        $Consulta=$obCon->Query($sql);
+                        while($DatosTipoFactura=$obCon->FetchAssoc($Consulta)){
+                            $css->option("", "", "", $DatosTipoFactura["ID"], "", "");
+                                print(utf8_encode($DatosTipoFactura["TipoFactura"]));
+                            $css->Coption();
+                        }
+                    $css->Cselect();
+            
+                    $css->Cdiv();
+                $css->Cdiv();
                     
-                               
+                          
+                
                 
             $css->Cdiv();
         

@@ -35,6 +35,11 @@ function MostrarListadoSegunID(){
     if(idListado==5){
         ListarFacturas();
     }
+    if(idListado==6){
+        ListarRIPS();
+    }
+    
+    
 }
 function ListarPacientes(Page=1){
     var idDiv="DivGeneralDraw";
@@ -369,6 +374,10 @@ function CambiePagina(Funcion,Page=""){
     }
     if(Funcion==5){
         ListarFacturas(Page);
+    }
+    
+    if(Funcion==6){
+        ListarRIPS(Page);
     }
     
 }
@@ -1368,11 +1377,389 @@ function ListarFacturas(Page=1){
     var Busquedas =document.getElementById("TxtBusquedas").value;    
     var FechaInicialRangos =document.getElementById("FechaInicialRangos").value;
     var FechaFinalRangos =document.getElementById("FechaFinalRangos").value;
+    var idTipoFactura =document.getElementById("idTipoFactura").value;
     
     var form_data = new FormData();
         form_data.append('Accion', 16);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
         form_data.append('Page', Page);
         form_data.append('Busquedas', Busquedas);        
+        form_data.append('FechaInicialRangos', FechaInicialRangos);
+        form_data.append('FechaFinalRangos', FechaFinalRangos);
+        form_data.append('idTipoFactura', idTipoFactura);
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos                      
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+
+
+function ConfirmeGenerarRIPS(FechaInicial,FechaFinal){
+    
+    alertify.confirm('Está seguro que desea Generar estos RIPS, El proceso es Irreversible?',
+        function (e) {
+            if (e) {
+                
+                GenerarRIPSAF(FechaInicial,FechaFinal);
+            }else{
+                alertify.error("Se canceló el proceso");
+
+                return;
+            }
+        });
+}
+
+
+function GenerarRIPSAF(FechaInicial,FechaFinal){
+        
+        var Condicion = $("#btnGenerarRIPS").data("condicion");
+        var btnEnviar = $("#btnGenerarRIPS");
+        var idTipoFactura = $("#idTipoFactura").val();
+        var form_data = new FormData();
+        
+            form_data.append('Accion', 14);
+            form_data.append('q', Condicion);            
+            form_data.append('FechaInicial',FechaInicial);
+            form_data.append('FechaFinal',FechaFinal);
+            form_data.append('idTipoFactura',idTipoFactura);
+        
+        $.ajax({
+            url: './procesadores/salud_prefacturacion.process.php',
+            //dataType: 'json',
+            cache: false,
+            contentType: false,
+            processData: false,
+            //data: form_data,
+            type: 'post',
+            data: form_data,
+            beforeSend: function(){
+                /*
+                * Esta función se ejecuta durante el envió de la petición al
+                * servidor.
+                * */
+                // btnEnviar.text("Enviando"); Para button 
+                btnEnviar.val("Generando..."); // Para input de tipo button
+                btnEnviar.attr("disabled","disabled");
+            },
+            complete:function(data){
+                /*
+                * Se ejecuta al termino de la petición
+                * */
+                btnEnviar.val("Generar");
+                btnEnviar.removeAttr("disabled");
+            },
+            success: function(data){
+               var respuestas = data.split(';'); 
+                if (respuestas[0] == "OK"){                 
+                    //alertify.success(respuestas[1]);
+                    alertify.success(respuestas[1]);
+                    GenerarRIPSAD(FechaInicial,FechaFinal,respuestas[2]);
+                }else if(respuestas[0] == "E1"){
+                    alertify.error(respuestas[1]);
+                    MarqueErrorElemento(respuestas[2]);
+                }else{
+                    alertify.alert(data);
+
+              }
+
+            },
+            error: function(data){
+                alert(xhr.status);
+                alert(thrownError);
+            }
+        });
+        // Nos permite cancelar el envio del formulario
+        return false;
+    
+
+}
+
+
+function GenerarRIPSAD(FechaInicial,FechaFinal,CuentaRIPS){
+        
+        var Condicion = $("#btnGenerarRIPS").data("condicion");
+        var btnEnviar = $("#btnGenerarRIPS");
+        
+        var form_data = new FormData();
+        
+            form_data.append('Accion', 15);
+            form_data.append('q', Condicion);            
+            form_data.append('FechaInicial',FechaInicial);
+            form_data.append('FechaFinal',FechaFinal);
+            form_data.append('CuentaRIPS',CuentaRIPS);
+        
+        $.ajax({
+            url: './procesadores/salud_prefacturacion.process.php',
+            //dataType: 'json',
+            cache: false,
+            contentType: false,
+            processData: false,
+            //data: form_data,
+            type: 'post',
+            data: form_data,
+            beforeSend: function(){
+                /*
+                * Esta función se ejecuta durante el envió de la petición al
+                * servidor.
+                * */
+                // btnEnviar.text("Enviando"); Para button 
+                btnEnviar.val("Generando..."); // Para input de tipo button
+                btnEnviar.attr("disabled","disabled");
+            },
+            complete:function(data){
+                /*
+                * Se ejecuta al termino de la petición
+                * */
+                btnEnviar.val("Generar");
+                btnEnviar.removeAttr("disabled");
+            },
+            success: function(data){
+               var respuestas = data.split(';'); 
+                if (respuestas[0] == "OK"){                 
+                    //alertify.success(respuestas[1]);
+                    alertify.success(respuestas[1]);
+                    GenerarRIPSAT(FechaInicial,FechaFinal,respuestas[2]);
+                }else if(respuestas[0] == "E1"){
+                    alertify.error(respuestas[1]);
+                    MarqueErrorElemento(respuestas[2]);
+                }else{
+                    alertify.alert(data);
+
+              }
+
+            },
+            error: function(data){
+                alert(xhr.status);
+                alert(thrownError);
+            }
+        });
+        // Nos permite cancelar el envio del formulario
+        return false;
+    
+
+}
+
+
+function GenerarRIPSAT(FechaInicial,FechaFinal,CuentaRIPS){
+        
+        var Condicion = $("#btnGenerarRIPS").data("condicion");
+        var btnEnviar = $("#btnGenerarRIPS");
+        
+        var form_data = new FormData();
+        
+            form_data.append('Accion', 16);
+            form_data.append('q', Condicion);            
+            form_data.append('FechaInicial',FechaInicial);
+            form_data.append('FechaFinal',FechaFinal);
+            form_data.append('CuentaRIPS',CuentaRIPS);
+        
+        $.ajax({
+            url: './procesadores/salud_prefacturacion.process.php',
+            //dataType: 'json',
+            cache: false,
+            contentType: false,
+            processData: false,
+            //data: form_data,
+            type: 'post',
+            data: form_data,
+            beforeSend: function(){
+                /*
+                * Esta función se ejecuta durante el envió de la petición al
+                * servidor.
+                * */
+                // btnEnviar.text("Enviando"); Para button 
+                btnEnviar.val("Generando..."); // Para input de tipo button
+                btnEnviar.attr("disabled","disabled");
+            },
+            complete:function(data){
+                /*
+                * Se ejecuta al termino de la petición
+                * */
+                btnEnviar.val("Generar");
+                btnEnviar.removeAttr("disabled");
+            },
+            success: function(data){
+               var respuestas = data.split(';'); 
+                if (respuestas[0] == "OK"){                 
+                    //alertify.success(respuestas[1]);
+                    alertify.success(respuestas[1]);
+                    GenerarRIPSUS(FechaInicial,FechaFinal,respuestas[2]);
+                }else if(respuestas[0] == "E1"){
+                    alertify.error(respuestas[1]);
+                    MarqueErrorElemento(respuestas[2]);
+                }else{
+                    alertify.alert(data);
+
+              }
+
+            },
+            error: function(data){
+                alert(xhr.status);
+                alert(thrownError);
+            }
+        });
+        // Nos permite cancelar el envio del formulario
+        return false;
+    
+
+}
+
+function GenerarRIPSUS(FechaInicial,FechaFinal,CuentaRIPS){
+        
+        var Condicion = $("#btnGenerarRIPS").data("condicion");
+        var btnEnviar = $("#btnGenerarRIPS");
+        
+        var form_data = new FormData();
+        
+            form_data.append('Accion', 17);
+            form_data.append('q', Condicion);            
+            form_data.append('FechaInicial',FechaInicial);
+            form_data.append('FechaFinal',FechaFinal);
+            form_data.append('CuentaRIPS',CuentaRIPS);
+        
+        $.ajax({
+            url: './procesadores/salud_prefacturacion.process.php',
+            //dataType: 'json',
+            cache: false,
+            contentType: false,
+            processData: false,
+            //data: form_data,
+            type: 'post',
+            data: form_data,
+            beforeSend: function(){
+                /*
+                * Esta función se ejecuta durante el envió de la petición al
+                * servidor.
+                * */
+                // btnEnviar.text("Enviando"); Para button 
+                btnEnviar.val("Generando..."); // Para input de tipo button
+                btnEnviar.attr("disabled","disabled");
+            },
+            complete:function(data){
+                /*
+                * Se ejecuta al termino de la petición
+                * */
+                btnEnviar.val("Generar");
+                btnEnviar.removeAttr("disabled");
+            },
+            success: function(data){
+               var respuestas = data.split(';'); 
+                if (respuestas[0] == "OK"){                 
+                    //alertify.success(respuestas[1]);
+                    alertify.success(respuestas[1]);
+                    GenerarRIPSCT(FechaInicial,FechaFinal,respuestas[2]);
+                }else if(respuestas[0] == "E1"){
+                    alertify.error(respuestas[1]);
+                    MarqueErrorElemento(respuestas[2]);
+                }else{
+                    alertify.alert(data);
+
+              }
+
+            },
+            error: function(data){
+                alert(xhr.status);
+                alert(thrownError);
+            }
+        });
+        // Nos permite cancelar el envio del formulario
+        return false;
+    
+
+}
+
+function GenerarRIPSCT(FechaInicial,FechaFinal,CuentaRIPS){
+        
+        var Condicion = $("#btnGenerarRIPS").data("condicion");
+        var btnEnviar = $("#btnGenerarRIPS");
+        var idTipoFactura =document.getElementById("idTipoFactura").value;
+        var form_data = new FormData();
+        
+            form_data.append('Accion', 18);
+            form_data.append('q', Condicion);            
+            form_data.append('FechaInicial',FechaInicial);
+            form_data.append('FechaFinal',FechaFinal);
+            form_data.append('CuentaRIPS',CuentaRIPS);
+            form_data.append('idTipoFactura',idTipoFactura);
+        
+        $.ajax({
+            url: './procesadores/salud_prefacturacion.process.php',
+            //dataType: 'json',
+            cache: false,
+            contentType: false,
+            processData: false,
+            //data: form_data,
+            type: 'post',
+            data: form_data,
+            beforeSend: function(){
+                /*
+                * Esta función se ejecuta durante el envió de la petición al
+                * servidor.
+                * */
+                // btnEnviar.text("Enviando"); Para button 
+                btnEnviar.val("Generando..."); // Para input de tipo button
+                btnEnviar.attr("disabled","disabled");
+            },
+            complete:function(data){
+                /*
+                * Se ejecuta al termino de la petición
+                * */
+                btnEnviar.val("Generar");
+                btnEnviar.removeAttr("disabled");
+            },
+            success: function(data){
+               var respuestas = data.split(';'); 
+                if (respuestas[0] == "OK"){                 
+                   
+                    alertify.alert(respuestas[1]);
+                    
+                }else if(respuestas[0] == "E1"){
+                    alertify.error(respuestas[1]);
+                    MarqueErrorElemento(respuestas[2]);
+                }else{
+                    alertify.alert(data);
+
+              }
+
+            },
+            error: function(data){
+                alert(xhr.status);
+                alert(thrownError);
+            }
+        });
+        // Nos permite cancelar el envio del formulario
+        return false;
+    
+
+}
+
+
+function ListarRIPS(Page=1){
+    var idDiv="DivGeneralDraw";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+    
+    var Busquedas =document.getElementById("TxtBusquedas").value;
+    var FechaInicialRangos =document.getElementById("FechaInicialRangos").value;
+    var FechaFinalRangos =document.getElementById("FechaFinalRangos").value;
+    
+    var form_data = new FormData();
+        form_data.append('Accion', 17);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('Page', Page);
+        form_data.append('Busquedas', Busquedas);
         form_data.append('FechaInicialRangos', FechaInicialRangos);
         form_data.append('FechaFinalRangos', FechaFinalRangos);
                 
@@ -1394,6 +1781,5 @@ function ListarFacturas(Page=1){
           }
       });
 }
-
 MostrarListadoSegunID();
 

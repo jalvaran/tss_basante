@@ -2478,8 +2478,8 @@ $this->PDF->MultiCell(93, 25, $tbl, 0, 'L', 1, 0, '', '', true,0, true, true, 10
         $html=$this->factura_items_basante($idFactura);
         $this->PDF_Write("<br>".$html);
         
-        $html="<br><br><br>Firma del Afiliado: ________________________________________";
-        $html.="<br><br><br>No.Identificacion : ________________________________________";
+        //$html="<br><br><br>Firma del Afiliado: ________________________________________";
+        //$html.="<br><br><br>No.Identificacion : ________________________________________";
         $this->PDF_Write($html);
         
         $this->PDF_Write("<br><br><br><br><br>".utf8_encode($DatosFormato["NotasPiePagina"]));
@@ -2490,7 +2490,7 @@ $this->PDF->MultiCell(93, 25, $tbl, 0, 'L', 1, 0, '', '', true,0, true, true, 10
         $obCon=new conexion(1);
         $idReserva=$DatosReserva["ID"];
         $Fecha=$DatosFactura["Fecha"];
-        $NombreCompleto= utf8_encode($DatosPaciente["PrimerNombre"]." ".$DatosPaciente["SegundoNombre"]." ".$DatosPaciente["PrimerApellido"]." ".$DatosPaciente["SegundoApellido"]);
+        $NombreCompleto= ($DatosPaciente["PrimerNombre"]." ".$DatosPaciente["SegundoNombre"]." ".$DatosPaciente["PrimerApellido"]." ".$DatosPaciente["SegundoApellido"]);
         $DatosRegimenPaciente=$obCon->DevuelveValores("prefactura_regimen_paciente", "ID", $DatosPaciente["idRegimenPaciente"]);
         $DatosEPS=$obCon->DevuelveValores("salud_eps", "cod_pagador_min", $DatosPaciente["CodEPS"]);
         $DatosEdad=$this->CalcularEdad($DatosPaciente["FechaNacimiento"]);
@@ -2626,6 +2626,106 @@ $this->PDF->MultiCell(93, 25, $tbl, 0, 'L', 1, 0, '', '', true,0, true, true, 10
 
     }
     
+    
+    public function RelacionFacturaBasante($Condicion,$idTipoFactura,$FechaInicial,$FechaFinal) {
+        $obCon=new conexion(1);
+        $idFormato=2001;
+        $DatosFormato=$obCon->DevuelveValores("formatos_calidad", "ID", $idFormato);
+        $DatosTipoFactura=$obCon->DevuelveValores("facturas_tipo", "ID", $idTipoFactura);
+        $Rango="Del $FechaInicial Al $FechaFinal";
+        $Documento=$DatosFormato["Nombre"]." ".$Rango;
+        $this->PDF_Ini($Documento, 8, "");
+        $this->PDF_Encabezado($FechaInicial,1, $idFormato, "",$Documento);
+        
+        //$this->PDF_Write("Relación de Facturación en el rango comprendido entre el $FechaInicial hasta $FechaFinal:");
+        
+        $html=$this->items_relacion_facturas_basante($Condicion,$DatosTipoFactura);
+        $this->PDF_Write($html);
+        
+        
+        $this->PDF_Write("<br><br><br><br><br>".utf8_encode($DatosFormato["NotasPiePagina"]));
+        $this->PDF_Output("Relacion_".$Rango);
+    }
+    
+    
+    public function items_relacion_facturas_basante($Condicion,$DatosTipoFactura) {
+        
+        $sql="SELECT * 
+                  FROM vista_facturas_basante $Condicion AND Estado>=1 AND Estado<10";
+        $Consulta= $this->obCon->Query($sql);
+        $h=1;  
+        if($this->obCon->NumRows($Consulta)){
+            $tbl = ' 
+            <br>
+                <h3 align="center">RELACIÓN DE FACTURAS '.$DatosTipoFactura["TipoFactura"].'</h3>
+                <table cellspacing="1" cellpadding="2" border="0">
+                    <tr>
+                        <td align="center" ><strong>Factura de Venta</strong></td>
+                        <td align="center" ><strong>Nombre de Usuario</strong></td>
+                        <td align="center" ><strong>Identificación del paciente</strong></td>
+                        <td align="center" ><strong>No. Autorización</strong></td>
+                        <td align="center" ><strong>N. Presciprión</strong></td>                        
+                        <td align="center" ><strong>Cantidad</strong></td>                        
+                        <td align="center" ><strong>Vr. Unitario</strong></td>                        
+                        <td align="center" ><strong>Total</strong></td>
+                        
+                    </tr>
+
+
+                ';
+        
+        $Total=0;
+        while($DatosItemFactura=$this->obCon->FetchArray($Consulta)){
+            $Total=$Total+$DatosItemFactura["TotalFactura"];
+            
+            if($h==0){
+                $Back="#f2f2f2";
+                $h=1;
+            }else{
+                $Back="white";
+                $h=0;
+            }
+
+            $tbl .= '    
+
+            <tr>
+                <td align="right" style="border-bottom: 1px solid #ddd;background-color: '.$Back.';">'.$DatosItemFactura["NumeroFactura"].'</td>    
+                
+                <td align="left"  style="border-bottom: 1px solid #ddd;background-color: '.$Back.';">'.utf8_encode($DatosItemFactura["NombrePaciente"]).'</td>
+                <td align="left" style="border-bottom: 1px solid #ddd;background-color: '.$Back.';">'.$DatosItemFactura["TipoDocumento"]." ".$DatosItemFactura["NumeroDocumento"].'</td>
+                    
+                <td align="right" style="border-bottom: 1px solid #ddd;background-color: '.$Back.';">'.$DatosItemFactura["NumeroAutorizacion"].'</td>
+                <td align="right" style="border-bottom: 1px solid #ddd;background-color: '.$Back.';">'.$DatosItemFactura["ReferenciaTutela"].'</td>
+                <td align="right" style="border-bottom: 1px solid #ddd;background-color: '.$Back.';">'.number_format($DatosItemFactura["CitasFacturadas"]).'</td>
+                <td align="right" style="border-bottom: 1px solid #ddd;background-color: '.$Back.';">'.number_format($DatosItemFactura["TotalFactura"],2).'</td>
+                <td align="right" style="border-bottom: 1px solid #ddd;background-color: '.$Back.';">'.number_format($DatosItemFactura["TotalFactura"],2).'</td>
+                
+            </tr>
+
+         ';
+
+        }
+        $tbl.= '<tr>'
+                . '<td align="right" colspan="7" style="border-bottom: 1px solid #ddd;background-color: white;"><strong>SUBTOTAL</strong></td>'
+                . '<td align="right" style="border-bottom: 1px solid #ddd;background-color: white;"><strong>'.number_format($Total,2).'</strong></td>'
+                
+                . '</tr>';
+        $tbl.= '<tr>'
+                . '<td align="right" colspan="7" style="border-bottom: 1px solid #ddd;background-color: white;"><strong>IVA</strong></td>'
+                . '<td align="right" style="border-bottom: 1px solid #ddd;background-color: white;"><strong>'.number_format(0,2).'</strong></td>'
+                
+                . '</tr>';
+        $tbl.= '<tr>'
+                . '<td align="right" colspan="7" style="border-bottom: 1px solid #ddd;background-color: white;"><strong>TOTAL</strong></td>'
+                . '<td align="right" style="border-bottom: 1px solid #ddd;background-color: white;"><strong>'.number_format($Total,2).'</strong></td>'
+                
+                . '</tr>';
+        $tbl.= "</table>";
+
+        }
+        return($tbl);
+
+    }
    //Fin Clases
 }
     
