@@ -2480,7 +2480,7 @@ $this->PDF->MultiCell(93, 25, $tbl, 0, 'L', 1, 0, '', '', true,0, true, true, 10
         
         //$html="<br><br><br>Firma del Afiliado: ________________________________________";
         //$html.="<br><br><br>No.Identificacion : ________________________________________";
-        $this->PDF_Write($html);
+        //$this->PDF_Write($html);
         
         $this->PDF_Write("<br><br><br><br><br>".utf8_encode($DatosFormato["NotasPiePagina"]));
         $this->PDF_Output("Factura_".$DatosFactura["NumeroFactura"]);
@@ -2627,11 +2627,12 @@ $this->PDF->MultiCell(93, 25, $tbl, 0, 'L', 1, 0, '', '', true,0, true, true, 10
     }
     
     
-    public function RelacionFacturaBasante($Condicion,$idTipoFactura,$FechaInicial,$FechaFinal) {
+    public function RelacionFacturaBasante($Condicion,$idTipoFactura,$idRegimenFactura,$FechaInicial,$FechaFinal) {
         $obCon=new conexion(1);
         $idFormato=2001;
         $DatosFormato=$obCon->DevuelveValores("formatos_calidad", "ID", $idFormato);
         $DatosTipoFactura=$obCon->DevuelveValores("facturas_tipo", "ID", $idTipoFactura);
+        $DatosRegimenFactura=$obCon->DevuelveValores("facturas_regimen", "ID", $idRegimenFactura);
         $Rango="Del $FechaInicial Al $FechaFinal";
         $Documento=$DatosFormato["Nombre"]." ".$Rango;
         $this->PDF_Ini($Documento, 8, "");
@@ -2639,7 +2640,7 @@ $this->PDF->MultiCell(93, 25, $tbl, 0, 'L', 1, 0, '', '', true,0, true, true, 10
         
         //$this->PDF_Write("Relación de Facturación en el rango comprendido entre el $FechaInicial hasta $FechaFinal:");
         
-        $html=$this->items_relacion_facturas_basante($Condicion,$DatosTipoFactura);
+        $html=$this->items_relacion_facturas_basante($Condicion,$DatosTipoFactura,$DatosRegimenFactura);
         $this->PDF_Write($html);
         
         
@@ -2648,16 +2649,16 @@ $this->PDF->MultiCell(93, 25, $tbl, 0, 'L', 1, 0, '', '', true,0, true, true, 10
     }
     
     
-    public function items_relacion_facturas_basante($Condicion,$DatosTipoFactura) {
+    public function items_relacion_facturas_basante($Condicion,$DatosTipoFactura,$DatosRegimenFactura) {
         
         $sql="SELECT * 
-                  FROM vista_facturas_basante $Condicion AND Estado>=1 AND Estado<10";
+                  FROM vista_facturas_basante $Condicion  AND Estado>=1 AND Estado<10 ORDER BY NumeroFactura ASC";
         $Consulta= $this->obCon->Query($sql);
         $h=1;  
         if($this->obCon->NumRows($Consulta)){
             $tbl = ' 
             <br>
-                <h3 align="center">RELACIÓN DE FACTURAS '.$DatosTipoFactura["TipoFactura"].'</h3>
+                <h3 align="center">RELACIÓN DE FACTURAS '.utf8_encode($DatosTipoFactura["TipoFactura"]).' '.utf8_encode($DatosRegimenFactura["RegimenFactura"]).'</h3>
                 <table cellspacing="1" cellpadding="2" border="0">
                     <tr>
                         <td align="center" ><strong>Factura de Venta</strong></td>

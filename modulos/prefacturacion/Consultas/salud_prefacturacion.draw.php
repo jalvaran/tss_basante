@@ -1231,7 +1231,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             $Condicion=" WHERE ID>0 ";
             
             if($Busquedas<>''){
-                $Condicion.=" AND ( NumeroAutorizacion like '%$Busquedas%' or NumeroDocumento like '%$Busquedas%' or NombrePaciente like '%$Busquedas%')";
+                $Condicion.=" AND ( NumeroAutorizacion = '$Busquedas' or NumeroDocumento = '$Busquedas' or NombrePaciente like '%$Busquedas%' or idReserva = '$Busquedas')";
             }
             
             if($Estado<>''){
@@ -1324,6 +1324,9 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                     
                                     print("<td class='mailbox-name'>");
                                         print($RegistrosTabla["ID"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print(($RegistrosTabla["idReserva"]));
                                     print("</td>");
                                     print("<td class='mailbox-subject'>");
                                         print(($RegistrosTabla["Fecha"]));
@@ -1553,6 +1556,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                             $css->Cselect();
                             $css->CrearDiv("divReferenciaTutela", "", "left", 1, 1);
                                 $css->input("text", "ReferenciaTutela", "form-control", "ReferenciaTutela", "", "", "Referencia Tutela", "off", "", "", "");
+                                $css->input("text", "idTraza", "form-control", "idTraza", "", "", "ID Traza", "off", "", "", "");
                             $css->CerrarDiv();
                         print("</td>");
 
@@ -1716,16 +1720,37 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                 $Page=1;
                 $NumPage=1;
             }
-            $Busquedas=$obCon->normalizar($_REQUEST["Busquedas"]);            
+            $Busquedas=$obCon->normalizar($_REQUEST["Busquedas"]);
+            $ArrayBusqueda= explode(",", $Busquedas);            
+            $ArrayBusquedaExcluir= explode("#", $Busquedas);
+            $TotalBusquedasArray=count($ArrayBusqueda)+count($ArrayBusquedaExcluir);
             $FechaInicialRangos=$obCon->normalizar($_REQUEST["FechaInicialRangos"]);
             $FechaFinalRangos=$obCon->normalizar($_REQUEST["FechaFinalRangos"]);
             $idTipoFactura=$obCon->normalizar($_REQUEST["idTipoFactura"]);
+            $idRegimenFactura=$obCon->normalizar($_REQUEST["idRegimenFactura"]);
             $obCon->CrearVistaFacturas();
-            $Condicion=" WHERE ID<>'' ";
+            $Condicion=" WHERE Estado < '10' ";
             
-            if($Busquedas<>''){
-                $Condicion.=" AND ( NumeroFactura='$Busquedas'  or NumeroAutorizacion like '%$Busquedas%' or NumeroDocumento like '%$Busquedas%' or NombrePaciente like '%$Busquedas%')";
+            if($Busquedas<>'' AND $TotalBusquedasArray == 2 ){
+                $Condicion.=" AND ( NumeroFactura='$Busquedas' )";
             }
+            if($Busquedas<>'' AND count($ArrayBusqueda)>1){
+                $Condicion.=" AND (";
+                foreach ($ArrayBusqueda as $key => $value) {
+                    $Condicion.="  NumeroFactura='$value' or ";
+                }
+                $Condicion = substr($Condicion, 0, -3);
+                $Condicion.=" )";
+            }
+            if($Busquedas<>'' AND count($ArrayBusquedaExcluir)>1){
+                $Condicion.=" AND (";
+                foreach ($ArrayBusquedaExcluir as $key => $value) {
+                    $Condicion.="  NumeroFactura<>'$value' AND ";
+                }
+                $Condicion = substr($Condicion, 0, -4);
+                $Condicion.=" )";
+            }
+            
             if($FechaInicialRangos<>''){
                 $Condicion.=" AND Fecha>='$FechaInicialRangos'";
             }
@@ -1734,6 +1759,9 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             }
             if($idTipoFactura<>''){
                 $Condicion.=" AND TipoFactura='$idTipoFactura'";
+            }
+            if($idRegimenFactura<>''){
+                $Condicion.=" AND idRegimenFactura='$idRegimenFactura'";
             }
             $PuntoInicio = ($Page * $Limit) - $Limit;
             
@@ -1754,7 +1782,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             
             $css->div("", "box-body no-padding", "", "", "", "", "");
                 $css->div("", "mailbox-controls", "", "", "", "", "");
-                    $Link="../../general/Consultas/PDF_Documentos.draw.php?idDocumento=2002&idTipoFactura=$idTipoFactura&FechaInicial=$FechaInicialRangos&FechaFinal=$FechaFinalRangos&q=".$CondicionURL;
+                    $Link="../../general/Consultas/PDF_Documentos.draw.php?idDocumento=2002&idRegimenFactura=$idRegimenFactura&idTipoFactura=$idTipoFactura&FechaInicial=$FechaInicialRangos&FechaFinal=$FechaFinalRangos&q=".$CondicionURL;
                                         
                     $htmlReporte=('<strong>Reporte General:</strong> <a href='.$Link.' target="_blank"><button type="button" class="btn btn-success btn-lg"><i class="fa fa-file-pdf-o"></i></button></a>');
                     
@@ -1806,12 +1834,15 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                     print('<table class="table table-hover table-striped">');
                         print('<thead>');
                             $css->FilaTabla(16);
+                                
                                 $css->ColTabla("<strong>PDF</strong>", 1);
+                                $css->ColTabla("<strong>Anular/Devolver</strong>", 1);
                                 $css->ColTabla("<strong>Fecha</strong>", 1);
                                 $css->ColTabla("<strong>NumeroFactura</strong>", 1);
                                 $css->ColTabla("<strong>Paciente</strong>", 1);
                                 $css->ColTabla("<strong>NumeroDocumento</strong>", 1);
                                 $css->ColTabla("<strong>NumeroAutorizacion</strong>", 1);
+                                $css->ColTabla("<strong>idTraza</strong>", 1);
                                 $css->ColTabla("<strong>NumeroPrescripcion</strong>", 1);
                                 $css->ColTabla("<strong>Cantidad Citas</strong>", 1);
                                 $css->ColTabla("<strong>Valor Unitario</strong>", 1);
@@ -1819,6 +1850,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                 $css->ColTabla("<strong>Tipo Factura</strong>", 1);
                                 $css->ColTabla("<strong>Regimen</strong>", 1);
                                 $css->ColTabla("<strong>Observaciones</strong>", 1);
+                                
                                 
                             $css->CierraFilaTabla();
                         print('</thead>');
@@ -1832,7 +1864,11 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                     print("<td>");
                                         $Link="../../general/Consultas/PDF_Documentos.draw.php?idDocumento=2001&idFactura=".$idItem;
                                         
-                                        print('<a href='.$Link.' target="_blank"><button type="button" class="btn btn-danger btn-sm"><i class="fa fa-file-pdf-o"></i></button></a>');
+                                        print('<a href='.$Link.' target="_blank"><button type="button" class="btn btn-success btn-sm"><i class="fa fa-file-pdf-o"></i></button></a>');
+                                    print("</td>");
+                                    
+                                    print("<td style='text-align:center'>");
+                                        print('<a onclick="FormularioAnularFactura(`'.$RegistrosTabla["ID"].'`);"><button type="button" class="btn btn-danger btn-sm"><i class="fa fa-times"></i></button></a>');
                                     print("</td>");
                                                                   
                                     print("<td class='mailbox-name'>");
@@ -1849,6 +1885,9 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                     print("</td>");
                                     print("<td class='mailbox-subject'>");
                                         print("<strong>".($RegistrosTabla["NumeroAutorizacion"])."</strong>");
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print(($RegistrosTabla["idTraza"]));
                                     print("</td>");
                                     print("<td class='mailbox-subject'>");
                                         print("<strong>".($RegistrosTabla["ReferenciaTutela"])."</strong>");
@@ -1876,6 +1915,8 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                     print("<td class='mailbox-subject'>");
                                         print(($RegistrosTabla["Observaciones"]));
                                     print("</td>");
+                                    
+                                    
                                                                                                             
                                 print('</tr>');
 
@@ -2016,6 +2057,53 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                 $css->Cdiv();
             $css->Cdiv();
         break;//fin caso 17
+        
+        case 18://Formulario devolver factura
+            
+            $idFactura=$obCon->normalizar($_REQUEST["idFactura"]);
+            
+            $DatosFactura=$obCon->DevuelveValores("facturas", "ID", $idFactura);
+            $DatosReserva=$obCon->DevuelveValores("prefactura_reservas", "ID", $DatosFactura["idReserva"]);
+            $DatosPaciente=$obCon->DevuelveValores("prefactura_paciente", "ID", $DatosReserva["idPaciente"]);
+            
+            $css->CrearTitulo("<strong>Anular o Devolver la Factura ".$DatosFactura["NumeroFactura"]."</strong>", "rojo");
+            $Nombre=$DatosPaciente["PrimerNombre"]." ".$DatosPaciente["SegundoNombre"]." ".$DatosPaciente["PrimerApellido"]." ".$DatosPaciente["SegundoApellido"];
+            $css->CrearTabla();
+                $css->FilaTabla(16);
+                    $css->ColTabla("Paciente:",1);
+                    $css->ColTabla("<strong>".$Nombre."</strong>",2);
+                    $css->ColTabla("EPS:",1);
+                    $css->ColTabla("<strong>".$DatosPaciente["CodEPS"]."<strong>",1);
+                $css->CierraFilaTabla();
+                $css->FilaTabla(16);
+                    print("<td colspan=3>");
+                        $css->textarea("Observaciones", "form-control", "Observaciones", "", "Observaciones de la anulación", "", "");
+                        
+                        $css->Ctextarea();
+                    print("</td>");
+                    print("<td colspan=2>");
+                        $css->select("TipoAnulacion", "form-control", "TipoAnulacion", "", "", "", "");
+                            $css->option("", "", "", "", "", "");
+                                print("Desea Marcar esta Factura como: ");
+                            $css->Coption();
+                            $css->option("", "", "", "Anulada", "", "");
+                                print("Anulada");
+                            $css->Coption();
+                            $css->option("", "", "", "Devuelta", "", "");
+                                print("Devuelta");
+                            $css->Coption();
+                        $css->Cselect();
+                        
+                        $css->CrearBotonEvento("btnAnularFactura", "Anular", "1", "onclick", "ConfimaAnularFactura(`$idFactura`)", "rojo");
+                    print("</td>");
+                $css->CierraFilaTabla();
+                $css->FilaTabla(16);
+                    
+                $css->CierraFilaTabla();
+            $css->CerrarTabla();
+            
+        break;//Fin caso 18    
+        
  }
     
           

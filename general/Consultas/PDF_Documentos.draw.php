@@ -108,7 +108,8 @@ if(isset($_REQUEST["idDocumento"])){
             $FechaInicial=$obCon->normalizar($_REQUEST["FechaInicial"]);
             $FechaFinal=$obCon->normalizar($_REQUEST["FechaFinal"]);
             $idTipoFactura=$obCon->normalizar($_REQUEST["idTipoFactura"]);
-            $obDoc->RelacionFacturaBasante($Condicion,$idTipoFactura,$FechaInicial,$FechaFinal);            
+            $idRegimenFactura=$obCon->normalizar($_REQUEST["idRegimenFactura"]);
+            $obDoc->RelacionFacturaBasante($Condicion,$idTipoFactura,$idRegimenFactura,$FechaInicial,$FechaFinal);            
         break;//Fin caso 2001
     }
 }else{

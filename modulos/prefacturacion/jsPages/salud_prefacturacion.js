@@ -1378,6 +1378,7 @@ function ListarFacturas(Page=1){
     var FechaInicialRangos =document.getElementById("FechaInicialRangos").value;
     var FechaFinalRangos =document.getElementById("FechaFinalRangos").value;
     var idTipoFactura =document.getElementById("idTipoFactura").value;
+    var idRegimenFactura =document.getElementById("idRegimenFactura").value;
     
     var form_data = new FormData();
         form_data.append('Accion', 16);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
@@ -1386,6 +1387,7 @@ function ListarFacturas(Page=1){
         form_data.append('FechaInicialRangos', FechaInicialRangos);
         form_data.append('FechaFinalRangos', FechaFinalRangos);
         form_data.append('idTipoFactura', idTipoFactura);
+        form_data.append('idRegimenFactura', idRegimenFactura);
                 
        $.ajax({// se arma un objecto por medio de ajax  
         url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
@@ -1429,6 +1431,7 @@ function GenerarRIPSAF(FechaInicial,FechaFinal){
         var Condicion = $("#btnGenerarRIPS").data("condicion");
         var btnEnviar = $("#btnGenerarRIPS");
         var idTipoFactura = $("#idTipoFactura").val();
+        var idRegimenFactura =document.getElementById("idRegimenFactura").value;
         var form_data = new FormData();
         
             form_data.append('Accion', 14);
@@ -1436,6 +1439,7 @@ function GenerarRIPSAF(FechaInicial,FechaFinal){
             form_data.append('FechaInicial',FechaInicial);
             form_data.append('FechaFinal',FechaFinal);
             form_data.append('idTipoFactura',idTipoFactura);
+            form_data.append('idRegimenFactura',idRegimenFactura);
         
         $.ajax({
             url: './procesadores/salud_prefacturacion.process.php',
@@ -1687,6 +1691,7 @@ function GenerarRIPSCT(FechaInicial,FechaFinal,CuentaRIPS){
         var Condicion = $("#btnGenerarRIPS").data("condicion");
         var btnEnviar = $("#btnGenerarRIPS");
         var idTipoFactura =document.getElementById("idTipoFactura").value;
+        var idRegimenFactura =document.getElementById("idRegimenFactura").value;
         var form_data = new FormData();
         
             form_data.append('Accion', 18);
@@ -1695,6 +1700,7 @@ function GenerarRIPSCT(FechaInicial,FechaFinal,CuentaRIPS){
             form_data.append('FechaFinal',FechaFinal);
             form_data.append('CuentaRIPS',CuentaRIPS);
             form_data.append('idTipoFactura',idTipoFactura);
+            form_data.append('idRegimenFactura',idRegimenFactura);
         
         $.ajax({
             url: './procesadores/salud_prefacturacion.process.php',
@@ -1781,5 +1787,117 @@ function ListarRIPS(Page=1){
           }
       });
 }
+
+function FormularioAnularFactura(idFactura){
+    var idDiv="DivGeneralDraw";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+    
+    
+    var form_data = new FormData();
+        form_data.append('Accion', 18);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('idFactura', idFactura);
+        
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos                      
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+
+function ConfimaAnularFactura(idFactura){
+    alertify.confirm('Está seguro que desea Anular esta Factura?',
+        function (e) {
+            if (e) {
+                
+                AnularFactura(idFactura);
+            }else{
+                alertify.error("Se canceló el proceso");
+
+                return;
+            }
+        });
+}
+
+function AnularFactura(idFactura){
+        
+       
+        var btnEnviar = $("#btnAnularFactura");
+        var Observaciones =document.getElementById("Observaciones").value;
+        var TipoAnulacion =document.getElementById("TipoAnulacion").value;
+        var form_data = new FormData();
+        
+            form_data.append('Accion', 19);
+            
+            form_data.append('idFactura',idFactura);
+            form_data.append('Observaciones',Observaciones);
+            form_data.append('TipoAnulacion',TipoAnulacion);
+        
+        $.ajax({
+            url: './procesadores/salud_prefacturacion.process.php',
+            //dataType: 'json',
+            cache: false,
+            contentType: false,
+            processData: false,
+            //data: form_data,
+            type: 'post',
+            data: form_data,
+            beforeSend: function(){
+                /*
+                * Esta función se ejecuta durante el envió de la petición al
+                * servidor.
+                * */
+                // btnEnviar.text("Enviando"); Para button 
+                btnEnviar.val("Anulando..."); // Para input de tipo button
+                btnEnviar.attr("disabled","disabled");
+            },
+            complete:function(data){
+                /*
+                * Se ejecuta al termino de la petición
+                * */
+                btnEnviar.val("Generar");
+                btnEnviar.removeAttr("disabled");
+            },
+            success: function(data){
+               var respuestas = data.split(';'); 
+                if (respuestas[0] == "OK"){                 
+                   
+                    alertify.alert(respuestas[1]);
+                    MostrarListadoSegunID();
+                }else if(respuestas[0] == "E1"){
+                    alertify.error(respuestas[1]);
+                    MarqueErrorElemento(respuestas[2]);
+                }else{
+                    alertify.alert(data);
+
+              }
+
+            },
+            error: function(data){
+                alert(xhr.status);
+                alert(thrownError);
+            }
+        });
+        // Nos permite cancelar el envio del formulario
+        return false;
+    
+
+}
+
+
+
 MostrarListadoSegunID();
 

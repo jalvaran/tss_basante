@@ -70,6 +70,8 @@ if( !empty($_REQUEST["Accion"]) ){
             //$Datos["UnidadMedidaEdad"]=$obCon->normalizar($_REQUEST["UnidadMedidaEdad"]);
             $Datos["Sexo"]=$obCon->normalizar($_REQUEST["Sexo"]);
             $Datos["CodigoDANE"]=$obCon->normalizar($_REQUEST["CodigoDANE"]);
+            $Datos["Departamento"]=$obCon->normalizar(substr($_REQUEST["CodigoDANE"],0,2));
+            $Datos["Municipio"]=$obCon->normalizar(substr($_REQUEST["CodigoDANE"],2,3));
             $Datos["Direccion"]=$obCon->normalizar($_REQUEST["Direccion"]);
             $Datos["ZonaResidencial"]=$obCon->normalizar($_REQUEST["ZonaResidencial"]);
             $Datos["Telefono"]=$obCon->normalizar($_REQUEST["Telefono"]);
@@ -93,6 +95,11 @@ if( !empty($_REQUEST["Accion"]) ){
             $TipoDocumento=$Datos["TipoDocumento"];
             $NumeroDocumento=$Datos["NumeroDocumento"];
             
+            $sql="SELECT ID FROM prefactura_paciente WHERE TipoDocumento='$TipoDocumento' AND NumeroDocumento='$NumeroDocumento' ";
+            $Validacion=$obCon->FetchAssoc($obCon->Query($sql));
+            if($Validacion["ID"]>0){
+                exit("E1;El Paciente ya Existe en el ID = ".$Validacion["ID"].";NumeroDocumento");
+            }
             
             if($TipoFormulario==1){//Si es creacion
                 $sql="SELECT ID FROM prefactura_paciente WHERE TipoDocumento='$TipoDocumento' AND NumeroDocumento='$NumeroDocumento' ";
@@ -431,6 +438,11 @@ if( !empty($_REQUEST["Accion"]) ){
             if($DatosFormulario["ReferenciaTutela"]==''){
                 exit("E1;Debe seleccionar una referencia de tutela;ReferenciaTutela");
             }
+            
+            if($DatosFormulario["idTraza"]==''){
+                exit("E1;Debe digitar un id de la traza;idTraza");
+            }
+            
             if($DatosFormulario["cmbRegimenFactura"]==''){
                 exit("E1;Debe seleccionar un Regimen para la Factura;cmbRegimenFactura");
             }
@@ -465,7 +477,7 @@ if( !empty($_REQUEST["Accion"]) ){
                 exit("E1;La resolucion fué completada");
             }
             
-            $obCon->CrearFactura($idFactura, $Fecha,$NumeroFactura, $DatosFormulario["cmbResolucionDIAN"], $DatosFormulario["cmbTipoFactura"], $DatosFormulario["cmbRegimenFactura"], $DatosFormulario["ReferenciaTutela"], $DatosFormulario["idReserva"],$DatosFormulario["ObservacionesFactura"], $idUser);
+            $obCon->CrearFactura($idFactura, $Fecha,$NumeroFactura, $DatosFormulario["cmbResolucionDIAN"], $DatosFormulario["cmbTipoFactura"], $DatosFormulario["cmbRegimenFactura"], $DatosFormulario["ReferenciaTutela"],$DatosFormulario["idTraza"], $DatosFormulario["idReserva"],$DatosFormulario["ObservacionesFactura"], $idUser);
             
             foreach ($DatosItemsFactura["Servicio"] as $key => $value) {
                 $obCon->AgregarItemFactura($idFactura, $key, $value, $DatosItemsFactura["Colaborador"][$key], $DatosItemsFactura["Recorrido"][$key], $DatosItemsFactura["Tarifa"][$key]);
@@ -483,6 +495,7 @@ if( !empty($_REQUEST["Accion"]) ){
             $FechaInicial=$obCon->normalizar($_REQUEST["FechaInicial"]);
             $FechaFinal=$obCon->normalizar($_REQUEST["FechaFinal"]);
             $idTipoFactura=$obCon->normalizar($_REQUEST["idTipoFactura"]);
+            $idRegimenFactura=$obCon->normalizar($_REQUEST["idRegimenFactura"]);
             
             if($FechaInicial==""){
                 exit("E1;Debe seleccionar una Fecha Inicial;FechaInicialRangos");
@@ -492,6 +505,9 @@ if( !empty($_REQUEST["Accion"]) ){
             }
             if($idTipoFactura==""){
                 exit("E1;Debe seleccionar un tipo de facturación;idTipoFactura");
+            }
+            if($idRegimenFactura==""){
+                exit("E1;Debe seleccione el Régimen;idRegimenFactura");
             }
             
             $CuentaRIPS=$obCon->CrearConsecutivoRips($idUser);
@@ -548,19 +564,35 @@ if( !empty($_REQUEST["Accion"]) ){
             $FechaFin=$obCon->normalizar($_REQUEST["FechaFinal"]);
             $CuentaRIPS=$obCon->normalizar($_REQUEST["CuentaRIPS"]); 
             $idTipoFactura=$obCon->normalizar($_REQUEST["idTipoFactura"]);
+            $idRegimenFactura=$obCon->normalizar($_REQUEST["idRegimenFactura"]);
             $DatosTipoFactura=$obCon->DevuelveValores("facturas_tipo", "ID", $idTipoFactura);
+            $DatosRegimenFactura=$obCon->DevuelveValores("facturas_regimen", "ID", $idRegimenFactura);
             $DatosRIPS=$obCon->DevuelveValores("rips_consecutivos", "CuentaRIPS", $CuentaRIPS);
             $RegistrosAD=$obCon->GenereRIPSCT($CuentaRIPS);
             $obCon->update("facturas", "CuentaRIPS", $CuentaRIPS, $Condicion);
             $obCon->ActualizaRegistro("rips_consecutivos", "Estado", 1, "CuentaRIPS", $CuentaRIPS);
             $FechaInicio=date("d-m-Y", strtotime($FechaInicio));
             $FechaFin=date("d-m-Y", strtotime($FechaFin));
-            $NombreZIP=$CuentaRIPS."_".str_replace(" ", "", $DatosTipoFactura["TipoFactura"])."-".$FechaInicio."-".$FechaFin."-Val(". number_format($DatosRIPS["Valor"], 0, "", "_").")" ;
+            $NombreZIP=$CuentaRIPS."_".str_replace(" ", "", $DatosRegimenFactura["RegimenFactura"])."_".str_replace(" ", "", $DatosTipoFactura["TipoFactura"])."-".$FechaInicio."-".$FechaFin."-Val(". number_format($DatosRIPS["Valor"], 0, "", "_").")" ;
             $NombreZIP.=".zip";
             $obCon->ComprimaRIPS($CuentaRIPS,$NombreZIP);
             print("OK;Todos los archivos han sido creados exitosamente;$CuentaRIPS");
             
         break;//Fin Generacion de CT fin caso 18
+    
+        case 19://Anular una factura
+            $idFactura=$obCon->normalizar($_REQUEST["idFactura"]);
+            $Observaciones=$obCon->normalizar($_REQUEST["Observaciones"]);
+            $TipoAnulacion=$obCon->normalizar($_REQUEST["TipoAnulacion"]);
+            if($Observaciones==""){
+                exit("E1;El campo observaciones no puede estar vacío;Observaciones");
+            }
+            if($TipoAnulacion==""){
+                exit("E1;Debe seleccionar si la factura es anulada o devuelta;TipoAnulacion");
+            }
+            $obCon->AnularFactura($idFactura, $TipoAnulacion, $Observaciones, $idUser);
+            print("OK;Factura anulada");
+        break;//fin caso 19    
         
     }
     

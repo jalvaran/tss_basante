@@ -173,6 +173,19 @@ $css->PageInit($myTitulo);
                             $css->Coption();
                         }
                     $css->Cselect();
+                    
+                    $css->select("idRegimenFactura", "form-control", "idRegimenFactura", "", "", "onchange=ListarFacturas(`1`)", '');
+                        $css->option("", "", "", "", "", "");
+                            print("Regimen de factura");
+                        $css->Coption();
+                        $sql="SELECT * FROM facturas_regimen";
+                        $Consulta=$obCon->Query($sql);
+                        while($DatosTipoFactura=$obCon->FetchAssoc($Consulta)){
+                            $css->option("", "", "", $DatosTipoFactura["ID"], "", "");
+                                print(utf8_encode($DatosTipoFactura["RegimenFactura"]));
+                            $css->Coption();
+                        }
+                    $css->Cselect();
             
                     $css->Cdiv();
                 $css->Cdiv();

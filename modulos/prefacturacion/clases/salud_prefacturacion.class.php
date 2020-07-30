@@ -14,6 +14,9 @@ class Prefacturacion extends conexion{
         $Anios=$interval->format('%y');
         $Meses=$interval->format('%m');
         $Salte=0;
+        $EdadCalculada=0;
+        $Unidad=3;
+        $NombreUnidad="DIAS";
         if($Anios>0 and $Salte==0){
             $EdadCalculada=$Anios;
             $Unidad=1;
@@ -119,7 +122,7 @@ class Prefacturacion extends conexion{
         $this->Query($sql);
     }
     
-    public function CrearFactura($idFactura,$Fecha,$NumeroFactura,$idResolucion, $TipoFactura, $idRegimenFactura,$ReferenciaTutela,$idReserva,$Observaciones, $idUser) {
+    public function CrearFactura($idFactura,$Fecha,$NumeroFactura,$idResolucion, $TipoFactura, $idRegimenFactura,$ReferenciaTutela,$idTraza,$idReserva,$Observaciones, $idUser) {
         
         $tab="facturas";        
         $Datos["ID"]=$idFactura;        
@@ -129,6 +132,7 @@ class Prefacturacion extends conexion{
         $Datos["TipoFactura"]=$TipoFactura; 
         $Datos["idRegimenFactura"]=$idRegimenFactura; 
         $Datos["ReferenciaTutela"]=$ReferenciaTutela; 
+        $Datos["idTraza"]=$idTraza; 
         $Datos["idReserva"]=$idReserva;   
         $Datos["Observaciones"]=$Observaciones;
         $Datos["Estado"]=1;         
@@ -312,7 +316,7 @@ class Prefacturacion extends conexion{
             mkdir($path,'0777');
         }
         
-        $sql="SELECT NumeroFactura,TipoDocumento,NumeroDocumento,NumeroAutorizacion,
+        $sql="SELECT NumeroFactura,TipoDocumento,NumeroDocumento,idTraza,
                     (SELECT idServicio FROM facturas_items t2 WHERE t2.idFactura=t1.ID LIMIT 1) as idServicio,
                     (SELECT Descripcion FROM catalogo_servicios t3 WHERE t3.CUPS=(SELECT idServicio) LIMIT 1) as DescripcionServicio,
                     CitasFacturadas,Subtotal,TotalFactura 
@@ -330,10 +334,10 @@ class Prefacturacion extends conexion{
                 $mensaje.=$CodPrestador.",";                
                 $mensaje.=$DatosConsulta["TipoDocumento"].","; 
                 $mensaje.=$DatosConsulta["NumeroDocumento"].","; 
-                $mensaje.=$DatosConsulta["NumeroAutorizacion"].","; 
+                $mensaje.=$DatosConsulta["idTraza"].","; 
                 $mensaje.="2,"; 
                 $mensaje.=$DatosConsulta["idServicio"].","; 
-                $mensaje.=$DatosConsulta["DescripcionServicio"].",";                
+                $mensaje.= substr(str_replace(")","", str_replace("(","", $DatosConsulta["DescripcionServicio"])),0,50).",";                
                 $mensaje.=($DatosConsulta["CitasFacturadas"]).",";
                 $mensaje.=round($DatosConsulta["Subtotal"],2).",";
                 $mensaje.=round($DatosConsulta["TotalFactura"],2);                          
@@ -493,6 +497,28 @@ class Prefacturacion extends conexion{
                 return("Error");
           }
         }
+    }
+    
+    public function AnularFactura($idFactura,$TipoAnulacion,$Observaciones,$idUser) {
+        $tab="facturas";
+        if($TipoAnulacion=="Anulada"){
+            $Estado=10;
+        }else{
+            $Estado=11;
+        }
+        $this->ActualizaRegistro($tab, "Estado", $Estado, "ID", $idFactura);
+        $sql="UPDATE prefactura_reservas_citas t1 INNER JOIN facturas_items t2 set t1.Estado='3' WHERE t2.idFactura='$idFactura' AND t2.idCita=t1.ID";
+        $this->Query($sql);
+        
+        $Datos["Observaciones"]=$Observaciones;
+        $Datos["TipoMovimiento"]=$TipoAnulacion;
+        $Datos["idUser"]=$Observaciones;
+        $Datos["idFactura"]=$idFactura;
+        $Datos["Created"]=date("Y-m-d H:i:s");
+        $sql= $this->getSQLInsert("facturas_anulaciones", $Datos);
+        $this->Query($sql);
+        
+        
     }
     
     /**
