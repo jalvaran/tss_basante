@@ -512,10 +512,27 @@ class Prefacturacion extends conexion{
         
         $Datos["Observaciones"]=$Observaciones;
         $Datos["TipoMovimiento"]=$TipoAnulacion;
-        $Datos["idUser"]=$Observaciones;
+        $Datos["idUser"]=$idUser;
         $Datos["idFactura"]=$idFactura;
         $Datos["Created"]=date("Y-m-d H:i:s");
         $sql= $this->getSQLInsert("facturas_anulaciones", $Datos);
+        $this->Query($sql);
+        
+        
+    }
+    
+    public function AnularReserva($idReserva,$Observaciones,$idUser) {
+        $tab="prefactura_reservas";
+        
+        $Estado=10;
+        
+        $this->ActualizaRegistro($tab, "Estado", $Estado, "ID", $idReserva);
+                
+        $Datos["Observaciones"]=$Observaciones;        
+        $Datos["idUser"]=$idUser;
+        $Datos["idReserva"]=$idReserva;
+        $Datos["Created"]=date("Y-m-d H:i:s");
+        $sql= $this->getSQLInsert("prefactura_reservas_anulaciones", $Datos);
         $this->Query($sql);
         
         

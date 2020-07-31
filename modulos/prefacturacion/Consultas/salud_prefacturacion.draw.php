@@ -498,7 +498,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             }
             $Busquedas=$obCon->normalizar($_REQUEST["Busquedas"]);
             $Estado=$obCon->normalizar($_REQUEST["Estado"]);
-            $Condicion=" WHERE ID>0 ";
+            $Condicion=" WHERE Estado<10 ";
             
             if($Busquedas<>''){
                 $Condicion.=" AND ( NumeroAutorizacion like '%$Busquedas%' or NumeroDocumento like '%$Busquedas%' or NombreCompleto like '%$Busquedas%' or Telefono like '%$Busquedas%')";
@@ -584,8 +584,19 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                     print("<td>");
                                         print('<button type="button" class="btn btn-primary btn-sm" title="Validar Reserva" onclick=FormularioValidarReserva(`'.$idItem.'`)><i class="fa fa-check"></i></button>');
                                     print("</td>");
+                                    print("<td>");
+                                        $disabled="";
+                                        if($RegistrosTabla["NumCitas"]>=1){
+                                            $disabled="disabled=true";
+                                        }
+                                        print('<button '.$disabled.' type="button" class="btn btn-error btn-sm" title="Anular Reserva" onclick=FormularioAnularReserva(`'.$idItem.'`)><i class="fa fa-times-circle"></i></button>');
+                                       
+                                    print("</td>");
                                     print("<td class='mailbox-name'>");
                                         print($RegistrosTabla["ID"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-name'>");
+                                        print($RegistrosTabla["NumCitas"]);
                                     print("</td>");
                                     print("<td class='mailbox-subject'>");
                                         print("<strong>".$NombreCompleto."</strong>");
@@ -2103,6 +2114,183 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             $css->CerrarTabla();
             
         break;//Fin caso 18    
+    
+        case 19://Formulario anualar reserva
+            
+            $idReserva=$obCon->normalizar($_REQUEST["idReserva"]);
+            
+            $DatosReserva=$obCon->DevuelveValores("prefactura_reservas", "ID", $idReserva);
+            $DatosPaciente=$obCon->DevuelveValores("prefactura_paciente", "ID", $DatosReserva["idPaciente"]);
+            
+            $css->CrearTitulo("<strong>Anular la reserva ".$DatosReserva["ID"]."</strong>", "rojo");
+            $Nombre=$DatosPaciente["PrimerNombre"]." ".$DatosPaciente["SegundoNombre"]." ".$DatosPaciente["PrimerApellido"]." ".$DatosPaciente["SegundoApellido"];
+            $css->CrearTabla();
+                $css->FilaTabla(16);
+                    $css->ColTabla("Paciente:",1);
+                    $css->ColTabla("<strong>".$Nombre."</strong>",2);
+                    $css->ColTabla("EPS:",1);
+                    $css->ColTabla("<strong>".$DatosPaciente["CodEPS"]."<strong>",1);
+                $css->CierraFilaTabla();
+                $css->FilaTabla(16);
+                    print("<td colspan=5>");
+                        $css->textarea("Observaciones", "form-control", "Observaciones", "", "Observaciones de la anulación", "", "");
+                        
+                        $css->Ctextarea();
+                        $css->CrearBotonEvento("btnAnularReserva", "Anular", "1", "onclick", "ConfimaAnularReserva(`$idReserva`)", "rojo");
+                    print("</td>");
+                    
+                $css->CierraFilaTabla();
+                $css->FilaTabla(16);
+                    
+                $css->CierraFilaTabla();
+            $css->CerrarTabla();
+            
+        break;//Fin caso 19
+    
+        case 20://dibuja la liquidacion de los colaboradores
+                        
+            $Limit=20;
+            $Page=$obCon->normalizar($_REQUEST["Page"]);
+            $NumPage=$obCon->normalizar($_REQUEST["Page"]);
+            if($Page==''){
+                $Page=1;
+                $NumPage=1;
+            }
+            $Busquedas=$obCon->normalizar($_REQUEST["Busquedas"]);
+            
+            
+            
+            $FechaInicialRangos=$obCon->normalizar($_REQUEST["FechaInicialRangos"]);
+            $FechaFinalRangos=$obCon->normalizar($_REQUEST["FechaFinalRangos"]);
+            
+           
+            $Condicion=" WHERE Documento>0 ";
+            
+            if($Busquedas<>''){
+                $Condicion.=" AND ( t1.Documento = '$Busquedas' or t1.Nombre like '%$Busquedas%' )";
+            }
+            if($FechaInicialRangos<>''){
+                $Condicion.=" AND Fecha>='$FechaInicialRangos'";
+            }
+            if($FechaFinalRangos<>''){
+                $Condicion.=" AND Fecha<='$FechaFinalRangos'";
+            }
+                        
+            
+            $PuntoInicio = ($Page * $Limit) - $Limit;
+            
+            $sql = "SELECT COUNT(*) as Items 
+                   FROM vista_liquidacion_colaboradores t1 $Condicion;";
+            
+            $Consulta=$obCon->Query($sql);
+            $totales = $obCon->FetchAssoc($Consulta);
+            $ResultadosTotales = $totales['Items'];
+                        
+            $sql="SELECT t1.*
+                  
+                  FROM vista_liquidacion_colaboradores t1 $Condicion ORDER BY ID DESC LIMIT $PuntoInicio,$Limit;";
+            $Consulta=$obCon->Query($sql);
+            
+            
+            $css->CrearTitulo("Liquidacion de Colaboradores", "verde");
+            
+            
+            
+            $css->div("", "box-body no-padding", "", "", "", "", "");
+                $css->div("", "mailbox-controls", "", "", "", "", "");
+                    $CondicionURL= urlencode($Condicion);
+                    $link="../../general/procesadores/GeneradorCSV.process.php?Opcion=1&sp=1&c=$CondicionURL";
+                    
+                    print('<a class="btn btn-app" style="background-color:#12a900;color:white;" href="'.$link.'" target="_blank">
+                        <span class="badge bg-blue" style="font-size:14px">'.$ResultadosTotales.'</span>
+                        <i class="fa fa-file-excel-o"></i> Exportar 
+                      </a>');
+                   
+                    $css->div("", "pull-right", "", "", "", "", "");
+                        if($ResultadosTotales>$Limit){
+                            $TotalPaginas= ceil($ResultadosTotales/$Limit);                               
+                            print('<div class="input-group" style=width:150px>');
+                            if($NumPage>1){
+                                $NumPage1=$NumPage-1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`7`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-left"></i></span>');
+                            }
+                            $FuncionJS="onchange=CambiePagina(`7`);";
+                            $css->select("CmbPage", "form-control", "CmbPage", "", "", $FuncionJS, "");
+
+                                for($p=1;$p<=$TotalPaginas;$p++){
+                                    if($p==$NumPage){
+                                        $sel=1;
+                                    }else{
+                                        $sel=0;
+                                    }
+
+                                    $css->option("", "", "", $p, "", "",$sel);
+                                        print($p);
+                                    $css->Coption();
+
+                                }
+
+                            $css->Cselect();
+                            if($ResultadosTotales>($PuntoInicio+$Limit)){
+                                $NumPage1=$NumPage+1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`7`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-right" ></i></span>');
+                            }
+                            print("</div>");
+                        }    
+                    $css->Cdiv();
+                $css->Cdiv();
+                   
+                $css->CrearDiv("", "table-responsive mailbox-messages", "", 1, 1);
+                    print('<table class="table table-hover table-striped">');
+                        print('<tbody>');
+                            while($RegistrosTabla=$obCon->FetchAssoc($Consulta)){
+                                
+                                $idItem=$RegistrosTabla["ID"];
+                                
+                                print('<tr>');
+                                   
+                                    print("<td class='mailbox-name'>");
+                                        print($RegistrosTabla["ID"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".$RegistrosTabla["Fecha"]."</strong>");
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print($RegistrosTabla["Nombre"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print($RegistrosTabla["Documento"]);
+                                    print("</td>");
+                                    
+                                    print("<td class='mailbox-subject'>");
+                                        print(($RegistrosTabla["idServicio"]));
+                                    print("</td>");
+                                    
+                                    print("<td class='mailbox-subject'>");
+                                        print(utf8_encode($RegistrosTabla["Descripcion"]));
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print(($RegistrosTabla["idRecorrido"]));
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print(number_format($RegistrosTabla["Valor"]));
+                                    print("</td>");
+                                    
+                                    /*
+                                    print("<td class='mailbox-date'>");
+                                        print(($RegistrosTabla["Updated"]));
+                                    print("</td>");
+                                    */
+                                    
+                                print('</tr>');
+
+                            }
+
+                        print('</tbody>');
+                    print('</table>');
+                $css->Cdiv();
+            $css->Cdiv();
+        break;//fin caso 20
         
  }
     

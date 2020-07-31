@@ -83,6 +83,11 @@ $css->PageInit($myTitulo);
                     <a href="#" onclick="ListarRIPS();idListado=6;">
                         <i class="fa fa-dashboard"></i>RIPS Generados</a>
                 </li>
+                
+                <li>
+                    <a href="#" onclick="ListarLiquidacionColaboradores();idListado=7;">
+                        <i class="fa fa-users"></i>Liquidacion Colaboradores</a>
+                </li>
                
               </ul>
             </div>

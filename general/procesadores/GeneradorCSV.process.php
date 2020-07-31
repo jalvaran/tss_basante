@@ -13,101 +13,69 @@ if(isset($_REQUEST["Opcion"])){
     $idUser=$_SESSION['idUser'];
     $obCon = new Administrador($idUser);
     
-    $DatosRuta=$obCon->DevuelveValores("configuracion_general", "ID", 1);
+    $DatosRuta=$obCon->DevuelveValores("configuracion_general", "ID", 10000);
     $OuputFile=$DatosRuta["Valor"];
-    $Link1=substr($OuputFile, -17);
-    $Link="../../".$Link1;
+    //$Link1=substr($OuputFile, -17);
+    $Link=$OuputFile;
     //print($Link);
     $a='"';
     $Enclosed=" ENCLOSED BY '$a' ";
     $Opcion=$_REQUEST["Opcion"];
     
     switch ($Opcion){
-        case 1: //Exportar CSV 
+        case 1: //Exportar Facturas Pagadas
             if(file_exists($Link)){
                 unlink($Link);
+            }else{
+                //print($Link." No existe");
             }
             
-            $Tabla=$obCon->normalizar($_REQUEST["Tabla"]);
             
-            $Condicion=$obCon->normalizar($_REQUEST["Condicion"]);
-            $OrdenColumna=$obCon->normalizar($_REQUEST["OrdenColumna"]);
-            $AscDesc=$obCon->normalizar($_REQUEST["Orden"]);
-            $Separador=$obCon->normalizar($_REQUEST["Separador"]);
-            $NumPage="";
-            $limit="";
-            $startpoint="";
-            $ColumnasSeleccionadas=$obCon->getColumnasVisibles($Tabla, "");  
-            
-            $DatosConsulta=$obCon->getConsultaTabla($Tabla,$ColumnasSeleccionadas, $Condicion, $OrdenColumna, $AscDesc, $NumPage, $limit,$startpoint);
-           
-            $TotalRegistros=$DatosConsulta["TotalRegistros"];
-            $QueryCompleto=$DatosConsulta["QueryCompleto"];
-            $QueryParcial=$DatosConsulta["QueryParcial"];
-            
-            
-            $idTabla=$ColumnasSeleccionadas["Field"][0];        
-            if($Condicion<>""){
-                $Condicion=" WHERE ".$Condicion;
+            $condicion=$obCon->normalizar(urldecode($_REQUEST["c"]));
+            $Separador=$obCon->normalizar($_REQUEST["sp"]);
+            if($Separador==1){
+                $Separador=';';
+            }else{
+                $Separador=',';
             }
-            if($OrdenColumna==''){
-                $OrdenColumna=$idTabla;
-            }
-            
-            $Orden=" ORDER BY $OrdenColumna $AscDesc ";
-            
-            
-            
-            $sqlColumnas="SELECT ";
-            $CamposShow="";
-            foreach($ColumnasSeleccionadas["Field"] as $key => $value){
-                $Titulo= utf8_encode($ColumnasSeleccionadas["Visualiza"][$key]);                
-                $sqlColumnas.="'$Titulo' ,";
-                $CamposShow.=" CONVERT(`$value` USING utf8mb4),"; 
-            }
-            $sqlColumnas=substr($sqlColumnas, 0, -1);
-            $CamposShow=substr($CamposShow, 0, -1);
+            $sqlColumnas="SELECT 'ID','Fecha','Documento','Nombre','idServicio','Descripcion',"
+                    . "'idRecorrido','Valor'";
+            $CamposShow=" t1.ID,t1.Fecha,t1.Documento,t1.Nombre,t1.idServicio,t1.Descripcion,"
+                    . "t1.idRecorrido,ROUND(t1.Valor) ";
             $sqlColumnas.=" UNION ALL ";
-            $Indice=$ColumnasSeleccionadas["Field"][0];
             
-            //$sql=$sqlColumnas."SELECT $CamposShow FROM $Tabla $Condicion INTO OUTFILE '$OuputFile' FIELDS TERMINATED BY '$Separador' $Enclosed LINES TERMINATED BY '\r\n';";
-            $sql=$sqlColumnas."$QueryParcial $Condicion INTO OUTFILE '$OuputFile' FIELDS TERMINATED BY '$Separador' $Enclosed LINES TERMINATED BY '\r\n';";
-            
-            $obCon->Query($sql);
-            print("<div id='DivImagenDescargarTablaDB'><a href='$Link' download='$Tabla.csv' target='_top' style='text-align:center;position: absolute;top:50%;left:50%;padding:5px;' onclick=document.getElementById('DivImagenDescargarTablaDB').style.display='none';><h1>Descargar: </h1><img src='../../images/descargar3.png'></img></a></div>");
-            break;
-            
-            case 2: //Exportar CSV directamente
+            //print($Indice);
+            $sql=$sqlColumnas."SELECT $CamposShow FROM vista_liquidacion_colaboradores t1 $condicion;";
+            $Consulta=$obCon->Query($sql);
+            if($archivo = fopen($Link, "a")){
+                $mensaje="";
+                $r=0;
+                while($DatosExportacion= $obCon->FetchArray($Consulta)){
+                    $r++;
+                    for ($i=0;$i<count($DatosExportacion);$i++){
+                        $Dato="";
+                        if(isset($DatosExportacion[$i])){
+                            $Dato=$DatosExportacion[$i];
+                        }
+                        $mensaje.='"'.str_replace(";", "", $Dato).'";'; 
+                    }
+                    $mensaje=substr($mensaje, 0, -1);
+                    $mensaje.="\r\n";
+                    if($r==1000){
+                        $r=0;
+                        fwrite($archivo, $mensaje);
+                        $mensaje="";
+                    }
+                }
                 
-            if(file_exists($Link)){
-                unlink($Link);
+
+                fwrite($archivo, $mensaje);
+                fclose($archivo);
+                unset($mensaje);
+                unset($DatosExportacion);
             }
-            
-            $Tabla=$obCon->normalizar($_REQUEST["Tabla"]);
-            $db=$obCon->normalizar($_REQUEST["db"]);
-            $Condicion="";
-            
-            $Separador=";";
-            $NumPage="";
-            $limit="";
-            $startpoint="";
-            
-            
-            $sqlColumnas="SELECT  ";
-            $Columnas=$obCon->ShowColums($db.".".$Tabla);
-            //print_r($Columnas);
-            foreach ($Columnas["Field"] as $key => $value) {
-                $sqlColumnas.="'$value',";
-            }
-            $sqlColumnas=substr($sqlColumnas, 0, -1);
-            $sqlColumnas.=" UNION ALL ";
-            
-            $sql=$sqlColumnas." SELECT * FROM $db.$Tabla $Condicion INTO OUTFILE '$OuputFile' FIELDS TERMINATED BY '$Separador' $Enclosed LINES TERMINATED BY '\r\n';";
-            
-            $obCon->Query($sql);
-            print("<div id='DivImagenDescargarTablaDB'><a href='$Link' download='$Tabla.csv' target='_top' ><h1>Descargar </h1></a></div>");
-            break;//Fin caso 2
-        
+            print("<a href='$Link' target='_top'><img src='../../images/download.gif'>Download</img></a>");
+            break;
         }
 }else{
     print("No se recibió parametro de opcion");

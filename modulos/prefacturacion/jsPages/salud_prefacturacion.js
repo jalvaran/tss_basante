@@ -38,7 +38,9 @@ function MostrarListadoSegunID(){
     if(idListado==6){
         ListarRIPS();
     }
-    
+    if(idListado==7){
+        ListarLiquidacionColaboradores();
+    }    
     
 }
 function ListarPacientes(Page=1){
@@ -1897,6 +1899,149 @@ function AnularFactura(idFactura){
 
 }
 
+
+
+function FormularioAnularReserva(idReserva){
+    var idDiv="DivGeneralDraw";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+    
+    
+    var form_data = new FormData();
+        form_data.append('Accion', 19);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('idReserva', idReserva);
+        
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos                      
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+
+function ConfimaAnularReserva(idReserva){
+    alertify.confirm('Está seguro que desea Anular esta Factura?',
+        function (e) {
+            if (e) {
+                
+                AnularReserva(idReserva);
+            }else{
+                alertify.error("Se canceló el proceso");
+
+                return;
+            }
+        });
+}
+
+function AnularReserva(idReserva){
+        
+       
+        var btnEnviar = $("#btnAnularReserva");
+        var Observaciones =document.getElementById("Observaciones").value;
+        
+        var form_data = new FormData();
+        
+            form_data.append('Accion', 20);
+            
+            form_data.append('idReserva',idReserva);
+            form_data.append('Observaciones',Observaciones);
+            
+        
+        $.ajax({
+            url: './procesadores/salud_prefacturacion.process.php',
+            //dataType: 'json',
+            cache: false,
+            contentType: false,
+            processData: false,
+            //data: form_data,
+            type: 'post',
+            data: form_data,
+            beforeSend: function(){
+                /*
+                * Esta función se ejecuta durante el envió de la petición al
+                * servidor.
+                * */
+                // btnEnviar.text("Enviando"); Para button 
+                btnEnviar.val("Anulando..."); // Para input de tipo button
+                btnEnviar.attr("disabled","disabled");
+            },
+            complete:function(data){
+                /*
+                * Se ejecuta al termino de la petición
+                * */
+                btnEnviar.val("Generar");
+                btnEnviar.removeAttr("disabled");
+            },
+            success: function(data){
+               var respuestas = data.split(';'); 
+                if (respuestas[0] == "OK"){                 
+                   
+                    alertify.alert(respuestas[1]);
+                    MostrarListadoSegunID();
+                }else if(respuestas[0] == "E1"){
+                    alertify.error(respuestas[1]);
+                    MarqueErrorElemento(respuestas[2]);
+                }else{
+                    alertify.alert(data);
+
+              }
+
+            },
+            error: function(data){
+                alert(xhr.status);
+                alert(thrownError);
+            }
+        });
+        // Nos permite cancelar el envio del formulario
+        return false;
+    
+
+}
+
+function ListarLiquidacionColaboradores(Page=1){
+    var idDiv="DivGeneralDraw";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+    var FechaInicialRangos =document.getElementById("FechaInicialRangos").value;
+    var FechaFinalRangos =document.getElementById("FechaFinalRangos").value;
+    var Busquedas =document.getElementById("TxtBusquedas").value;
+    
+    var form_data = new FormData();
+        form_data.append('Accion', 20);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('Page', Page);
+        form_data.append('Busquedas', Busquedas);
+        form_data.append('FechaInicialRangos', FechaInicialRangos);
+        form_data.append('FechaFinalRangos', FechaFinalRangos);
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos                      
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
 
 
 MostrarListadoSegunID();

@@ -592,7 +592,19 @@ if( !empty($_REQUEST["Accion"]) ){
             }
             $obCon->AnularFactura($idFactura, $TipoAnulacion, $Observaciones, $idUser);
             print("OK;Factura anulada");
-        break;//fin caso 19    
+        break;//fin caso 19   
+        
+        case 20://Anular una reserva
+            $idReserva=$obCon->normalizar($_REQUEST["idReserva"]);
+            $Observaciones=$obCon->normalizar($_REQUEST["Observaciones"]);
+            
+            if($Observaciones==""){
+                exit("E1;El campo observaciones no puede estar vacío;Observaciones");
+            }
+            
+            $obCon->AnularReserva($idReserva, $Observaciones, $idUser);
+            print("OK;Reserva anulada");
+        break;//fin caso 20   
         
     }
     
