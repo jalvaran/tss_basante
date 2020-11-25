@@ -516,9 +516,9 @@ class html_estruct_class {
      * @param type $placeholder ->atr. placeholder del elemento texarea
      * @param type $vectorhtml ->vector por si se desea meter mas atributos al elemento(se debe definir antes de ulitlizarlo y en la clase definir el uso para tal atributo)
      */
-    function textarea($id,$class,$name,$title,$placeholder,$vectorhtml,$Script){
+    function textarea($id,$class,$name,$title,$placeholder,$vectorhtml,$Script,$style=''){
         
-        print('<textarea id="'.$id.'" class="'.$class.'" name="'.$name.'" title="'.$title.'" placeholder="'.$placeholder.'" '.$Script.' >');
+        print('<textarea id="'.$id.'" class="'.$class.'" name="'.$name.'" title="'.$title.'" placeholder="'.$placeholder.'" '.$Script.' '.$style.'>');
     }
     
     /**

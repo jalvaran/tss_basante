@@ -6,6 +6,23 @@
 var idListado=1;
 document.getElementById("BtnMuestraMenuLateral").click(); //da click sobre el boton que esconde el menu izquierdo de la pagina principal
 
+function mostrar_spinner(mensaje){
+    var cadena = '';            
+
+        cadena += '<div id="spinner1" class="m-2 d-inline-block" style="position:fixed;top: 50%;left: 50%;z-index:1;text-align:center;color:red"> ';
+            cadena += '<strong>'+mensaje+'</strong><br> ';
+             
+        cadena += '</div>'; 
+        var spinner = $(cadena);
+        $("#div_spinner").prepend(spinner);
+        document.getElementById('spinner1').innerHTML='<div id="GifProcess">Procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+    
+}
+
+function ocultar_spinner(){
+    $("#spinner1").remove();    
+}
+
 function CopiarAlPortapapelesID(idElemento){
     var $temp = $("<input>");
     $("body").append($temp);
@@ -13,6 +30,11 @@ function CopiarAlPortapapelesID(idElemento){
     document.execCommand("copy");
     alertify.success("Texto Copiado: "+$(idElemento).text());
     $temp.remove();
+}
+
+function openModal(idModal){
+    var id="#"+idModal;
+    $(id).modal();
 }
 
 function AbreModal(idModal){
@@ -41,8 +63,66 @@ function MostrarListadoSegunID(){
     if(idListado==7){
         ListarLiquidacionColaboradores();
     }    
+    if(idListado==8){
+        ListarDocumentosElectronicosPendientes();
+    }
+    
+    if(idListado==9){
+        ListarDocumentosElectronicosEnviados();
+    }
+    
+    if(idListado==10){
+        ListarDocumentosElectronicosError();
+    }
+}
+
+function CambiePagina(Funcion,Page=""){
+    
+    if(Page==""){
+        if(document.getElementById('CmbPage')){
+            Page = document.getElementById('CmbPage').value;
+        }else{
+            Page=1;
+        }
+    }
+    if(Funcion==1){
+        ListarPacientes(Page);
+    }
+    if(Funcion==2){
+        ListarReservas(Page);
+    }
+    if(Funcion==3){
+        ListarCitas(Page);
+    }
+    if(Funcion==4){
+        ListarPendientesPorFacturar(Page);
+    }
+    if(Funcion==5){
+        ListarFacturas(Page);
+    }
+    
+    if(Funcion==6){
+        ListarRIPS(Page);
+    }
+    
+    if(Funcion==7){
+        ListarLiquidacionColaboradores(Page);
+    }
+    
+    if(Funcion==8){
+        ListarDocumentosElectronicosPendientes(Page);
+    }
+    
+    if(Funcion==9){
+        ListarDocumentosElectronicosEnviados(Page);
+    }
+    
+    if(Funcion==10){
+        ListarDocumentosElectronicosError(Page);
+    }
     
 }
+
 function ListarPacientes(Page=1){
     var idDiv="DivGeneralDraw";
     document.getElementById(idDiv).innerHTML='<div id="GifProcess">procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
@@ -353,36 +433,7 @@ function DesMarqueErrorElemento(idElemento){
     
 }
 
-function CambiePagina(Funcion,Page=""){
-    
-    if(Page==""){
-        if(document.getElementById('CmbPage')){
-            Page = document.getElementById('CmbPage').value;
-        }else{
-            Page=1;
-        }
-    }
-    if(Funcion==1){
-        ListarPacientes(Page);
-    }
-    if(Funcion==2){
-        ListarReservas(Page);
-    }
-    if(Funcion==3){
-        ListarCitas(Page);
-    }
-    if(Funcion==4){
-        ListarPendientesPorFacturar(Page);
-    }
-    if(Funcion==5){
-        ListarFacturas(Page);
-    }
-    
-    if(Funcion==6){
-        ListarRIPS(Page);
-    }
-    
-}
+
 
 function ListarReservas(Page=1){
     var idDiv="DivGeneralDraw";
@@ -604,7 +655,7 @@ function AgregarCitaAReserva(idReserva){
     var idBoton='btnCrearCita';
     document.getElementById(idBoton).disabled=true;
     var idHospital=document.getElementById("idHospital").value;    
-    var Fecha=document.getElementById("Fecha").value;    
+    var Fecha=document.getElementById("FechaCitaReserva").value;    
     var Hora=document.getElementById("Hora").value; 
     var Observaciones=document.getElementById("Observaciones").value;  
       
@@ -631,7 +682,7 @@ function AgregarCitaAReserva(idReserva){
                 alertify.success(respuestas[1]);
                 var ServiciosDisponibles=respuestas[2];
                 document.getElementById(idBoton).disabled=false;
-                document.getElementById('Fecha').value='';
+                document.getElementById('FechaCitaReserva').value='';
                 ListarCitasReserva(idReserva);
                 ActualizarServiciosDisponibles(ServiciosDisponibles);
             }else if(respuestas[0]=="E1"){  
@@ -2043,6 +2094,259 @@ function ListarLiquidacionColaboradores(Page=1){
       });
 }
 
+function editar_registro(tabla,valor_id,campo_edit,id_edit){
+        
+       
+       
+        var valor =document.getElementById(valor_id).value;
+        
+        var form_data = new FormData();
+        
+            form_data.append('Accion', 21);
+            
+            form_data.append('tabla',tabla);
+            form_data.append('campo_edit',campo_edit);
+            form_data.append('id_edit',id_edit);
+            form_data.append('valor',valor);
+            
+        
+        $.ajax({
+            url: './procesadores/salud_prefacturacion.process.php',
+            //dataType: 'json',
+            cache: false,
+            contentType: false,
+            processData: false,
+            //data: form_data,
+            type: 'post',
+            data: form_data,
+            
+            success: function(data){
+               var respuestas = data.split(';'); 
+                if (respuestas[0] == "OK"){                 
+                   
+                    alertify.success(respuestas[1]);
+                    
+                }else if(respuestas[0] == "E1"){
+                    alertify.error(respuestas[1]);
+                    MarqueErrorElemento(respuestas[2]);
+                }else{
+                    alertify.alert(data);
+
+              }
+
+            },
+            error: function(data){
+                alert(xhr.status);
+                alert(thrownError);
+            }
+        });
+        // Nos permite cancelar el envio del formulario
+        return false;
+    
+
+}
+
+function ListarDocumentosElectronicosPendientes(Page=1){
+    var idDiv="DivGeneralDraw";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">Cargando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+    
+    var Busquedas =document.getElementById("TxtBusquedas").value;    
+    var FechaInicialRangos =document.getElementById("FechaInicialRangos").value;
+    var FechaFinalRangos =document.getElementById("FechaFinalRangos").value;    
+        
+    var form_data = new FormData();
+        form_data.append('Accion', 21);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('Page', Page);
+        form_data.append('Busquedas', Busquedas);        
+        form_data.append('FechaInicialRangos', FechaInicialRangos);
+        form_data.append('FechaFinalRangos', FechaFinalRangos);
+                
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos                      
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+
+function ListarDocumentosElectronicosEnviados(Page=1){
+    var idDiv="DivGeneralDraw";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">Cargando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+    
+    var Busquedas =document.getElementById("TxtBusquedas").value;    
+    var FechaInicialRangos =document.getElementById("FechaInicialRangos").value;
+    var FechaFinalRangos =document.getElementById("FechaFinalRangos").value;    
+        
+    var form_data = new FormData();
+        form_data.append('Accion', 22);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('Page', Page);
+        form_data.append('Busquedas', Busquedas);        
+        form_data.append('FechaInicialRangos', FechaInicialRangos);
+        form_data.append('FechaFinalRangos', FechaFinalRangos);
+                
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos                      
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+function ListarDocumentosElectronicosError(Page=1){
+    var idDiv="DivGeneralDraw";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">Cargando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+    
+    var Busquedas =document.getElementById("TxtBusquedas").value;    
+    var FechaInicialRangos =document.getElementById("FechaInicialRangos").value;
+    var FechaFinalRangos =document.getElementById("FechaFinalRangos").value;    
+        
+    var form_data = new FormData();
+        form_data.append('Accion', 23);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('Page', Page);
+        form_data.append('Busquedas', Busquedas);        
+        form_data.append('FechaInicialRangos', FechaInicialRangos);
+        form_data.append('FechaFinalRangos', FechaFinalRangos);
+                
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/salud_prefacturacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos                      
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+function ver_json_documento(empresa_id,documento_electronico_id){
+    
+    if(empresa_id==''){
+        var empresa_id=document.getElementById("empresa_id").value;
+    }
+    
+    openModal('ModalAcciones');
+    var idDiv="DivFrmModalAcciones";
+    urlQuery='procesadores/facturador.process.php';    
+    var form_data = new FormData();
+        form_data.append('Accion', 10);  
+        form_data.append('empresa_id', empresa_id);  
+        form_data.append('documento_electronico_id', documento_electronico_id); 
+        
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: urlQuery,// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        beforeSend: function() { //lo que hará la pagina antes de ejecutar el proceso
+            //document.getElementById(idDiv).innerHTML='<div id="GifProcess">Procesando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+        },
+        complete: function(){
+           
+        },
+        success: function(data){    
+            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos                      
+            
+            
+        },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
+            var alertMensanje='<div class="alert alert-danger mt-3"><h4 class="alert-heading">Error!</h4><p>Parece que no hay conexión con el servidor.</p><hr><p class="mb-0">Intentalo de nuevo.</p></div>';
+            document.getElementById(idDiv).innerHTML=alertMensanje;
+            swal("Error de Conexión");
+          }
+      });
+
+}
+
+function reportar_documento_electronico_api(documento_electronico_id){
+    
+    var boton_id="btn_reporte_documento_"+documento_electronico_id;
+    document.getElementById(boton_id).disabled=true;
+    var empresa_id = document.getElementById('empresa_id').value;    
+        
+    var form_data = new FormData();
+        form_data.append('Accion', 7);        
+        form_data.append('empresa_id', empresa_id);
+        form_data.append('documento_electronico_id', documento_electronico_id);        
+         
+        $.ajax({
+        url: './procesadores/facturador.process.php',
+        //dataType: 'json',
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post',
+        beforeSend: function() { //lo que hará la pagina antes de ejecutar el proceso
+           mostrar_spinner('Procesando');
+        },
+        
+        success: function(data){
+            ocultar_spinner();
+            var respuestas = data.split(';'); 
+            if(respuestas[0]=="OK"){
+                
+                alertify.success(respuestas[1]);
+                idListado=9;
+                MostrarListadoSegunID();
+                
+            }else if(respuestas[0]=="E1"){                
+                alert(respuestas[1]);
+                idListado=10;
+                MostrarListadoSegunID();
+                
+            }else{
+                alert(data);
+                
+            }
+                       
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            ocultar_spinner();
+            document.getElementById(boton_id).disabled=false;
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
 
 MostrarListadoSegunID();
 

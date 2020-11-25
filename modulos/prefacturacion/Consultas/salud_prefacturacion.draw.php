@@ -811,7 +811,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                 $css->CrearDiv("", "col-md-6", "", 1, 1);
                                     $css->CrearDiv("", "form-group", "", 1, 1);
                                         print('<label>Fecha</label>');
-                                        $css->input("date", "Fecha", "form-control", "Fecha", "Fecha", "", "Fecha", "off", "", "","style='line-height: 15px;'");
+                                        $css->input("date", "FechaCitaReserva", "form-control", "FechaCitaReserva", "Fecha", "", "Fecha", "off", "", "","style='line-height: 15px;'");
                         
                                     $css->CerrarDiv();                             
                                 $css->CerrarDiv();
@@ -1274,7 +1274,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             $css->div("", "box-body no-padding", "", "", "", "", "");
                 $css->div("", "mailbox-controls", "", "", "", "", "");
                     print('<span class="badge bg-orange" style="font-size:14px">'.$ResultadosTotales.'</span>');
-                    $css->div("", "pull-right", "", "", "", "", "");
+                    $css->div("", "pull-center", "", "", "", "", "");
                         if($ResultadosTotales>$Limit){
                             $TotalPaginas= ceil($ResultadosTotales/$Limit);                               
                             print('<div class="input-group" style=width:150px>');
@@ -1361,8 +1361,15 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                         print(($RegistrosTabla["Telefono"]));
                                     print("</td>");
                                     
+                                    
                                     print("<td class='mailbox-subject'>");
                                         print(utf8_encode("<strong>".$RegistrosTabla["NombreEstado"]."</strong>"));
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        
+                                        $css->textarea("txt_observaciones_cita_".$idItem, "form-control", "txt_observaciones_cita", "Observaciones", "Observaciones", "", "onchange=editar_registro(1,`"."txt_observaciones_cita_".$idItem."`,`Observaciones`,`$idItem`)","style=width:100px;");
+                                            print(($RegistrosTabla["Observaciones"]));
+                                        $css->Ctextarea();
                                     print("</td>");
                                                                         
                                 print('</tr>');
@@ -1740,10 +1747,11 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             $idTipoFactura=$obCon->normalizar($_REQUEST["idTipoFactura"]);
             $idRegimenFactura=$obCon->normalizar($_REQUEST["idRegimenFactura"]);
             $obCon->CrearVistaFacturas();
-            $Condicion=" WHERE Estado < '10' ";
+            $Condicion=" WHERE Estado < '10' "; 
+            
             
             if($Busquedas<>'' AND $TotalBusquedasArray == 2 ){
-                $Condicion.=" AND ( NumeroFactura='$Busquedas' )";
+                $Condicion.=" AND ( NumeroFactura='$Busquedas' or NumeroAutorizacion='$Busquedas' or NumeroDocumento='$Busquedas' )";
             }
             if($Busquedas<>'' AND count($ArrayBusqueda)>1){
                 $Condicion.=" AND (";
@@ -2291,6 +2299,742 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                 $css->Cdiv();
             $css->Cdiv();
         break;//fin caso 20
+        
+        case 21://Lista de documentos electronicos por reportar
+              
+            print("<div class='row'>");
+                $TipoListado=1;
+                $sql="SELECT COUNT(ID) as Total FROM documentos_electronicos WHERE estado=0";
+                $DatosTotales=$obCon->FetchArray($obCon->Query($sql));            
+                $TotalPendientes=$DatosTotales["Total"];
+
+                $sql="SELECT COUNT(ID) as Total FROM documentos_electronicos WHERE is_valid=0 and estado=1";
+                $DatosTotales=$obCon->FetchArray($obCon->Query($sql));            
+                $TotalErrores=$DatosTotales["Total"];
+
+                $sql="SELECT COUNT(ID) as Total FROM documentos_electronicos WHERE is_valid=1";
+                $DatosTotales=$obCon->FetchArray($obCon->Query($sql));            
+                $TotalEnviados=$DatosTotales["Total"];
+
+                $TotalRecibidos=0;
+                $Opacidad1="opacity:0.3;";  
+                $Opacidad2="opacity:0.5;";
+                $Opacidad3="opacity:0.5;";
+                
+
+                if($TipoListado==1){ //documentos pendientes por reportar
+
+                    $Opacidad1="opacity:1;";
+                }
+                if($TipoListado==2){ //documentos enviados
+
+                    $Opacidad2="opacity:1;";
+                }
+                if($TipoListado==3){ //documentos en error
+
+                    $Opacidad3="opacity:1;";
+                }
+
+                $css->CrearDiv("", "col-md-3", "center", 1, 1);
+                    print('<div class="info-box bg-aqua" style="cursor:pointer;'.$Opacidad1.'" onclick=idListado=8;MostrarListadoSegunID();>
+                        <span class="info-box-icon"><i class="fa fa-send"></i></span>
+
+                        <div class="info-box-content">
+                          <span class="info-box-text">Pendientes</span>
+                          <span class="info-box-number">'.number_format($TotalPendientes).'</span>
+
+                          <div class="progress">
+                            <div class="progress-bar" style="width: 100%"></div>
+                          </div>
+                          <span class="progress-description">
+                                Doc. Pendientes
+                              </span>
+                        </div>
+                        <!-- /.info-box-content -->
+                      </div>');
+                $css->CerrarDiv();
+
+                $css->CrearDiv("", "col-md-3", "center", 1, 1);
+                    print('<div class="info-box bg-green" style="cursor:pointer;'.$Opacidad2.'" onclick=idListado=9;MostrarListadoSegunID();>
+                        <span class="info-box-icon"><i class="fa fa-inbox"></i></span>
+
+                        <div class="info-box-content">
+                          <span class="info-box-text">Enviados</span>
+                          <span class="info-box-number">'.number_format($TotalEnviados).'</span>
+
+                          <div class="progress">
+                            <div class="progress-bar" style="width: 100%"></div>
+                          </div>
+                          <span class="progress-description">
+                                Doc. Enviados
+                              </span>
+                        </div>
+                        <!-- /.info-box-content -->
+                      </div>');
+                $css->CerrarDiv();
+
+
+                $css->CrearDiv("", "col-md-3", "center", 1, 1);
+                    print('<div class="info-box bg-red" style="cursor:pointer;'.$Opacidad3.'" onclick=idListado=10;MostrarListadoSegunID();>
+                        <span class="info-box-icon"><i class="fa fa-warning" ></i></span>
+
+                        <div class="info-box-content">
+                          <span class="info-box-text">Errores</span>
+                          <span class="info-box-number">'.number_format($TotalErrores).'</span>
+
+                          <div class="progress">
+                            <div class="progress-bar" style="width: 100%"></div>
+                          </div>
+                          <span class="progress-description">
+                                Doc. con errores
+                              </span>
+                        </div>
+                        <!-- /.info-box-content -->
+                      </div>');
+                $css->CerrarDiv();
+            $css->CerrarDiv();
+            $Limit=20;
+            $Page=$obCon->normalizar($_REQUEST["Page"]);
+            $NumPage=$obCon->normalizar($_REQUEST["Page"]);
+            if($Page==''){
+                $Page=1;
+                $NumPage=1;
+            }
+            $Busquedas=$obCon->normalizar($_REQUEST["Busquedas"]);
+            
+            $obCon->crear_vista_documentos_electronicos(DB);
+            
+            $FechaInicialRangos=$obCon->normalizar($_REQUEST["FechaInicialRangos"]);
+            $FechaFinalRangos=$obCon->normalizar($_REQUEST["FechaFinalRangos"]);
+            
+           
+            $Condicion=" WHERE estado=0 ";
+            
+            if($Busquedas<>''){
+                $Condicion.=" AND ( t1.nit_tercero = '$Busquedas' or t1.nombre_tercero like '%$Busquedas%' )";
+            }
+            if($FechaInicialRangos<>''){
+                $Condicion.=" AND fecha>='$FechaInicialRangos'";
+            }
+            if($FechaFinalRangos<>''){
+                $Condicion.=" AND fecha<='$FechaFinalRangos'";
+            }
+                        
+            
+            $PuntoInicio = ($Page * $Limit) - $Limit;
+            
+            $sql = "SELECT COUNT(*) as Items 
+                   FROM vista_documentos_electronicos t1 $Condicion;";
+            
+            $Consulta=$obCon->Query($sql);
+            $totales = $obCon->FetchAssoc($Consulta);
+            $ResultadosTotales = $totales['Items'];
+                        
+            $sql="SELECT t1.*
+                  
+                  FROM vista_documentos_electronicos t1 $Condicion ORDER BY ID DESC LIMIT $PuntoInicio,$Limit;";
+            $Consulta=$obCon->Query($sql);
+            
+            
+            $css->CrearTitulo("Documentos Electrónicos Pendientes", "azul");
+            
+            
+            
+            $css->div("", "box-body no-padding", "", "", "", "", "");
+                $css->div("", "mailbox-controls", "", "", "", "", "");
+                    $CondicionURL= urlencode($Condicion);
+                    $link="../../general/procesadores/GeneradorCSV.process.php?Opcion=1&sp=1&c=$CondicionURL";
+                    
+                    print('<a class="btn btn-app" style="background-color:#12a900;color:white;" href="'.$link.'" target="_blank">
+                        <span class="badge bg-blue" style="font-size:14px">'.$ResultadosTotales.'</span>
+                        <i class="fa fa-file-excel-o"></i> Exportar 
+                      </a>');
+                   
+                    $css->div("", "pull-right", "", "", "", "", "");
+                        if($ResultadosTotales>$Limit){
+                            $TotalPaginas= ceil($ResultadosTotales/$Limit);                               
+                            print('<div class="input-group" style=width:150px>');
+                            if($NumPage>1){
+                                $NumPage1=$NumPage-1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`8`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-left"></i></span>');
+                            }
+                            $FuncionJS="onchange=CambiePagina(`8`);";
+                            $css->select("CmbPage", "form-control", "CmbPage", "", "", $FuncionJS, "");
+
+                                for($p=1;$p<=$TotalPaginas;$p++){
+                                    if($p==$NumPage){
+                                        $sel=1;
+                                    }else{
+                                        $sel=0;
+                                    }
+
+                                    $css->option("", "", "", $p, "", "",$sel);
+                                        print($p);
+                                    $css->Coption();
+
+                                }
+
+                            $css->Cselect();
+                            if($ResultadosTotales>($PuntoInicio+$Limit)){
+                                $NumPage1=$NumPage+1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`8`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-right" ></i></span>');
+                            }
+                            print("</div>");
+                        }    
+                    $css->Cdiv();
+                $css->Cdiv();
+                   
+                $css->CrearDiv("", "table-responsive mailbox-messages", "", 1, 1);
+                    print('<table class="table table-hover table-striped">');
+                        print('<tbody>');
+                            while($RegistrosTabla=$obCon->FetchAssoc($Consulta)){
+                                
+                                $idItem=$RegistrosTabla["documento_electronico_id"];
+                                
+                                print('<tr>');
+                                    print("<td class='mailbox-name'>");
+                                        print('<button id="btn_reporte_documento_'.$idItem.'" title="Enviar" type="button" class="btn btn-success btn-sm" onclick="reportar_documento_electronico_api(`'.$idItem.'`)" ><i class="fa fa-paper-plane"></i></button>');
+                                    print("</td>");
+                                    print("<td class='mailbox-name'>");
+                                        print('<button title="Código" type="button" class="btn btn-warning btn-sm" onclick="ver_json_documento(`1`,`'.$idItem.'`)" ><i class="fa fa-code"></i></button>');
+                                    print("</td>");
+                                    print("<td class='mailbox-name'>");
+                                        print($RegistrosTabla["ID"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".$RegistrosTabla["fecha"]."</strong>");
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".utf8_encode($RegistrosTabla["nombre_tipo_documento"])."</strong>");
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print($RegistrosTabla["prefijo"]." - ".$RegistrosTabla["numero"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print(utf8_encode($RegistrosTabla["nombre_tercero"]." ".$RegistrosTabla["nit_tercero"]));
+                                    print("</td>");
+                                    
+                                    print("<td class='mailbox-subject'>");
+                                        print(number_format($RegistrosTabla["total_documento"]));
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print(($RegistrosTabla["notas"]));
+                                    print("</td>");
+                                    
+                                    print("<td class='mailbox-name'>");
+                                        print($RegistrosTabla["nombre_usuario"]);
+                                    print("</td>");
+                                    
+                                print('</tr>');
+
+                            }
+
+                        print('</tbody>');
+                    print('</table>');
+                $css->Cdiv();
+            $css->Cdiv();
+        break;//fin caso 21
+        
+        case 22://Lista de documentos electronicos enviados
+            $empresa_id=1;
+            print("<div class='row'>");
+                $TipoListado=2;
+                $sql="SELECT COUNT(ID) as Total FROM documentos_electronicos WHERE estado=0";
+                $DatosTotales=$obCon->FetchArray($obCon->Query($sql));            
+                $TotalPendientes=$DatosTotales["Total"];
+
+                $sql="SELECT COUNT(ID) as Total FROM documentos_electronicos WHERE is_valid=0 and estado=1";
+                $DatosTotales=$obCon->FetchArray($obCon->Query($sql));            
+                $TotalErrores=$DatosTotales["Total"];
+
+                $sql="SELECT COUNT(ID) as Total FROM documentos_electronicos WHERE is_valid=1";
+                $DatosTotales=$obCon->FetchArray($obCon->Query($sql));            
+                $TotalEnviados=$DatosTotales["Total"];
+
+                $TotalRecibidos=0;
+                $Opacidad1="opacity:0.3;";  
+                $Opacidad2="opacity:0.5;";
+                $Opacidad3="opacity:0.5;";
+                
+
+                if($TipoListado==1){ //documentos pendientes por reportar
+
+                    $Opacidad1="opacity:1;";
+                }
+                if($TipoListado==2){ //documentos enviados
+
+                    $Opacidad2="opacity:1;";
+                }
+                if($TipoListado==3){ //documentos en error
+
+                    $Opacidad3="opacity:1;";
+                }
+
+                $css->CrearDiv("", "col-md-3", "center", 1, 1);
+                    print('<div class="info-box bg-aqua" style="cursor:pointer;'.$Opacidad1.'" onclick=idListado=8;MostrarListadoSegunID();>
+                        <span class="info-box-icon"><i class="fa fa-send"></i></span>
+
+                        <div class="info-box-content">
+                          <span class="info-box-text">Pendientes</span>
+                          <span class="info-box-number">'.number_format($TotalPendientes).'</span>
+
+                          <div class="progress">
+                            <div class="progress-bar" style="width: 100%"></div>
+                          </div>
+                          <span class="progress-description">
+                                Doc. Pendientes
+                              </span>
+                        </div>
+                        <!-- /.info-box-content -->
+                      </div>');
+                $css->CerrarDiv();
+
+                $css->CrearDiv("", "col-md-3", "center", 1, 1);
+                    print('<div class="info-box bg-green" style="cursor:pointer;'.$Opacidad2.'" onclick=idListado=9;MostrarListadoSegunID();>
+                        <span class="info-box-icon"><i class="fa fa-inbox"></i></span>
+
+                        <div class="info-box-content">
+                          <span class="info-box-text">Enviados</span>
+                          <span class="info-box-number">'.number_format($TotalEnviados).'</span>
+
+                          <div class="progress">
+                            <div class="progress-bar" style="width: 100%"></div>
+                          </div>
+                          <span class="progress-description">
+                                Doc. Enviados
+                              </span>
+                        </div>
+                        <!-- /.info-box-content -->
+                      </div>');
+                $css->CerrarDiv();
+
+
+                $css->CrearDiv("", "col-md-3", "center", 1, 1);
+                    print('<div class="info-box bg-red" style="cursor:pointer;'.$Opacidad3.'" onclick=idListado=10;MostrarListadoSegunID();>
+                        <span class="info-box-icon"><i class="fa fa-warning" ></i></span>
+
+                        <div class="info-box-content">
+                          <span class="info-box-text">Errores</span>
+                          <span class="info-box-number">'.number_format($TotalErrores).'</span>
+
+                          <div class="progress">
+                            <div class="progress-bar" style="width: 100%"></div>
+                          </div>
+                          <span class="progress-description">
+                                Doc. con errores
+                              </span>
+                        </div>
+                        <!-- /.info-box-content -->
+                      </div>');
+                $css->CerrarDiv();
+            $css->CerrarDiv();
+            $Limit=20;
+            $Page=$obCon->normalizar($_REQUEST["Page"]);
+            $NumPage=$obCon->normalizar($_REQUEST["Page"]);
+            if($Page==''){
+                $Page=1;
+                $NumPage=1;
+            }
+            $Busquedas=$obCon->normalizar($_REQUEST["Busquedas"]);
+            
+            $obCon->crear_vista_documentos_electronicos(DB);
+            
+            $FechaInicialRangos=$obCon->normalizar($_REQUEST["FechaInicialRangos"]);
+            $FechaFinalRangos=$obCon->normalizar($_REQUEST["FechaFinalRangos"]);
+            
+           
+            $Condicion=" WHERE is_valid=1 ";
+            
+            if($Busquedas<>''){
+                $Condicion.=" AND ( t1.nit_tercero = '$Busquedas' or t1.nombre_tercero like '%$Busquedas%' )";
+            }
+            if($FechaInicialRangos<>''){
+                $Condicion.=" AND fecha>='$FechaInicialRangos'";
+            }
+            if($FechaFinalRangos<>''){
+                $Condicion.=" AND fecha<='$FechaFinalRangos'";
+            }
+                        
+            
+            $PuntoInicio = ($Page * $Limit) - $Limit;
+            
+            $sql = "SELECT COUNT(*) as Items 
+                   FROM vista_documentos_electronicos t1 $Condicion;";
+            
+            $Consulta=$obCon->Query($sql);
+            $totales = $obCon->FetchAssoc($Consulta);
+            $ResultadosTotales = $totales['Items'];
+                        
+            $sql="SELECT t1.*
+                  
+                  FROM vista_documentos_electronicos t1 $Condicion ORDER BY ID DESC LIMIT $PuntoInicio,$Limit;";
+            $Consulta=$obCon->Query($sql);
+            
+            
+            $css->CrearTitulo("Documentos Electrónicos Enviados", "verde");
+            
+            
+            
+            $css->div("", "box-body no-padding", "", "", "", "", "");
+                $css->div("", "mailbox-controls", "", "", "", "", "");
+                    $CondicionURL= urlencode($Condicion);
+                    $link="../../general/procesadores/GeneradorCSV.process.php?Opcion=1&sp=1&c=$CondicionURL";
+                    
+                    print('<a class="btn btn-app" style="background-color:#12a900;color:white;" href="'.$link.'" target="_blank">
+                        <span class="badge bg-blue" style="font-size:14px">'.$ResultadosTotales.'</span>
+                        <i class="fa fa-file-excel-o"></i> Exportar 
+                      </a>');
+                   
+                    $css->div("", "pull-right", "", "", "", "", "");
+                        if($ResultadosTotales>$Limit){
+                            $TotalPaginas= ceil($ResultadosTotales/$Limit);                               
+                            print('<div class="input-group" style=width:150px>');
+                            if($NumPage>1){
+                                $NumPage1=$NumPage-1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`9`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-left"></i></span>');
+                            }
+                            $FuncionJS="onchange=CambiePagina(`9`);";
+                            $css->select("CmbPage", "form-control", "CmbPage", "", "", $FuncionJS, "");
+
+                                for($p=1;$p<=$TotalPaginas;$p++){
+                                    if($p==$NumPage){
+                                        $sel=1;
+                                    }else{
+                                        $sel=0;
+                                    }
+
+                                    $css->option("", "", "", $p, "", "",$sel);
+                                        print($p);
+                                    $css->Coption();
+
+                                }
+
+                            $css->Cselect();
+                            if($ResultadosTotales>($PuntoInicio+$Limit)){
+                                $NumPage1=$NumPage+1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`9`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-right" ></i></span>');
+                            }
+                            print("</div>");
+                        }    
+                    $css->Cdiv();
+                $css->Cdiv();
+                   
+                $css->CrearDiv("", "table-responsive mailbox-messages", "", 1, 1);
+                    print('<table class="table table-hover table-striped">');
+                        print('<tbody>');
+                            while($RegistrosTabla=$obCon->FetchAssoc($Consulta)){
+                                
+                                $idItem=$RegistrosTabla["documento_electronico_id"];
+
+                            print('<tr>');
+                                print("<td style='text-align:center'>");
+                                    $link="procesadores/facturador.process.php?Accion=8&empresa_id=$empresa_id&documento_electronico_id=$idItem";
+                                    print('<a style="font-size:25px;text-align:center" title="Ver PDF" href="'.$link.'" target="_blank")" ><i class="fa fa-file-pdf-o text-danger"></i></a>');
+
+                                print("</td>");
+                                print("<td style='text-align:center'>");
+                                    $link="procesadores/facturador.process.php?Accion=9&empresa_id=$empresa_id&documento_electronico_id=$idItem";
+                                    print('<a style="font-size:25px;text-align:center" title="Ver ZIP" href="'.$link.'" target="_blank" ><i class="fa fa-file-archive-o text-primary"></i></a>');
+
+                                print("</td>");
+                                                                      
+
+                                print("<td class='mailbox-name'>");
+                                    print($RegistrosTabla["nombre_tipo_documento"]);
+                                print("</td>");
+                                print("<td class='mailbox-subject text-primary'>");
+                                    print("<strong>".$RegistrosTabla["fecha"]."</strong>");
+                                print("</td>");
+                                print("<td class='mailbox-subject text-primary'>");
+                                    print("<strong>".$RegistrosTabla["hora"]."</strong>");
+                                print("</td>");
+                                
+                                print("<td class='mailbox-subject'>");
+                                    print("<strong>".$RegistrosTabla["prefijo"]."-".$RegistrosTabla["numero"]."</strong>");
+                                print("</td>");   
+                                
+                                print("<td class='mailbox-subject text-flickr'>");
+                                    print("<strong>".number_format($RegistrosTabla["subtotal_documento"])."</strong>");
+                                print("</td>");
+                                
+                                print("<td class='mailbox-subject text-flickr'>");
+                                    print("<strong>".number_format($RegistrosTabla["impuestos_documento"])."</strong>");
+                                print("</td>");
+                                
+                                print("<td class='mailbox-subject text-flickr'>");
+                                    print("<strong>".number_format($RegistrosTabla["total_documento"])."</strong>");
+                                print("</td>");
+                                
+                                print("<td class='mailbox-subject text-success'>");
+                                    print(" ".$RegistrosTabla["nombre_tercero"]." || <strong>" .$RegistrosTabla["nit_tercero"]."</strong>");
+                                print("</td>");
+                                print("<td class='mailbox-subject text-primary'>");
+                                    print(" <strong>".$RegistrosTabla["orden_compra"]."</strong>");
+                                print("</td>");
+                                print("<td class='mailbox-subject text-flickr'>");
+                                    print($RegistrosTabla["notas"]);
+                                print("</td>");
+                                
+                                
+                                print("<td class='mailbox-name'>");
+                                    print($RegistrosTabla["nombre_usuario"]);
+                                print("</td>");
+                                
+                                print("<td class='mailbox-name'>");
+                                    print($RegistrosTabla["documento_asociado"]);
+                                print("</td>");
+                                
+                                
+                                print("<td class='mailbox-name'>");
+                                    print($RegistrosTabla["uuid"]);
+                                print("</td>");
+                                
+                                
+
+                            print('</tr>');
+
+                            }
+
+                        print('</tbody>');
+                    print('</table>');
+                $css->Cdiv();
+            $css->Cdiv();
+        break;//fin caso 22
+        
+        case 23://Lista de documentos electronicos en error
+              
+            print("<div class='row'>");
+                $TipoListado=3;
+                $sql="SELECT COUNT(ID) as Total FROM documentos_electronicos WHERE estado=0";
+                $DatosTotales=$obCon->FetchArray($obCon->Query($sql));            
+                $TotalPendientes=$DatosTotales["Total"];
+
+                $sql="SELECT COUNT(ID) as Total FROM documentos_electronicos WHERE is_valid=0 and estado=1";
+                $DatosTotales=$obCon->FetchArray($obCon->Query($sql));            
+                $TotalErrores=$DatosTotales["Total"];
+
+                $sql="SELECT COUNT(ID) as Total FROM documentos_electronicos WHERE is_valid=1";
+                $DatosTotales=$obCon->FetchArray($obCon->Query($sql));            
+                $TotalEnviados=$DatosTotales["Total"];
+
+                $TotalRecibidos=0;
+                $Opacidad1="opacity:0.3;";  
+                $Opacidad2="opacity:0.5;";
+                $Opacidad3="opacity:0.5;";
+                
+
+                if($TipoListado==1){ //documentos pendientes por reportar
+
+                    $Opacidad1="opacity:1;";
+                }
+                if($TipoListado==2){ //documentos enviados
+
+                    $Opacidad2="opacity:1;";
+                }
+                if($TipoListado==3){ //documentos en error
+
+                    $Opacidad3="opacity:1;";
+                }
+
+                $css->CrearDiv("", "col-md-3", "center", 1, 1);
+                    print('<div class="info-box bg-aqua" style="cursor:pointer;'.$Opacidad1.'" onclick=idListado=8;MostrarListadoSegunID();>
+                        <span class="info-box-icon"><i class="fa fa-send"></i></span>
+
+                        <div class="info-box-content">
+                          <span class="info-box-text">Pendientes</span>
+                          <span class="info-box-number">'.number_format($TotalPendientes).'</span>
+
+                          <div class="progress">
+                            <div class="progress-bar" style="width: 100%"></div>
+                          </div>
+                          <span class="progress-description">
+                                Doc. Pendientes
+                              </span>
+                        </div>
+                        <!-- /.info-box-content -->
+                      </div>');
+                $css->CerrarDiv();
+
+                $css->CrearDiv("", "col-md-3", "center", 1, 1);
+                    print('<div class="info-box bg-green" style="cursor:pointer;'.$Opacidad2.'" onclick=idListado=9;MostrarListadoSegunID();>
+                        <span class="info-box-icon"><i class="fa fa-inbox"></i></span>
+
+                        <div class="info-box-content">
+                          <span class="info-box-text">Enviados</span>
+                          <span class="info-box-number">'.number_format($TotalEnviados).'</span>
+
+                          <div class="progress">
+                            <div class="progress-bar" style="width: 100%"></div>
+                          </div>
+                          <span class="progress-description">
+                                Doc. Enviados
+                              </span>
+                        </div>
+                        <!-- /.info-box-content -->
+                      </div>');
+                $css->CerrarDiv();
+
+
+                $css->CrearDiv("", "col-md-3", "center", 1, 1);
+                    print('<div class="info-box bg-red" style="cursor:pointer;'.$Opacidad3.'" onclick=idListado=10;MostrarListadoSegunID();>
+                        <span class="info-box-icon"><i class="fa fa-warning" ></i></span>
+
+                        <div class="info-box-content">
+                          <span class="info-box-text">Errores</span>
+                          <span class="info-box-number">'.number_format($TotalErrores).'</span>
+
+                          <div class="progress">
+                            <div class="progress-bar" style="width: 100%"></div>
+                          </div>
+                          <span class="progress-description">
+                                Doc. con errores
+                              </span>
+                        </div>
+                        <!-- /.info-box-content -->
+                      </div>');
+                $css->CerrarDiv();
+            $css->CerrarDiv();
+            $Limit=20;
+            $Page=$obCon->normalizar($_REQUEST["Page"]);
+            $NumPage=$obCon->normalizar($_REQUEST["Page"]);
+            if($Page==''){
+                $Page=1;
+                $NumPage=1;
+            }
+            $Busquedas=$obCon->normalizar($_REQUEST["Busquedas"]);
+            
+            $obCon->crear_vista_documentos_electronicos(DB);
+            
+            $FechaInicialRangos=$obCon->normalizar($_REQUEST["FechaInicialRangos"]);
+            $FechaFinalRangos=$obCon->normalizar($_REQUEST["FechaFinalRangos"]);
+            
+           
+            $Condicion=" WHERE is_valid=0 and estado=1 ";
+            
+            if($Busquedas<>''){
+                $Condicion.=" AND ( t1.nit_tercero = '$Busquedas' or t1.nombre_tercero like '%$Busquedas%' )";
+            }
+            if($FechaInicialRangos<>''){
+                $Condicion.=" AND fecha>='$FechaInicialRangos'";
+            }
+            if($FechaFinalRangos<>''){
+                $Condicion.=" AND fecha<='$FechaFinalRangos'";
+            }
+                        
+            
+            $PuntoInicio = ($Page * $Limit) - $Limit;
+            
+            $sql = "SELECT COUNT(*) as Items 
+                   FROM vista_documentos_electronicos t1 $Condicion;";
+            
+            $Consulta=$obCon->Query($sql);
+            $totales = $obCon->FetchAssoc($Consulta);
+            $ResultadosTotales = $totales['Items'];
+                        
+            $sql="SELECT t1.*
+                  
+                  FROM vista_documentos_electronicos t1 $Condicion ORDER BY ID DESC LIMIT $PuntoInicio,$Limit;";
+            $Consulta=$obCon->Query($sql);
+            
+            
+            $css->CrearTitulo("Documentos Electrónicos En Error", "rojo");
+            
+            
+            
+            $css->div("", "box-body no-padding", "", "", "", "", "");
+                $css->div("", "mailbox-controls", "", "", "", "", "");
+                    $CondicionURL= urlencode($Condicion);
+                    $link="../../general/procesadores/GeneradorCSV.process.php?Opcion=1&sp=1&c=$CondicionURL";
+                    
+                    print('<a class="btn btn-app" style="background-color:#12a900;color:white;" href="'.$link.'" target="_blank">
+                        <span class="badge bg-blue" style="font-size:14px">'.$ResultadosTotales.'</span>
+                        <i class="fa fa-file-excel-o"></i> Exportar 
+                      </a>');
+                   
+                    $css->div("", "pull-right", "", "", "", "", "");
+                        if($ResultadosTotales>$Limit){
+                            $TotalPaginas= ceil($ResultadosTotales/$Limit);                               
+                            print('<div class="input-group" style=width:150px>');
+                            if($NumPage>1){
+                                $NumPage1=$NumPage-1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`8`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-left"></i></span>');
+                            }
+                            $FuncionJS="onchange=CambiePagina(`8`);";
+                            $css->select("CmbPage", "form-control", "CmbPage", "", "", $FuncionJS, "");
+
+                                for($p=1;$p<=$TotalPaginas;$p++){
+                                    if($p==$NumPage){
+                                        $sel=1;
+                                    }else{
+                                        $sel=0;
+                                    }
+
+                                    $css->option("", "", "", $p, "", "",$sel);
+                                        print($p);
+                                    $css->Coption();
+
+                                }
+
+                            $css->Cselect();
+                            if($ResultadosTotales>($PuntoInicio+$Limit)){
+                                $NumPage1=$NumPage+1;
+                            print('<span class="input-group-addon" onclick=CambiePagina(`8`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-right" ></i></span>');
+                            }
+                            print("</div>");
+                        }    
+                    $css->Cdiv();
+                $css->Cdiv();
+                   
+                $css->CrearDiv("", "table-responsive mailbox-messages", "", 1, 1);
+                    print('<table class="table table-hover table-striped">');
+                        print('<tbody>');
+                            while($RegistrosTabla=$obCon->FetchAssoc($Consulta)){
+                                
+                                $idItem=$RegistrosTabla["documento_electronico_id"];
+                                
+                                print('<tr>');
+                                    print("<td class='mailbox-name'>");
+                                        print('<button id="btn_reporte_documento_'.$idItem.'" title="Enviar" type="button" class="btn btn-success btn-sm" onclick="reportar_documento_electronico_api(`'.$idItem.'`)" ><i class="fa fa-paper-plane"></i></button>');
+                                    print("</td>");
+                                    print("<td class='mailbox-name'>");
+                                        print('<button title="Código" type="button" class="btn btn-warning btn-sm" onclick="ver_json_documento(`1`,`'.$idItem.'`)" ><i class="fa fa-code"></i></button>');
+                                    print("</td>");
+                                    print("<td class='mailbox-name'>");
+                                        print($RegistrosTabla["ID"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".$RegistrosTabla["fecha"]."</strong>");
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print("<strong>".utf8_encode($RegistrosTabla["nombre_tipo_documento"])."</strong>");
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print($RegistrosTabla["prefijo"]." - ".$RegistrosTabla["numero"]);
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print(utf8_encode($RegistrosTabla["nombre_tercero"]." ".$RegistrosTabla["nit_tercero"]));
+                                    print("</td>");
+                                    
+                                    print("<td class='mailbox-subject'>");
+                                        print(number_format($RegistrosTabla["total_documento"]));
+                                    print("</td>");
+                                    print("<td class='mailbox-subject'>");
+                                        print(($RegistrosTabla["notas"]));
+                                    print("</td>");
+                                    
+                                    print("<td class='mailbox-name'>");
+                                        print($RegistrosTabla["nombre_usuario"]);
+                                    print("</td>");
+                                    
+                                print('</tr>');
+
+                            }
+
+                        print('</tbody>');
+                    print('</table>');
+                $css->Cdiv();
+            $css->Cdiv();
+        break;//fin caso 23
         
  }
     

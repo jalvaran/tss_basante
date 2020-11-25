@@ -538,6 +538,143 @@ class Prefacturacion extends conexion{
         
     }
     
+    function cree_documento_electronico_desde_factura($factura_id){
+        $usuario_id=$_SESSION["idUser"];
+        $datos_factura=$this->DevuelveValores("facturas", "ID", $factura_id);
+        $datos_reserva=$this->DevuelveValores("prefactura_reservas", "ID", $datos_factura["idReserva"]);
+        $datos_paciente=$this->DevuelveValores("prefactura_paciente", "ID", $datos_reserva["idPaciente"]);
+        $datos_eps=$this->DevuelveValores("salud_eps", "cod_pagador_min", $datos_paciente["CodEPS"]);
+        $datos_tercero=$this->DevuelveValores("terceros", "identificacion", $datos_eps["nit"]);
+        $empresa_db=DB;
+        $datos_resolucion=$this->DevuelveValores("empresa_resoluciones", "ID", 1);
+        
+        if($datos_resolucion["estado"]==2){
+            exit("E1;La resolución seleccionada ya fué completada");
+        }
+        if($datos_resolucion["estado"]==3){
+            exit("E1;La resolución seleccionada ya está vencida");
+        }
+        $prefijo_resolucion=$datos_resolucion["prefijo"];
+        $sql="SELECT MAX(numero) as numero FROM $empresa_db.documentos_electronicos WHERE tipo_documento_id='1' and resolucion_id='1' and prefijo='$prefijo_resolucion'";
+        $datos_validacion=$this->FetchAssoc($this->Query($sql));
+        if($datos_validacion["numero"]=='' or $datos_validacion["numero"]==0){
+            $datos_validacion["numero"]=$datos_resolucion["proximo_numero_documento"]-1;
+        }
+        $numero=$datos_validacion["numero"]+1;
+        if($numero>$datos_resolucion["hasta"]){
+            exit("E1;la resolución no ya fué completada");
+        }
+        $notas=$this->limpiar_cadena($datos_factura["Observaciones"]);
+        $orden_compra="";
+        
+        $this->crear_items_inventario_desde_items_factura($factura_id);
+        
+        $documento_electronico_id=$this->registra_documento_electronico(DB, 1, 1, $datos_resolucion["prefijo"],$numero,$datos_tercero["ID"],$usuario_id,$notas,$orden_compra,2,"");
+        $this->copiar_items_factura_items_documento(DB, $factura_id, $documento_electronico_id);
+    }
+   
+    
+    public function copiar_items_factura_items_documento($db,$factura_id,$documento_electronico_id) {
+        $usuario_id=$_SESSION["idUser"];
+        $sql="INSERT INTO $db.documentos_electronicos_items (`documento_electronico_id`,`item_id`,`valor_unitario`,`cantidad`,`subtotal`,`impuestos`,`total`,`porcentaje_iva_id`,`usuario_id`) 
+                SELECT '$documento_electronico_id',(SELECT ID FROM inventario_items_general t2 WHERE t2.Referencia=t1.idServicio LIMIT 1),t1.Valor,'1',t1.Valor,'0',t1.Valor,'1','$usuario_id' 
+                FROM $db.facturas_items t1 WHERE idFactura='$factura_id' 
+                
+                ";
+        $this->Query($sql);
+    }
+    
+    
+    function crear_items_inventario_desde_items_factura($factura_id){
+        $usuario_id=$_SESSION["idUser"];
+        $sql="SELECT t1.* FROM catalogo_servicios t1 INNER JOIN facturas_items t2 ON t1.CUPS=t2.idServicio WHERE t2.idFactura='$factura_id' AND NOT EXISTS (SELECT 1 FROM inventario_items_general t3 WHERE t3.Referencia=t1.CUPS) GROUP BY t2.idServicio;";
+        $Consulta= $this->Query($sql);
+        
+        while($datos_consulta=$this->FetchAssoc($Consulta)){
+            $this->crear_item_general($datos_consulta["ID"], $datos_consulta["CUPS"], $datos_consulta["Descripcion"], $datos_consulta["TarifaSencilla"], 1, $usuario_id);
+        }
+    }
+    
+    function crear_item_general($ID,$Referencia,$Descripcion,$Precio,$PorcentajeIVA,$usuario_id){
+        $Datos["ID"]=$ID;        
+        $Datos["Referencia"]=$Referencia;
+        $Datos["Descripcion"]=$Descripcion;
+        $Datos["Precio"]=$Precio;
+        $Datos["porcentajes_iva_id"]=$PorcentajeIVA;
+        $Datos["usuario_id"]=$usuario_id;
+         
+        $sql= $this->getSQLInsert("inventario_items_general", $Datos);
+        $this->Query($sql);
+    }
+    
+    /*
+     * Clases de facturacion electronica
+     */
+    
+    
+    public function limpiar_cadena($string) {
+        $string = htmlentities($string);
+        $string = preg_replace('/\&(.)[^;]*;/', '', $string);
+        $string = str_replace('\n', '', $string);
+        $string = trim(preg_replace('/[\r\n|\n|\r]+/', '', $string));
+        return $string;
+    }
+            
+    public function registra_documento_electronico($db,$resolucion_id,$tipo_documento_id,$prefijo,$numero,$tercero_id,$usuario_id,$notas,$orden_compra,$forma_pago,$documento_asociado_id) {
+        $tab="$db.documentos_electronicos";
+        if($tipo_documento_id==1){
+            $prefijo_llave="fv_";
+        }
+        if($tipo_documento_id==5){
+            $prefijo_llave="nc_";
+        }
+        if($tipo_documento_id==6){
+            $prefijo_llave="nd_";
+        }
+        
+        $documento_electronico_id=$this->getUniqId($prefijo_llave);
+        $Datos["documento_electronico_id"]=$documento_electronico_id;
+        $Datos["fecha"]=date("Y-m-d");
+        $Datos["hora"]=date("H:i:s");
+        $Datos["tipo_documento_id"]=$tipo_documento_id;
+        $Datos["resolucion_id"]=$resolucion_id;
+        $Datos["prefijo"]=$prefijo;
+        $Datos["numero"]=$numero;
+        $Datos["tercero_id"]=$tercero_id;
+        $Datos["usuario_id"]=$usuario_id;
+        $Datos["notas"]=$notas;  
+        $Datos["orden_compra"]=$orden_compra;  
+        $Datos["forma_pago"]=$forma_pago;  
+        $Datos["documento_asociado_id"]=$documento_asociado_id;  
+        $sql=$this->getSQLInsert($tab, $Datos);
+        $this->Query($sql);
+        return($documento_electronico_id);
+    }
+    
+    
+    public function crear_vista_documentos_electronicos($db) {
+        $principalDb=DB;
+        $sql="DROP VIEW IF EXISTS `vista_documentos_electronicos`;";
+        $this->QueryExterno($sql, HOST, USER, PW, $db, "");
+        
+        $sql="CREATE VIEW vista_documentos_electronicos AS
+                SELECT t1.*, 
+                    
+                    (SELECT SUM(subtotal) from documentos_electronicos_items t4 where t4.documento_electronico_id=t1.documento_electronico_id LIMIT 1 ) AS subtotal_documento,
+                    (SELECT SUM(impuestos) from documentos_electronicos_items t4 where t4.documento_electronico_id=t1.documento_electronico_id LIMIT 1 ) AS impuestos_documento,
+                    (SELECT SUM(total) from documentos_electronicos_items t4 where t4.documento_electronico_id=t1.documento_electronico_id LIMIT 1 ) AS total_documento,
+                    (SELECT name FROM $principalDb.api_fe_tipo_documentos t3 WHERE t3.ID=t1.tipo_documento_id LIMIT 1) AS nombre_tipo_documento,
+                    (SELECT razon_social FROM terceros t4 WHERE t4.ID=t1.tercero_id LIMIT 1) AS nombre_tercero, 
+                    (SELECT identificacion FROM terceros t4 WHERE t4.ID=t1.tercero_id LIMIT 1) AS nit_tercero,
+                    (SELECT CONCAT(Nombre,' ',Apellido) FROM $principalDb.usuarios t5 WHERE t5.idUsuarios=t1.usuario_id LIMIT 1) AS nombre_usuario,
+                    (SELECT CONCAT(prefijo,'-',numero) from documentos_electronicos t5 where t5.documento_electronico_id=t1.documento_asociado_id LIMIT 1 ) AS documento_asociado,
+                    (SELECT GROUP_CONCAT(t5.Descripcion) from inventario_items_general t5 where exists (SELECT 1 FROM documentos_electronicos_items t7 WHERE t7.documento_electronico_id=t1.documento_electronico_id and t7.item_id=t5.ID) ) as nombre_items  
+                    
+                FROM `documentos_electronicos` t1 ORDER BY updated DESC ";
+        
+        $this->QueryExterno($sql, HOST, USER, PW, $db, "");
+    }
+    
     /**
      * Fin Clase
      */

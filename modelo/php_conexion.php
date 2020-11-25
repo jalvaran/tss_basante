@@ -349,5 +349,15 @@ class conexion extends db_conexion{
     public function getUniqId($prefijo='') {
         return (str_replace(".","",uniqid($prefijo, true)));
     }
+    
+    public function SumeDiasFecha($Fecha,$Dias){		
+        
+        $nuevafecha = date('Y-m-d', strtotime($Fecha) + 86400);
+        $nuevafecha = date('Y-m-d', strtotime("$Fecha + $Dias day"));
+
+        return($nuevafecha);
+
+    }
+    
 }
 ?>

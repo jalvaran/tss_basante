@@ -34,8 +34,12 @@ $css->PageInit($myTitulo);
          
     $css->Csection();
     //print("<br>");
+    print('<input type="hidden" id="empresa_id" value=1>');
     $css->section("", "content", "", "");
         $css->CrearDiv("", "row", "left", 1, 1);
+            $css->CrearDiv("div_spinner", "", "left", 1, 1);
+
+            $css->CerrarDiv();
          $css->CrearDiv("", "col-md-2", "left", 1, 1);
          /*
             $css->CrearBotonEvento("BtnPacientes", "Pacientes", 1, "onclick", "ListarPacientes();idListado=1;", "verde");
@@ -78,6 +82,10 @@ $css->PageInit($myTitulo);
                 <li>
                     <a href="#" onclick="ListarFacturas();idListado=5;">
                         <i class="fa fa-list"></i>Historial de Facturas</a>
+                </li>
+                <li>
+                    <a href="#" onclick="idListado=8;MostrarListadoSegunID();">
+                        <i class="fa fa-server"></i>Facturación Electrónica</a>
                 </li>
                 <li>
                     <a href="#" onclick="ListarRIPS();idListado=6;">
@@ -244,7 +252,7 @@ $css->PageInit($myTitulo);
          */
         
 $css->PageFin();
-
+//print('<script src="jsPages/facturador.js"></script>');  //script propio de la pagina
 print('<script src="jsPages/salud_prefacturacion.js"></script>');  //script propio de la pagina
 
 $css->Cbody();

@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+@session_start();
 if (!isset($_SESSION['username'])){
   exit("<a href='../../index.php' ><img src='../images/401.png'>Iniciar Sesion </a>");
   
@@ -416,6 +416,7 @@ if( !empty($_REQUEST["Accion"]) ){
         
         case 13://Guardo Factura
             $Fecha=$obCon->normalizar($_REQUEST["Fecha"]);
+            $Fecha=date("Y-m-d");
             $jsonForm= $_REQUEST["jsonFormularioFactura"];
             $idFactura=$obCon->getUniqId("fv_");
             
@@ -483,6 +484,7 @@ if( !empty($_REQUEST["Accion"]) ){
                 $obCon->AgregarItemFactura($idFactura, $key, $value, $DatosItemsFactura["Colaborador"][$key], $DatosItemsFactura["Recorrido"][$key], $DatosItemsFactura["Tarifa"][$key]);
                 $obCon->ActualizaRegistro("prefactura_reservas_citas", "Estado", 4, "ID", $key);//Marco la cita cómo facturada
             }
+            $obCon->cree_documento_electronico_desde_factura($idFactura);
             $Link="../../general/Consultas/PDF_Documentos.draw.php?idDocumento=2001&idFactura=".$idFactura;
             $Ver="<a href='$Link' target='_blank'>Imprimir PDF</a>";
             print("OK;Factura Creada $Ver;$idFactura");
@@ -605,6 +607,20 @@ if( !empty($_REQUEST["Accion"]) ){
             $obCon->AnularReserva($idReserva, $Observaciones, $idUser);
             print("OK;Reserva anulada");
         break;//fin caso 20   
+        
+        case 21://editar un registro
+            $tabla=$obCon->normalizar($_REQUEST["tabla"]);
+            $campo_edit=$obCon->normalizar($_REQUEST["campo_edit"]);
+            $id_edit=$obCon->normalizar($_REQUEST["id_edit"]);
+            $valor=$obCon->normalizar($_REQUEST["valor"]);
+            
+            if($tabla==1){
+                $tab="prefactura_reservas_citas";
+            }
+            
+            $obCon->ActualizaRegistro($tab, $campo_edit, $valor, "ID", $id_edit);
+            print("OK;Campo editado");
+        break;//fin caso 21
         
     }
     
