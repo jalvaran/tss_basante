@@ -472,7 +472,12 @@ if( !empty($_REQUEST["Accion"]) ){
             $idResolucion=($DatosFormulario["cmbResolucionDIAN"]);
             $DatosResolucion=$obCon->DevuelveValores("empresapro_resoluciones_facturacion", "ID", $idResolucion);
             $NumeroFactura= $obCon->ObtenerMAX("facturas", "NumeroFactura", "idResolucion", $idResolucion);
-            $NumeroFactura=$NumeroFactura+1;
+            if($NumeroFactura<1 or $NumeroFactura==''){
+                $NumeroFactura=$DatosResolucion["Desde"];
+            }else{
+                $NumeroFactura=$NumeroFactura+1;
+            }
+            
             if($DatosResolucion["Hasta"]<$NumeroFactura){
                 $obCon->ActualizaRegistro("empresapro_resoluciones_facturacion", "Completada", "SI", "ID", $idResolucion);
                 exit("E1;La resolucion fué completada");
@@ -593,7 +598,13 @@ if( !empty($_REQUEST["Accion"]) ){
                 exit("E1;Debe seleccionar si la factura es anulada o devuelta;TipoAnulacion");
             }
             $obCon->AnularFactura($idFactura, $TipoAnulacion, $Observaciones, $idUser);
-            print("OK;Factura anulada");
+            $datos_factura=$obCon->DevuelveValores("facturas", "ID", $idFactura);
+            $datos_resolucion=$obCon->DevuelveValores("empresapro_resoluciones_facturacion", "ID", $datos_factura["idResolucion"]);
+            if($datos_resolucion["FacturaElectronica"]==1){
+                $obCon->cree_documento_electronico_desde_factura($idFactura, 5, $Observaciones);
+            }
+            
+            print("OK;Factura anulada y Nota Credito Realizada, por favor Reportela");
         break;//fin caso 19   
         
         case 20://Anular una reserva

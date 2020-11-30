@@ -538,7 +538,7 @@ class Prefacturacion extends conexion{
         
     }
     
-    function cree_documento_electronico_desde_factura($factura_id){
+    function cree_documento_electronico_desde_factura($factura_id,$tipo_documento=1,$observaciones_notas=''){
         $usuario_id=$_SESSION["idUser"];
         $datos_factura=$this->DevuelveValores("facturas", "ID", $factura_id);
         $datos_reserva=$this->DevuelveValores("prefactura_reservas", "ID", $datos_factura["idReserva"]);
@@ -546,7 +546,24 @@ class Prefacturacion extends conexion{
         $datos_eps=$this->DevuelveValores("salud_eps", "cod_pagador_min", $datos_paciente["CodEPS"]);
         $datos_tercero=$this->DevuelveValores("terceros", "identificacion", $datos_eps["nit"]);
         $empresa_db=DB;
-        $datos_resolucion=$this->DevuelveValores("empresa_resoluciones", "ID", 1);
+        $numero_factura=$datos_factura["NumeroFactura"];
+        $documento_referencia="";
+        if($tipo_documento==1){
+            $resolucion_id=1;
+        }
+        if($tipo_documento==5){
+            $resolucion_id=2;
+            $sql="SELECT documento_electronico_id FROM documentos_electronicos WHERE tipo_documento_id=1 AND numero='$numero_factura'";
+            $datos_consulta=$this->FetchAssoc($this->Query($sql));
+            $documento_referencia=$datos_consulta["documento_electronico_id"];
+        }
+        if($tipo_documento==6){
+            $resolucion_id=3;
+            $sql="SELECT documento_electronico_id FROM documentos_electronicos WHERE tipo_documento_id=1 AND numero='$numero_factura'";
+            $datos_consulta=$this->FetchAssoc($this->Query($sql));
+            $documento_referencia=$datos_consulta["documento_electronico_id"];
+        }
+        $datos_resolucion=$this->DevuelveValores("empresa_resoluciones", "ID", $resolucion_id);
         
         if($datos_resolucion["estado"]==2){
             exit("E1;La resolución seleccionada ya fué completada");
@@ -555,7 +572,7 @@ class Prefacturacion extends conexion{
             exit("E1;La resolución seleccionada ya está vencida");
         }
         $prefijo_resolucion=$datos_resolucion["prefijo"];
-        $sql="SELECT MAX(numero) as numero FROM $empresa_db.documentos_electronicos WHERE tipo_documento_id='1' and resolucion_id='1' and prefijo='$prefijo_resolucion'";
+        $sql="SELECT MAX(numero) as numero FROM $empresa_db.documentos_electronicos WHERE tipo_documento_id='$tipo_documento' and resolucion_id='$resolucion_id' and prefijo='$prefijo_resolucion'";
         $datos_validacion=$this->FetchAssoc($this->Query($sql));
         if($datos_validacion["numero"]=='' or $datos_validacion["numero"]==0){
             $datos_validacion["numero"]=$datos_resolucion["proximo_numero_documento"]-1;
@@ -564,12 +581,17 @@ class Prefacturacion extends conexion{
         if($numero>$datos_resolucion["hasta"]){
             exit("E1;la resolución no ya fué completada");
         }
-        $notas=$this->limpiar_cadena($datos_factura["Observaciones"]);
+        if($observaciones_notas==''){
+            $notas=$this->limpiar_cadena($datos_factura["Observaciones"]);
+        }else{
+            $notas=$this->limpiar_cadena($observaciones_notas);
+        }
+        
         $orden_compra="";
         
         $this->crear_items_inventario_desde_items_factura($factura_id);
         
-        $documento_electronico_id=$this->registra_documento_electronico(DB, 1, 1, $datos_resolucion["prefijo"],$numero,$datos_tercero["ID"],$usuario_id,$notas,$orden_compra,2,"");
+        $documento_electronico_id=$this->registra_documento_electronico(DB, $resolucion_id, $tipo_documento, $datos_resolucion["prefijo"],$numero,$datos_tercero["ID"],$usuario_id,$notas,$orden_compra,2,$documento_referencia);
         $this->copiar_items_factura_items_documento(DB, $factura_id, $documento_electronico_id);
     }
    

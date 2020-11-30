@@ -1242,7 +1242,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             $Condicion=" WHERE ID>0 ";
             
             if($Busquedas<>''){
-                $Condicion.=" AND ( NumeroAutorizacion = '$Busquedas' or NumeroDocumento = '$Busquedas' or NombrePaciente like '%$Busquedas%' or idReserva = '$Busquedas')";
+                $Condicion.=" AND (ID='$Busquedas' or  NumeroAutorizacion = '$Busquedas' or NumeroDocumento = '$Busquedas' or NombrePaciente like '%$Busquedas%' or idReserva = '$Busquedas')";
             }
             
             if($Estado<>''){
