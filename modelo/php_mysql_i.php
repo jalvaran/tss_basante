@@ -358,8 +358,13 @@ public function ShowColums($Tabla){
  * @param type $Datos -> el indice será el campo y el valor el dato a ingresar
  * @return string -> retorna el sql
  */
-    function getSQLInsert($Tabla,$Datos){
-      $sqlCampos = "INSERT INTO $Tabla (";
+    function getSQLInsert($Tabla,$Datos,$ignore=0){
+      if($ignore==0){
+          $ignore="";
+      }else{
+          $ignore="IGNORE";
+      }   
+      $sqlCampos = "INSERT $ignore INTO $Tabla (";
       $sqlValores= ' VALUES (';
       $length_array = count($Datos);
       $i = 1;

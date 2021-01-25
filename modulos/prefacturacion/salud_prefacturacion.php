@@ -96,6 +96,11 @@ $css->PageInit($myTitulo);
                     <a href="#" onclick="ListarLiquidacionColaboradores();idListado=7;">
                         <i class="fa fa-users"></i>Liquidacion Colaboradores</a>
                 </li>
+                
+                <li>
+                    <a href="#" onclick="idListado=11;MostrarListadoSegunID();">
+                        <i class="fa fa-calendar-check-o"></i> MiPres</a>
+                </li>
                
               </ul>
             </div>

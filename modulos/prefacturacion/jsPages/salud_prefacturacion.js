@@ -74,6 +74,11 @@ function MostrarListadoSegunID(){
     if(idListado==10){
         ListarDocumentosElectronicosError();
     }
+    
+    if(idListado==11){
+        ListarProgramacionMipres();
+    }
+    
 }
 
 function CambiePagina(Funcion,Page=""){
@@ -119,6 +124,9 @@ function CambiePagina(Funcion,Page=""){
     
     if(Funcion==10){
         ListarDocumentosElectronicosError(Page);
+    }
+    if(Funcion==11){
+        ListarProgramacionMipres(Page);
     }
     
 }
@@ -2342,6 +2350,42 @@ function reportar_documento_electronico_api(documento_electronico_id){
         error: function (xhr, ajaxOptions, thrownError) {
             ocultar_spinner();
             document.getElementById(boton_id).disabled=false;
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+}
+
+
+function ListarProgramacionMipres(Page=1){
+    var idDiv="DivGeneralDraw";
+    document.getElementById(idDiv).innerHTML='<div id="GifProcess">Cargando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+    
+    var Busquedas =document.getElementById("TxtBusquedas").value;    
+    var FechaInicialRangos =document.getElementById("FechaInicialRangos").value;
+    var FechaFinalRangos =document.getElementById("FechaFinalRangos").value;    
+        
+    var form_data = new FormData();
+        form_data.append('Accion', 1);// pasamos la accion y el numero de accion para el dibujante sepa que caso tomar
+        form_data.append('Page', Page);
+        form_data.append('Busquedas', Busquedas);        
+        form_data.append('FechaInicialRangos', FechaInicialRangos);
+        form_data.append('FechaFinalRangos', FechaFinalRangos);
+                
+                
+       $.ajax({// se arma un objecto por medio de ajax  
+        url: 'Consultas/mipres_programacion.draw.php',// se indica donde llegara la informacion del objecto
+        
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post', // se especifica que metodo de envio se utilizara normalmente y por seguridad se utiliza el post
+        success: function(data){            
+            document.getElementById(idDiv).innerHTML=data; //La respuesta del servidor la dibujo en el div DivTablasBaseDatos                      
+             },
+        error: function (xhr, ajaxOptions, thrownError) {// si hay error se ejecuta la funcion
+            
             alert(xhr.status);
             alert(thrownError);
           }
