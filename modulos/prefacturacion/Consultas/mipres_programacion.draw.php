@@ -21,7 +21,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                         
             $empresa_id=1;
             $tabla="mipres_programacion";
-            $Limit=5;
+            $Limit=20;
             $Page=$obCon->normalizar($_REQUEST["Page"]);
             $NumPage=$obCon->normalizar($_REQUEST["Page"]);
             if($Page==''){
@@ -37,13 +37,13 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             $Condicion=" WHERE ID>0 ";
             
             if($Busquedas<>''){
-                $Condicion.=" AND ( t1.NoPrescripcion = '$Busquedas' or t1.NoIDPaciente = '$Busquedas' )";
+                $Condicion.=" AND ( t1.ID = '$Busquedas' or t1.NoPrescripcion = '$Busquedas' or t1.NoIDPaciente = '$Busquedas' )";
             }
             if($FechaInicialRangos<>''){
-                $Condicion.=" AND t1.FecProgramacion>='$FechaInicialRangos 00:00:00'";
+                $Condicion.=" AND t1.FecDireccionamiento>='$FechaInicialRangos 00:00:00'";
             }
             if($FechaFinalRangos<>''){
-                $Condicion.=" AND t1.FecProgramacion<='$FechaFinalRangos 23:59:59'";
+                $Condicion.=" AND t1.FecDireccionamiento<='$FechaFinalRangos 23:59:59'";
             }
                         
             
@@ -91,8 +91,8 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                         $css->CrearDiv("", "col-md-2", "left", 1, 1); 
                             //$css->div("", "pull-left", "", "", "", "style=text-align:center", "");
                                 $FechaInicialMiPres=date("Y-m-d");
-                                if(isset($_REQUEST["FechaInicialMiPres"])){
-                                    $FechaInicialMiPres=$obCon->normalizar($_REQUEST["FechaInicialMiPres"]);
+                                if(isset($_REQUEST["fecha_inicial_mipres"])){
+                                    $FechaInicialMiPres=$obCon->normalizar($_REQUEST["fecha_inicial_mipres"]);
                                 }
                                 
                                 
@@ -106,8 +106,8 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                 
                                 
                                 $FechaFinallMiPres=date("Y-m-d");
-                                if(isset($_REQUEST["FechaFinallMiPres"])){
-                                    $FechaFinallMiPres=$obCon->normalizar($_REQUEST["FechaFinallMiPres"]);
+                                if(isset($_REQUEST["fecha_final_mipres"])){
+                                    $FechaFinallMiPres=$obCon->normalizar($_REQUEST["fecha_final_mipres"]);
                                 }
                                 
                                 print("<strong>Fecha Final</strong>");
@@ -120,10 +120,16 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                             $css->CrearBotonEvento("btn_obtener_direccionamiento_mipres", "Obtener", 1, "onclick", "iniciar_consulta_mipres()", "naranja");
                         $css->Cdiv();
                         $css->CrearDiv("", "col-md-2", "left", 1, 1); 
-                        print("<span id='sp_msg_mipres'><strong></strong></span>");
+                        $porcentaje=0;
+                        $leyenda_barra="";
+                        if(isset($_REQUEST["porcentaje_barra_mipres"])){
+                            $porcentaje=$_REQUEST["porcentaje_barra_mipres"];
+                            $leyenda_barra="Consulta completada";
+                        }
+                        print("<span id='sp_msg_mipres'>$leyenda_barra</span>");
                         print('<div class="progress">
-                                <div id="PgProgresoUp" name="PgProgresoUp" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">
-                                  <div id="LyProgresoCMG" name="LyProgresoCMG" "="">0%</div>
+                                <div id="PgProgresoUp" name="PgProgresoUp" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:'.$porcentaje.'%">
+                                  <div id="LyProgresoCMG" name="LyProgresoCMG" "="">'.$porcentaje.'%</div>
                                 </div>
                               </div>');
                         $css->Cdiv();
@@ -169,11 +175,15 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                     print('<table class="table table-hover table-striped">');
                         print('<tbody>');
                             print('<tr>');
-                                print("<th>Accion 1</th>");
-                                print("<th>Accion 2</th>");
+                                print("<th>Programar</th>");
+                                print("<th>Entregar</th>");
                                 print("<th>ID</th>");
                                 print("<th>IDDireccionamiento</th>");
                                 print("<th>NoPrescripcion</th>");
+                                
+                                print("<th>FecDireccionamiento</th>");
+                                print("<th>EstDireccionamiento</th>");
+                                
                                 print("<th>TipoTec</th>");
                                 print("<th>ConTec</th>");
                                 print("<th>TipoIDPaciente</th>");
@@ -183,6 +193,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                 print("<th>NoSubEntrega</th>");
                                 
                                 print("<th>FecMaxEnt</th>");
+                                
                                 
                                 print("<th>TipoIDProv</th>");                                
                                 print("<th>NoIDProv</th>");
@@ -196,8 +207,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                 print("<th>NoIDEPS</th>");
                                 print("<th>CodEPS</th>");
                                 
-                                print("<th>FecDireccionamiento</th>");
-                                print("<th>EstDireccionamiento</th>");
+                                
                                 print("<th>FecAnulacion</th>");
                                 print("<th>IDUsuario</th>");
                                     
@@ -208,13 +218,19 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
 
                                 print('<tr>');
                                 print("<td style='text-align:center'>");
-                                    $link="procesadores/facturador.process.php?Accion=8&empresa_id=$empresa_id&documento_electronico_id=$idItem";
-                                    print('<a style="font-size:25px;text-align:center" title="Ver PDF" href="'.$link.'" target="_blank")" ><i class="fa fa-file-pdf-o text-danger"></i></a>');
+                                    $disabled="disabled=1";
+                                    if($RegistrosTabla["EstDireccionamiento"]==1){
+                                        $disabled="";
+                                    }
+                                    print('<button '.$disabled.'  class="btn btn-success fa fa-share" title="Direccionar Autorización" onclick="iniciar_programacion_mipres_x_id(`'.$idItem.'`)" target="_blank" ></button>');
 
                                 print("</td>");
                                 print("<td style='text-align:center'>");
-                                    $link="procesadores/facturador.process.php?Accion=9&empresa_id=$empresa_id&documento_electronico_id=$idItem";
-                                    print('<a style="font-size:25px;text-align:center" title="Ver ZIP" href="'.$link.'" target="_blank" ><i class="fa fa-file-archive-o text-primary"></i></a>');
+                                    $disabled="disabled=1";
+                                    if($RegistrosTabla["EstDireccionamiento"]==2){
+                                        $disabled="";
+                                    }
+                                    print('<button '.$disabled.'  class="btn btn-warning fa fa-send" title="Entregar" onclick="direccionar_mipres(`'.$idItem.'`)" target="_blank" ></button>');
 
                                 print("</td>");
                                                                       
@@ -227,6 +243,23 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                 print("</td>");
                                 print("<td class='mailbox-subject text-flickr'>");
                                     print("<strong>".$RegistrosTabla["NoPrescripcion"]."</strong>");
+                                print("</td>");
+                                
+                                print("<td class='mailbox-subject text-success'>");
+                                    print("<strong>".($RegistrosTabla["FecDireccionamiento"])."</strong>");
+                                print("</td>");
+                                
+                                print("<td class='mailbox-subject text-primary'>");
+                                    if($RegistrosTabla["EstDireccionamiento"]==0){
+                                        $NombreEstado="ANULADO";
+                                    }
+                                    if($RegistrosTabla["EstDireccionamiento"]==1){
+                                        $NombreEstado="ACTIVO";
+                                    }
+                                    if($RegistrosTabla["EstDireccionamiento"]==2){
+                                        $NombreEstado="PROCESADO";
+                                    }
+                                    print("<strong>$NombreEstado</strong>");
                                 print("</td>");
                                 
                                 print("<td class='mailbox-subject'>");
@@ -281,13 +314,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                     print("<strong>".($RegistrosTabla["CodEPS"])."</strong>");
                                 print("</td>");
                                 
-                                print("<td class='mailbox-subject text-success'>");
-                                    print("<strong>".($RegistrosTabla["FecDireccionamiento"])."</strong>");
-                                print("</td>");
                                 
-                                print("<td class='mailbox-subject text-primary'>");
-                                    print("<strong>".($RegistrosTabla["EstDireccionamiento"])."</strong>");
-                                print("</td>");
                                 
                                 print("<td class='mailbox-subject text-flickr'>");
                                     print("<strong>".($RegistrosTabla["FecAnulacion"])."</strong>");

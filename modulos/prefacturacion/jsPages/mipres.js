@@ -1,7 +1,8 @@
 
 function ListarProgramacionMipres(Page=1,datos_mipres=''){
+    
     var idDiv="DivGeneralDraw";
-    document.getElementById(idDiv).innerHTML='<div id="GifProcess">Cargando...<br><img   src="../../images/loader.gif" alt="Cargando" height="100" width="100"></div>';
+    
     
     var Busquedas =document.getElementById("TxtBusquedas").value;    
     var FechaInicialRangos =document.getElementById("FechaInicialRangos").value;
@@ -13,7 +14,8 @@ function ListarProgramacionMipres(Page=1,datos_mipres=''){
         form_data.append('Busquedas', Busquedas);        
         form_data.append('FechaInicialRangos', FechaInicialRangos);
         form_data.append('FechaFinalRangos', FechaFinalRangos);
-        if(datos_mipres != ''){
+        if(datos_mipres["fecha_inicial"]){
+            
             form_data.append('fecha_inicial_mipres', datos_mipres["fecha_inicial"]);
             form_data.append('fecha_final_mipres', datos_mipres["fecha_final"]); 
             form_data.append('fecha_consulta_mipres', datos_mipres["fecha_consulta"]); 
@@ -41,6 +43,7 @@ function ListarProgramacionMipres(Page=1,datos_mipres=''){
 
 
 function iniciar_consulta_mipres(){
+    delete datos_mipres;
     var idDivMensajes='sp_msg_mipres';
     
     var FechaInicialMiPres=document.getElementById("FechaInicialMiPres").value;    
@@ -68,7 +71,7 @@ function iniciar_consulta_mipres(){
                 datos_mipres["fecha_final"]=respuestas[3];
                 datos_mipres["fecha_consulta"]=respuestas[4];
                 datos_mipres["total_dias"]=respuestas[5];
-                obtenga_token_consulta_mipres(datos_mipres);
+                obtenga_token_consulta_mipres(datos_mipres,1);
             }else if(respuestas[0]=="E1"){  
                 alertify.error(respuestas[1],0);
                 MarqueErrorElemento(respuestas[2]);
@@ -88,7 +91,7 @@ function iniciar_consulta_mipres(){
 }
 
 
-function obtenga_token_consulta_mipres(datos_mipres){
+function obtenga_token_consulta_mipres(datos_mipres,funcion){
     var idDivMensajes='sp_msg_mipres';
     
     var form_data = new FormData();
@@ -107,7 +110,12 @@ function obtenga_token_consulta_mipres(datos_mipres){
             if(respuestas[0]=="OK"){                
                 alertify.success(respuestas[1]);
                 datos_mipres["token_consultas"]=respuestas[2];
-                consulte_direccionamiento_mipres_x_rango(datos_mipres);
+                if(funcion==1){
+                    consulte_direccionamiento_mipres_x_rango(datos_mipres);
+                }
+                if(funcion==2){
+                    programar_mi_pres_x_id(datos_mipres);
+                }
             }else if(respuestas[0]=="E1"){  
                 alertify.error(respuestas[1],0);
                 MarqueErrorElemento(respuestas[2]);
@@ -125,11 +133,63 @@ function obtenga_token_consulta_mipres(datos_mipres){
           }
       });
 }
+ 
+function iniciar_programacion_mipres_x_id(mipres_id){
+    delete datos_mipres;
+    var datos_mipres=[];
+    datos_mipres["mipres_id"]=mipres_id;
+    obtenga_token_consulta_mipres(datos_mipres,2);
+}    
     
+function programar_mi_pres_x_id(datos_mipres){
+    
+    var idDivMensajes='sp_msg_mipres';
+    document.getElementById(idDivMensajes).innerHTML='<div id="GifProcess">Programando...<img   src="../../images/loader.gif" alt="Cargando" height="50" width="50"></div>';
+    document.getElementById(idDivMensajes).innerHTML=document.getElementById(idDivMensajes).innerHTML+" "+datos_mipres["ID"];
+    
+    var form_data = new FormData();
+        form_data.append('Accion', '5'); 
+        form_data.append('token_consultas', datos_mipres["token_consultas"]);
+        form_data.append('mipres_id', datos_mipres["mipres_id"]);
+        
+        $.ajax({
+        url: './procesadores/mipres.process.php',
+        //dataType: 'json',
+        cache: false,
+        contentType: false,
+        processData: false,
+        data: form_data,
+        type: 'post',
+        success: function(data){
+            var respuestas = data.split(';'); //Armamos un vector separando los punto y coma de la cadena de texto
+            if(respuestas[0]=="OK"){                
+                alertify.success(respuestas[1]);
+                ListarProgramacionMipres(1);
+                              
+            }else if(respuestas[0]=="E1"){  
+                alertify.error(respuestas[1],0);
+                MarqueErrorElemento(respuestas[2]);
+                
+            }else{
+                document.getElementById(idDivMensajes).innerHTML=data;
+                
+            }
+                   
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            
+            alert(xhr.status);
+            alert(thrownError);
+          }
+      });
+    
+}
+
 function consulte_direccionamiento_mipres_x_rango(datos_mipres){
     
     var idDivMensajes='sp_msg_mipres';
-    document.getElementById(idDivMensajes).innerHTML="Consultando el "+datos_mipres["fecha_consulta"];
+    document.getElementById(idDivMensajes).innerHTML='<div id="GifProcess">Consultando...<img   src="../../images/loader.gif" alt="Cargando" height="50" width="50"></div>';
+    document.getElementById(idDivMensajes).innerHTML=document.getElementById(idDivMensajes).innerHTML+" "+datos_mipres["fecha_consulta"];
     
     var form_data = new FormData();
         form_data.append('Accion', '4'); 
@@ -152,7 +212,7 @@ function consulte_direccionamiento_mipres_x_rango(datos_mipres){
                 alertify.success(respuestas[1]);
                 datos_mipres["fecha_consulta"]=respuestas[2];
                 var porcentaje=respuestas[3];
-                console.log("porcentaje: "+porcentaje);
+                
                 var sp_msg=respuestas[4];
                 $('.progress-bar').css('width',porcentaje+'%').attr('aria-valuenow', porcentaje);  
                 document.getElementById('LyProgresoCMG').innerHTML=porcentaje+"%";                

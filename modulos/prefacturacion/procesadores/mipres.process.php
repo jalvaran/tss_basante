@@ -129,7 +129,25 @@ if( !empty($_REQUEST["Accion"]) ){
             
         break;//Fin caso 4    
         
-        
+        case 5: //Programar Mipres
+            
+            //$empresa_id=$obCon->normalizar($_REQUEST["empresa_id"]);
+            $empresa_id=1;
+            $datos_empresa=$obCon->DevuelveValores("empresapro", "ID", $empresa_id);
+            $db=$datos_empresa["db"];            
+            $token_consultas=$obCon->normalizar($_REQUEST["token_consultas"]);
+            $mipres_id=$obCon->normalizar($_REQUEST["mipres_id"]);
+            
+            $respuesta=$obCon->programar_mipres_x_id($datos_empresa, $mipres_id, $token_consultas, $idUser);
+            
+            if(isset($respuesta["OK"])){
+                $idProgramacion=$respuesta["IdProgramacion"];
+                exit("OK;Registro Programado con el id: $idProgramacion;$idProgramacion");
+            }else{
+                print_r($respuesta);
+            }
+            
+        break;//Fin caso 5
         
            
         

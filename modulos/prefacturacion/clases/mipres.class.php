@@ -101,6 +101,67 @@ class MiPres extends conexion{
         
     }
     
+    public function programar_mipres_x_id($datos_empresa,$ID,$token_consultas,$idUser) {
+        $db=$datos_empresa["db"];
+        
+        $datos_mipres=$this->DevuelveValores("$db.mipres_programacion", "ID", $ID);
+        
+        $datos_servidor=$this->DevuelveValores("servidores", "ID", 2002);//aqui se encuentra la url para programar
+        $method="PUT";
+        $url=$datos_servidor["IP"].$datos_empresa["NIT"]."/".$token_consultas;
+        $Token=$datos_empresa["TokenAPIMipres"];
+        $data=$this->json_programar_mipres_x_id($ID, $datos_mipres["FecMaxEnt"], 'NI', $datos_empresa["NIT"],$datos_empresa["CodSedeProv"] , $datos_mipres["CodSerTecAEntregar"], $datos_mipres["CantTotAEntregar"]);
+        $respuesta=$this->callAPI($method, $url, $Token, $data);
+        $datos_obtenidos= json_decode($respuesta,1);
+        
+        $fecha=date("Y-m-d H:i:s");
+        if(isset($datos_obtenidos[0]["Id"])){
+            $idProgramacion=$datos_obtenidos[0]["IdProgramacion"];
+            $Datos["ID"]=$ID;
+            $Datos["IdProgramacion"]=$idProgramacion;
+            $Datos["user_id"]=$idUser;
+            $sql=$this->getSQLInsert("$db.mipres_registro_programacion", $Datos);            
+            $this->Query($sql);
+            $sql="UPDATE $db.mipres_programacion SET  EstDireccionamiento=2 WHERE ID='$ID'";
+            $this->Query($sql);
+            $retorno["OK"]=1;
+            $retorno["IdProgramacion"]=$idProgramacion;
+            return($retorno);
+        }
+        
+        if(isset($datos_obtenidos["Id"])){
+            $idProgramacion=$datos_obtenidos["IdProgramacion"];
+            $Datos["ID"]=$ID;
+            $Datos["IdProgramacion"]=$idProgramacion;
+            $Datos["user_id"]=$idUser;
+            $sql=$this->getSQLInsert("$db.mipres_registro_programacion", $Datos);            
+            $this->Query($sql);
+            $sql="UPDATE $db.mipres_programacion SET  EstDireccionamiento=2 WHERE ID='$ID'";
+            $this->Query($sql);
+            $retorno["OK"]=1;
+            $retorno["IdProgramacion"]=$idProgramacion;
+            return($retorno);
+        }
+        
+        return($datos_obtenidos);
+        
+    }
+    
+    public function json_programar_mipres_x_id($ID,$FechaMaxEnt,$TipoIDSedeProv,$NoIDSedeProv,$CodSedeProv,$CodSerTecAEntregar,$CantTotAEntregar) {
+        
+        $json='{
+            "ID": '.$ID.',
+            "FecMaxEnt": "'.$FechaMaxEnt.'",
+            "TipoIDSedeProv": "'.$TipoIDSedeProv.'",
+            "NoIDSedeProv": "'.$NoIDSedeProv.'",
+            "CodSedeProv": "'.$CodSedeProv.'",
+            "CodSerTecAEntregar": "'.$CodSerTecAEntregar.'",
+            "CantTotAEntregar": "'.$CantTotAEntregar.'"
+          }'; 
+        return $json;
+        
+    }
+    
     /**
      * Fin Clase
      */
