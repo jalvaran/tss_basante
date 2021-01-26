@@ -259,6 +259,7 @@ $css->PageInit($myTitulo);
 $css->PageFin();
 //print('<script src="jsPages/facturador.js"></script>');  //script propio de la pagina
 print('<script src="jsPages/salud_prefacturacion.js"></script>');  //script propio de la pagina
+print('<script src="jsPages/mipres.js"></script>');  //script propio de la pagina
 
 $css->Cbody();
 $css->Chtml();

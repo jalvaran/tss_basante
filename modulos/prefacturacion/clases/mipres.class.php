@@ -89,6 +89,18 @@ class MiPres extends conexion{
         
     }
     
+    public function obtener_dias_diferencia_rango_fecha($fecha_inicial,$fecha_final) {
+        $date1 = new DateTime($fecha_inicial);
+        $date2 = new DateTime($fecha_final);
+        $diff = $date1->diff($date2);
+        return($diff->days);
+    }
+    
+    public function sumar_dias_fecha($fecha,$dias) {
+        return date("Y-m-d",strtotime($fecha."+ $dias days")); 
+        
+    }
+    
     /**
      * Fin Clase
      */

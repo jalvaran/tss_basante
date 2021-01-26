@@ -21,7 +21,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                         
             $empresa_id=1;
             $tabla="mipres_programacion";
-            $Limit=20;
+            $Limit=5;
             $Page=$obCon->normalizar($_REQUEST["Page"]);
             $NumPage=$obCon->normalizar($_REQUEST["Page"]);
             if($Page==''){
@@ -69,7 +69,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             $Consulta=$obCon->Query($sql);
             
             
-            $css->CrearTitulo("Programacion Mipres", "verde");
+            $css->CrearTitulo("MiPres", "verde");
             
             
             $statement= base64_encode(urlencode($statement));
@@ -79,43 +79,89 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                 $css->div("", "mailbox-controls", "", "", "", "", "");
                     $CondicionURL= urlencode($Condicion);
                     $link='../../general/procesadores/GeneradorCSV.process.php?Opcion=3&empresa_id='.$empresa_id.'&tb='.$tabla.'&st='.$statement.'&colsQuery='.$colsQuery;
-                    
-                    print('<a class="btn btn-app" style="background-color:#12a900;color:white;" href="'.$link.'" target="_blank">
-                        <span class="badge bg-blue" style="font-size:14px">'.$ResultadosTotales.'</span>
-                        <i class="fa fa-file-excel-o"></i> Exportar 
-                      </a>');
-                   
-                    $css->div("", "pull-right", "", "", "", "", "");
-                        if($ResultadosTotales>$Limit){
-                            $TotalPaginas= ceil($ResultadosTotales/$Limit);                               
-                            print('<div class="input-group" style=width:150px>');
-                            if($NumPage>1){
-                                $NumPage1=$NumPage-1;
-                            print('<span class="input-group-addon" onclick=CambiePagina(`11`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-left"></i></span>');
-                            }
-                            $FuncionJS="onchange=CambiePagina(`11`);";
-                            $css->select("CmbPage", "form-control", "CmbPage", "", "", $FuncionJS, "");
+                    $css->div("", "row", "", "", "", "", "");
+                        $css->CrearDiv("", "col-md-2", "left", 1, 1); 
+                            $css->div("", "pull-left", "", "", "", "", "");
+                                print('<a class="btn btn-app" style="background-color:#12a900;color:white;" href="'.$link.'" target="_blank">
+                                    <span class="badge bg-blue" style="font-size:14px">'.$ResultadosTotales.'</span>
+                                    <i class="fa fa-file-excel-o"></i> Exportar 
+                                  </a>');
+                            $css->Cdiv();
+                        $css->Cdiv();
+                        $css->CrearDiv("", "col-md-2", "left", 1, 1); 
+                            //$css->div("", "pull-left", "", "", "", "style=text-align:center", "");
+                                $FechaInicialMiPres=date("Y-m-d");
+                                if(isset($_REQUEST["FechaInicialMiPres"])){
+                                    $FechaInicialMiPres=$obCon->normalizar($_REQUEST["FechaInicialMiPres"]);
+                                }
+                                
+                                
+                                print("<strong>Fecha Inicial</strong>");
+                                $css->input("date", "FechaInicialMiPres", "form-control", "FechaInicialMiPres", "Fecha", $FechaInicialMiPres, "Fecha Inicial", "off", "", "","style='line-height: 15px;'");
+                                
+                            //$css->Cdiv();
+                        $css->Cdiv();
+                        $css->CrearDiv("", "col-md-2", "left", 1, 1); 
+                            //$css->div("", "pull-left", "", "", "", "style=text-align:center", "");
+                                
+                                
+                                $FechaFinallMiPres=date("Y-m-d");
+                                if(isset($_REQUEST["FechaFinallMiPres"])){
+                                    $FechaFinallMiPres=$obCon->normalizar($_REQUEST["FechaFinallMiPres"]);
+                                }
+                                
+                                print("<strong>Fecha Final</strong>");
+                                $css->input("date", "FechaFinalMiPres", "form-control", "FechaFinalMiPres", "Fecha", $FechaFinallMiPres, "Fecha Final", "off", "", "","style='line-height: 15px;'");
+                                
+                            //$css->Cdiv();
+                        $css->Cdiv();
+                        $css->CrearDiv("", "col-md-2", "left", 1, 1); 
+                            print("<strong>Consultar MiPres</strong>");
+                            $css->CrearBotonEvento("btn_obtener_direccionamiento_mipres", "Obtener", 1, "onclick", "iniciar_consulta_mipres()", "naranja");
+                        $css->Cdiv();
+                        $css->CrearDiv("", "col-md-2", "left", 1, 1); 
+                        print("<span id='sp_msg_mipres'><strong></strong></span>");
+                        print('<div class="progress">
+                                <div id="PgProgresoUp" name="PgProgresoUp" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">
+                                  <div id="LyProgresoCMG" name="LyProgresoCMG" "="">0%</div>
+                                </div>
+                              </div>');
+                        $css->Cdiv();
+                    $css->Cdiv();
+                    $css->div("", "row", "", "", "", "", "");
+                        $css->div("", "pull-right", "", "", "", "", "");
+                            if($ResultadosTotales>$Limit){
+                                $TotalPaginas= ceil($ResultadosTotales/$Limit);                               
+                                print('<div class="input-group" style=width:150px>');
+                                if($NumPage>1){
+                                    $NumPage1=$NumPage-1;
+                                print('<span class="input-group-addon" onclick=CambiePagina(`11`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-left"></i></span>');
+                                }
+                                $FuncionJS="onchange=CambiePagina(`11`);";
+                                $css->select("CmbPage", "form-control", "CmbPage", "", "", $FuncionJS, "");
 
-                                for($p=1;$p<=$TotalPaginas;$p++){
-                                    if($p==$NumPage){
-                                        $sel=1;
-                                    }else{
-                                        $sel=0;
+                                    for($p=1;$p<=$TotalPaginas;$p++){
+                                        if($p==$NumPage){
+                                            $sel=1;
+                                        }else{
+                                            $sel=0;
+                                        }
+
+                                        $css->option("", "", "", $p, "", "",$sel);
+                                            print($p);
+                                        $css->Coption();
+
                                     }
 
-                                    $css->option("", "", "", $p, "", "",$sel);
-                                        print($p);
-                                    $css->Coption();
-
+                                $css->Cselect();
+                                if($ResultadosTotales>($PuntoInicio+$Limit)){
+                                    $NumPage1=$NumPage+1;
+                                print('<span class="input-group-addon" onclick=CambiePagina(`11`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-right" ></i></span>');
                                 }
-
-                            $css->Cselect();
-                            if($ResultadosTotales>($PuntoInicio+$Limit)){
-                                $NumPage1=$NumPage+1;
-                            print('<span class="input-group-addon" onclick=CambiePagina(`11`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-right" ></i></span>');
-                            }
-                            print("</div>");
-                        }    
+                                print("</div>");
+                            }    
+                        $css->Cdiv();
+                    
                     $css->Cdiv();
                 $css->Cdiv();
                    
