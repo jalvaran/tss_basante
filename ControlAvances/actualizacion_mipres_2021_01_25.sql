@@ -19,4 +19,51 @@ ADD `CodSedeProv` varchar(30) NOT NULL AFTER `CodigoPrestadora`;
 
 UPDATE `empresapro` SET `CodSedeProv` = 'PROV004612' WHERE `idEmpresaPro` = '1';
 
+DROP TABLE IF EXISTS `mipres_programacion`;
+CREATE TABLE `mipres_programacion` (
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+  `IDDireccionamiento` bigint(20) NOT NULL,
+  `NoPrescripcion` varchar(200) COLLATE utf8_spanish_ci NOT NULL,
+  `TipoTec` varchar(2) COLLATE utf8_spanish_ci NOT NULL,
+  `ConTec` int(11) NOT NULL,
+  `TipoIDPaciente` varchar(4) COLLATE utf8_spanish_ci NOT NULL,
+  `NoIDPaciente` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `NoEntrega` int(11) NOT NULL,
+  `NoSubEntrega` int(11) NOT NULL,
+  `FecMaxEnt` date NOT NULL,
+  `TipoIDProv` varchar(4) COLLATE utf8_spanish_ci NOT NULL,
+  `NoIDProv` varchar(20) COLLATE utf8_spanish_ci NOT NULL,
+  `CodMunEnt` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `CantTotAEntregar` int(11) NOT NULL,
+  `DirPaciente` varchar(200) COLLATE utf8_spanish_ci NOT NULL,
+  `CodSerTecAEntregar` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `NoIDEPS` varchar(25) COLLATE utf8_spanish_ci NOT NULL,
+  `CodEPS` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  `FecDireccionamiento` datetime NOT NULL,
+  `EstDireccionamiento` int(11) NOT NULL,
+  `IdProgramacion` bigint(20) NOT NULL,
+  `IdEntrega` bigint(20) NOT NULL,
+  `IdReporteEntrega` bigint(20) NOT NULL,
+  `FecAnulacion` date NOT NULL,
+  `user_id` int(11) NOT NULL COMMENT 'usaurio que crea el registro',
+  PRIMARY KEY (`ID`),
+  KEY `IDProgramacion` (`IDDireccionamiento`),
+  KEY `NoPrescripcion` (`NoPrescripcion`),
+  KEY `TipoTec` (`TipoTec`),
+  KEY `ConTec` (`ConTec`),
+  KEY `NoIDPaciente` (`NoIDPaciente`),
+  KEY `NoEntrega` (`NoEntrega`),
+  KEY `EstProgramacion` (`EstDireccionamiento`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
+DROP TABLE IF EXISTS `mipres_registro_programacion`;
+CREATE TABLE `mipres_registro_programacion` (
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+  `IdProgramacion` bigint(20) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
 
