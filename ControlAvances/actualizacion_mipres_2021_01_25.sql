@@ -57,13 +57,46 @@ CREATE TABLE `mipres_programacion` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-DROP TABLE IF EXISTS `mipres_registro_programacion`;
-CREATE TABLE `mipres_registro_programacion` (
+
+
+
+CREATE TABLE `mipres_registro_entrega` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `IdProgramacion` bigint(20) NOT NULL,
+  `mipres_id` bigint(20) NOT NULL,
+  `IdEntrega` bigint(20) NOT NULL,
   `user_id` int(11) NOT NULL,
+  `user_id_anulacion` int(11) NOT NULL,
+  `fecha_anulacion` datetime NOT NULL,
   `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`ID`)
+  PRIMARY KEY (`ID`),
+  KEY `mipres_id` (`mipres_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
+CREATE TABLE `mipres_registro_programacion` (
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+  `mipres_id` bigint(20) NOT NULL,
+  `IdProgramacion` bigint(20) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `user_id_anulacion` int(11) NOT NULL,
+  `fecha_anulacion` datetime NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`ID`),
+  KEY `mipres_id` (`mipres_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+ALTER TABLE `prefactura_paciente`
+ADD `reponsable_tipo_documento` varchar(2) COLLATE 'utf8_spanish_ci' NOT NULL COMMENT '(CC,CE,PA,RC,TI,AS,MS)' AFTER `Correo`,
+ADD `reponsable_identificacion` bigint NOT NULL COMMENT 'Identificacion del responsable del paciente' AFTER `reponsable_tipo_documento`,
+ADD `responsable_parentesco` int NOT NULL COMMENT 'parentesco del responsable del paciente' AFTER `reponsable_identificacion`,
+ADD `responsable_nombre` varchar(200) COLLATE 'utf8_spanish_ci' NOT NULL COMMENT 'nombre del responsable del paciente' AFTER `responsable_parentesco`;
+
+
+INSERT INTO `servidores` (`ID`, `IP`, `Nombre`, `Usuario`, `Password`, `DataBase`, `Puerto`, `TipoServidor`, `Observaciones`, `Updated`, `Sync`) VALUES
+(2003,	'https://wsmipres.sispro.gov.co/WSSUMMIPRESNOPBS/api/Entrega/',	'Entregar Mipres',	'',	'',	'',	0,	'REST',	'Ruta para entregar una un mipres en el api mipres, ver: https://wsmipres.sispro.gov.co/WSSUMMIPRESNOPBS/Swagger/',	'2021-01-25 11:51:52',	'2020-07-25 10:06:36');
+
+INSERT INTO `servidores` (`ID`, `IP`, `Nombre`, `Usuario`, `Password`, `DataBase`, `Puerto`, `TipoServidor`, `Observaciones`, `Updated`, `Sync`) VALUES
+(2004,	'https://wsmipres.sispro.gov.co/WSSUMMIPRESNOPBS/api/AnularProgramacion/',	'Anular programacion Mipres',	'',	'',	'',	0,	'REST',	'Ruta para anular una programacion de un mipres en el api mipres, ver: https://wsmipres.sispro.gov.co/WSSUMMIPRESNOPBS/Swagger/',	'2021-01-25 11:51:52',	'2020-07-25 10:06:36');
+
+
+INSERT INTO `servidores` (`ID`, `IP`, `Nombre`, `Usuario`, `Password`, `DataBase`, `Puerto`, `TipoServidor`, `Observaciones`, `Updated`, `Sync`) VALUES
+(2005,	'https://wsmipres.sispro.gov.co/WSSUMMIPRESNOPBS/api/AnularEntrega/',	'Anular Entrega Mipres',	'',	'',	'',	0,	'REST',	'Ruta para anular entrega de un mipres en el api mipres, ver: https://wsmipres.sispro.gov.co/WSSUMMIPRESNOPBS/Swagger/',	'2021-01-25 11:51:52',	'2020-07-25 10:06:36');

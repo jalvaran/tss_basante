@@ -64,23 +64,23 @@ $css->PageInit($myTitulo);
             <div class="box-body no-padding" style="">
               <ul class="nav nav-pills nav-stacked">
                 <li>
-                    <a href="#" onclick="ListarPacientes();idListado=1;">
+                    <a href="#" onclick="idListado=1;MostrarListadoSegunID();">
                         <i class="fa fa-user-md"></i>Pacientes</a>
                 </li>
                 <li>
-                    <a href="#" onclick="ListarReservas();idListado=2;">
+                    <a href="#" onclick="idListado=2;MostrarListadoSegunID();">
                         <i class="fa fa-ambulance"></i>Reservas</a>
                 </li>
                 <li>
-                    <a href="#" onclick="ListarCitas();idListado=3;">
+                    <a href="#" onclick="idListado=3;MostrarListadoSegunID();">
                         <i class="fa fa-medkit"></i>Citas</a>
                 </li>
                 <li>
-                    <a href="#" onclick="ListarPendientesPorFacturar();idListado=4;">
+                    <a href="#" onclick="idListado=4;MostrarListadoSegunID();">
                         <i class="fa fa-list-alt"></i>Pendiente por Facturar</a>
                 </li>
                 <li>
-                    <a href="#" onclick="ListarFacturas();idListado=5;">
+                    <a href="#" onclick="idListado=5;MostrarListadoSegunID();">
                         <i class="fa fa-list"></i>Historial de Facturas</a>
                 </li>
                 <li>
@@ -88,12 +88,12 @@ $css->PageInit($myTitulo);
                         <i class="fa fa-server"></i>Facturación Electrónica</a>
                 </li>
                 <li>
-                    <a href="#" onclick="ListarRIPS();idListado=6;">
+                    <a href="#" onclick="idListado=6;MostrarListadoSegunID();">
                         <i class="fa fa-dashboard"></i>RIPS Generados</a>
                 </li>
                 
                 <li>
-                    <a href="#" onclick="ListarLiquidacionColaboradores();idListado=7;">
+                    <a href="#" onclick="idListado=7;MostrarListadoSegunID();">
                         <i class="fa fa-users"></i>Liquidacion Colaboradores</a>
                 </li>
                 
@@ -216,8 +216,24 @@ $css->PageInit($myTitulo);
             
             $css->CrearDiv("", "col-md-10", "left", 1, 1);
                       
-            $css->CrearDiv("DivMensajes", "col-md-4", "left", 1, 1);
+            $css->CrearDiv("DivMensajes", "col-md-2", "left", 1, 1);
             
+            $css->CerrarDiv();
+            $css->CrearDiv("div_filtro_mipres", "col-md-2", "left", 1, 1);
+                $css->select("cmb_estado_mipres", "form-control", "cmb_estado_mipres", "Estado Mipres", "", "onchange=MostrarListadoSegunID()", "");
+                    $css->option("", "", "", "", "", "");
+                        print("Todos");
+                    $css->Coption();
+                    $css->option("", "", "", "0", "", "");
+                        print("Anulados");
+                    $css->Coption();
+                    $css->option("", "", "", "1", "", "");
+                        print("Activos");
+                    $css->Coption();
+                    $css->option("", "", "", "2", "", "");
+                        print("Procesados");
+                    $css->Coption();
+                $css->Cselect();    
             $css->CerrarDiv();
             $css->CrearDiv("", "col-md-2", "right", 1, 1); 
                 

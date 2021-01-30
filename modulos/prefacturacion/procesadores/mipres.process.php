@@ -149,6 +149,94 @@ if( !empty($_REQUEST["Accion"]) ){
             
         break;//Fin caso 5
         
+        case 6: //Entregar Mipres
+            
+            //$empresa_id=$obCon->normalizar($_REQUEST["empresa_id"]);
+            $empresa_id=1;
+            $datos_empresa=$obCon->DevuelveValores("empresapro", "ID", $empresa_id);
+            $db=$datos_empresa["db"];            
+            $token_consultas=$obCon->normalizar($_REQUEST["token_consultas"]);
+            $mipres_id=$obCon->normalizar($_REQUEST["mipres_id"]);
+            
+            $mipres_cantidad_entregada=$obCon->normalizar($_REQUEST["mipres_cantidad_entregada"]);
+            $mipres_fecha_real_entrega=$obCon->normalizar($_REQUEST["mipres_fecha_real_entrega"]);
+            $mipres_tipo_documento_recibe=$obCon->normalizar($_REQUEST["mipres_tipo_documento_recibe"]);
+            $mipres_identificacion_recibe=$obCon->normalizar($_REQUEST["mipres_identificacion_recibe"]);
+            $mipres_parentesco=$obCon->normalizar($_REQUEST["mipres_parentesco"]);
+            $mipres_nombre_recibe=$obCon->normalizar($_REQUEST["mipres_nombre_recibe"]);
+            $mipres_causas_no_entrega=$obCon->normalizar($_REQUEST["mipres_causas_no_entrega"]);
+            
+            if(!is_numeric($mipres_cantidad_entregada) or $mipres_cantidad_entregada<1){
+                exit("E1;El campo cantidad entregada debe ser un numero mayor a cero;mipres_cantidad_entregada");
+            }
+            if(!is_numeric($mipres_identificacion_recibe) or $mipres_identificacion_recibe<1){
+                exit("E1;El campo cantidad identificacion de quien recibe debe ser un numero mayor a cero;mipres_identificacion_recibe");
+            }
+            
+            if($mipres_fecha_real_entrega==''){
+                exit("E1;El campo fecha de entrega no puede estar vacío;mipres_fecha_real_entrega");
+            }
+            
+            if($mipres_tipo_documento_recibe==''){
+                exit("E1;El campo tipo de documento de quien entrega no puede estar vacío;mipres_tipo_documento_recibe");
+            }
+            
+            if($mipres_nombre_recibe==''){
+                exit("E1;El campo nombre de quien recibe no puede estar vacío;mipres_nombre_recibe");
+            }
+            
+            $respuesta=$obCon->entregar_mipres_x_id($datos_empresa, $mipres_id, $token_consultas,$mipres_cantidad_entregada,$mipres_identificacion_recibe,$mipres_fecha_real_entrega,$mipres_tipo_documento_recibe,$mipres_causas_no_entrega,$idUser);
+            
+            if(isset($respuesta["OK"])){
+                $idEntrega=$respuesta["IdEntrega"];
+                $sql="UPDATE prefactura_paciente SET reponsable_tipo_documento='$mipres_tipo_documento_recibe',reponsable_identificacion='$mipres_identificacion_recibe',responsable_parentesco='$mipres_parentesco',responsable_nombre='$mipres_nombre_recibe'";
+                exit("OK;Registro Entregado con el id: $idEntrega;$idEntrega");
+            }else{
+                print_r($respuesta);
+            }
+            
+        break;//Fin caso 6
+        
+        case 7: //Anular programacion Mipres
+            
+            //$empresa_id=$obCon->normalizar($_REQUEST["empresa_id"]);
+            $empresa_id=1;
+            $datos_empresa=$obCon->DevuelveValores("empresapro", "ID", $empresa_id);
+            $db=$datos_empresa["db"];            
+            $token_consultas=$obCon->normalizar($_REQUEST["token_consultas"]);
+            $programacion_id=$obCon->normalizar($_REQUEST["programacion_id"]);
+            
+            $respuesta=$obCon->anular_programacion_mipres($datos_empresa, $programacion_id, $token_consultas,$idUser);
+            
+            if(isset($respuesta["OK"])){
+                $mensaje=$respuesta["Mensaje"];
+                exit("OK;$mensaje");
+            }else{
+                print_r($respuesta);
+            }
+            
+        break;//Fin caso 7
+        
+        case 8: //Anular entrega Mipres
+            
+            //$empresa_id=$obCon->normalizar($_REQUEST["empresa_id"]);
+            $empresa_id=1;
+            $datos_empresa=$obCon->DevuelveValores("empresapro", "ID", $empresa_id);
+            $db=$datos_empresa["db"];            
+            $token_consultas=$obCon->normalizar($_REQUEST["token_consultas"]);
+            $entrega_id=$obCon->normalizar($_REQUEST["entrega_id"]);
+            
+            $respuesta=$obCon->anular_entrega_mipres($datos_empresa, $entrega_id, $token_consultas,$idUser);
+            
+            if(isset($respuesta["OK"])){
+                $mensaje=$respuesta["Mensaje"];
+                exit("OK;$mensaje");
+            }else{
+                print_r($respuesta);
+            }
+            
+        break;//Fin caso 8
+        
            
         
     }

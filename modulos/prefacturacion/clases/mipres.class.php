@@ -117,7 +117,7 @@ class MiPres extends conexion{
         $fecha=date("Y-m-d H:i:s");
         if(isset($datos_obtenidos[0]["Id"])){
             $idProgramacion=$datos_obtenidos[0]["IdProgramacion"];
-            $Datos["ID"]=$ID;
+            $Datos["mipres_id"]=$ID;
             $Datos["IdProgramacion"]=$idProgramacion;
             $Datos["user_id"]=$idUser;
             $sql=$this->getSQLInsert("$db.mipres_registro_programacion", $Datos);            
@@ -131,7 +131,7 @@ class MiPres extends conexion{
         
         if(isset($datos_obtenidos["Id"])){
             $idProgramacion=$datos_obtenidos["IdProgramacion"];
-            $Datos["ID"]=$ID;
+            $Datos["mipres_id"]=$ID;
             $Datos["IdProgramacion"]=$idProgramacion;
             $Datos["user_id"]=$idUser;
             $sql=$this->getSQLInsert("$db.mipres_registro_programacion", $Datos);            
@@ -160,6 +160,113 @@ class MiPres extends conexion{
           }'; 
         return $json;
         
+    }
+    
+    public function entregar_mipres_x_id($datos_empresa,$ID,$token_consultas,$mipres_cantidad_entregada,$mipres_identificacion_recibe,$mipres_fecha_real_entrega,$mipres_tipo_documento_recibe,$mipres_causas_no_entrega,$idUser) {
+        $db=$datos_empresa["db"];
+        
+        $datos_mipres=$this->DevuelveValores("$db.mipres_programacion", "ID", $ID);
+        if($mipres_cantidad_entregada>$datos_mipres["CantTotAEntregar"]){
+            exit("E1;La cantidad entregada no puede ser mayor a la cantidad por entregar");
+        }
+        
+        if($mipres_cantidad_entregada<$datos_mipres["CantTotAEntregar"] and $mipres_causas_no_entrega==''){
+            exit("E1;La cantidad entregada es menor a la cantidad por entrega, debe seleccionar una causa de no entrega");
+        }
+        
+        $datos_servidor=$this->DevuelveValores("servidores", "ID", 2003);//aqui se encuentra la url para entregar
+        $method="PUT";
+        $url=$datos_servidor["IP"].$datos_empresa["NIT"]."/".$token_consultas;
+        $Token=$datos_empresa["TokenAPIMipres"];
+        $data=$this->json_entregar_mipres_x_id($ID, $datos_mipres["CodSerTecAEntregar"], $datos_mipres["CantTotAEntregar"], $mipres_cantidad_entregada, $mipres_causas_no_entrega, $mipres_fecha_real_entrega, "", $mipres_tipo_documento_recibe, $mipres_identificacion_recibe);
+        $respuesta=$this->callAPI($method, $url, $Token, $data);
+        $datos_obtenidos= json_decode($respuesta,1);
+        
+        $fecha=date("Y-m-d H:i:s");
+        if(isset($datos_obtenidos[0]["Id"])){
+            $idEntrega=$datos_obtenidos[0]["IdEntrega"];
+            $Datos["mipres_id"]=$ID;
+            $Datos["IdEntrega"]=$idEntrega;
+            $Datos["user_id"]=$idUser;
+            $sql=$this->getSQLInsert("$db.mipres_registro_entrega", $Datos);            
+            $this->Query($sql);            
+            $retorno["OK"]=1;
+            $retorno["IdEntrega"]=$idEntrega;
+            return($retorno);
+        }
+        
+        if(isset($datos_obtenidos["Id"])){
+            $idEntrega=$datos_obtenidos["IdEntrega"];
+            $Datos["mipres_id"]=$ID;
+            $Datos["IdEntrega"]=$idEntrega;
+            $Datos["user_id"]=$idUser;
+            $sql=$this->getSQLInsert("$db.mipres_registro_entrega", $Datos);            
+            $this->Query($sql);            
+            $retorno["OK"]=1;
+            $retorno["IdEntrega"]=$idEntrega;
+            return($retorno);
+        }
+        
+        return($datos_obtenidos);
+        
+    }
+    
+    public function json_entregar_mipres_x_id($ID,$CodSerTecEntregado,$CantTotEntregada,$EntTotal,$CausaNoEntrega,$FecEntrega,$NoLote,$TipoIDRecibe,$NoIDRecibe) {
+        
+        $json='{
+            "ID": '.$ID.',
+            "CodSerTecEntregado": "'.$CodSerTecEntregado.'",
+            "CantTotEntregada": "'.$CantTotEntregada.'",
+            "EntTotal": '.$EntTotal.',
+            "CausaNoEntrega": '.$CausaNoEntrega.',
+            "FecEntrega": "'.$FecEntrega.'",
+            "NoLote": "'.$NoLote.'",
+            "TipoIDRecibe": "'.$TipoIDRecibe.'",
+            "NoIDRecibe": "'.$NoIDRecibe.'"
+          }'; 
+        return $json;
+        
+    }
+    
+    
+    public function anular_programacion_mipres($datos_empresa,$programacion_id,$token_consultas,$idUser) {
+                
+        $datos_servidor=$this->DevuelveValores("servidores", "ID", 2004);//aqui se encuentra la url para anular una programacion
+        $method="PUT";
+        $url=$datos_servidor["IP"].$datos_empresa["NIT"]."/".$token_consultas."/".$programacion_id;
+        $Token=$datos_empresa["TokenAPIMipres"];
+        $data="";
+        $respuesta=$this->callAPI($method, $url, $Token, $data);
+        $datos_obtenidos= json_decode($respuesta,1);
+        $fecha=date("Y-m-d H:i:s");
+        if(isset($datos_obtenidos["Mensaje"])){
+            $sql="UPDATE mipres_registro_programacion SET user_id_anulacion='$idUser', fecha_anulacion='$fecha' WHERE IdProgramacion='$programacion_id'";
+            $this->Query($sql);
+            $retorno["OK"]=1;
+            $retorno["Mensaje"]=$datos_obtenidos["Mensaje"];
+            return($retorno);
+        }
+                
+    }
+    
+    public function anular_entrega_mipres($datos_empresa,$entrega_id,$token_consultas,$idUser) {
+                
+        $datos_servidor=$this->DevuelveValores("servidores", "ID", 2005);//aqui se encuentra la url para anular una programacion
+        $method="PUT";
+        $url=$datos_servidor["IP"].$datos_empresa["NIT"]."/".$token_consultas."/".$entrega_id;
+        $Token=$datos_empresa["TokenAPIMipres"];
+        $data="";
+        $respuesta=$this->callAPI($method, $url, $Token, $data);
+        $datos_obtenidos= json_decode($respuesta,1);
+        $fecha=date("Y-m-d H:i:s");
+        if(isset($datos_obtenidos["Mensaje"])){
+            $sql="UPDATE mipres_registro_entrega SET user_id_anulacion='$idUser', fecha_anulacion='$fecha' WHERE IdEntrega='$entrega_id'";
+            $this->Query($sql);
+            $retorno["OK"]=1;
+            $retorno["Mensaje"]=$datos_obtenidos["Mensaje"];
+            return($retorno);
+        }
+                
     }
     
     /**

@@ -42,6 +42,7 @@ function AbreModal(idModal){
 }
 
 function MostrarListadoSegunID(){
+    OcultaXID('div_filtro_mipres');
     if(idListado==1){
         ListarPacientes();
     }
@@ -76,6 +77,7 @@ function MostrarListadoSegunID(){
     }
     
     if(idListado==11){
+        MuestraOcultaXID('div_filtro_mipres');
         ListarProgramacionMipres();
     }
     
