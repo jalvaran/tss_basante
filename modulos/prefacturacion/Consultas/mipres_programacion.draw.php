@@ -61,8 +61,8 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             $ResultadosTotales = $totales['Items'];
                
             $colsQuery="ID,IDDireccionamiento,NoPrescripcion,TipoTec,ConTec,TipoIDPaciente,NoIDPaciente,NoEntrega,NoSubEntrega,FecMaxEnt,TipoIDProv,NoIDProv,CodMunEnt,CantTotAEntregar,DirPaciente,CodSerTecAEntregar,NoIDEPS,CodEPS,FecDireccionamiento,EstDireccionamiento,FecAnulacion,user_id ";
-            $colsSubQuery=",(SELECT IdProgramacion FROM mipres_registro_programacion t2 WHERE t2.mipres_id=t1.ID ORDER BY ID DESC LIMIT 1) as idProgramacion ";
-            $colsSubQuery.=",(SELECT IdEntrega FROM mipres_registro_entrega t3 WHERE t3.mipres_id=t1.ID ORDER BY ID DESC LIMIT 1) as idEntrega ";
+            $colsSubQuery=",(SELECT IdProgramacion FROM mipres_registro_programacion t2 WHERE t2.mipres_id=t1.ID and user_id_anulacion='' ORDER BY ID DESC LIMIT 1) as idProgramacion ";
+            $colsSubQuery.=",(SELECT IdEntrega FROM mipres_registro_entrega t3 WHERE t3.mipres_id=t1.ID and user_id_anulacion='' ORDER BY ID DESC LIMIT 1) as idEntrega ";
             $sql="SELECT $colsQuery  $colsSubQuery              
                   FROM $tabla t1 $Condicion ";
             $statement=$sql;
