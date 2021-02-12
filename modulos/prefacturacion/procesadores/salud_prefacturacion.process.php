@@ -84,7 +84,7 @@ if( !empty($_REQUEST["Accion"]) ){
             }
             
             foreach ($Datos as $key => $value) {
-                if($value=='' and $key<>'SegundoNombre' and $key<>'Correo'){
+                if($value=='' and $key<>'SegundoNombre' and $key<>'SegundoApellido' and $key<>'Correo'){
                     exit("E1;El campo $key no puede estar vacío;$key");
                 }
             }

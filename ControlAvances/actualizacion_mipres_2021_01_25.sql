@@ -19,6 +19,14 @@ ADD `CodSedeProv` varchar(30) NOT NULL AFTER `CodigoPrestadora`;
 
 UPDATE `empresapro` SET `CodSedeProv` = 'PROV004612' WHERE `idEmpresaPro` = '1';
 
+DROP TABLE IF EXISTS `mipres_causas_no_entrega`;
+CREATE TABLE `mipres_causas_no_entrega` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `causa` varchar(45) COLLATE utf8_spanish_ci NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+
 DROP TABLE IF EXISTS `mipres_programacion`;
 CREATE TABLE `mipres_programacion` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -57,9 +65,7 @@ CREATE TABLE `mipres_programacion` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
-
-
-
+DROP TABLE IF EXISTS `mipres_registro_entrega`;
 CREATE TABLE `mipres_registro_entrega` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `mipres_id` bigint(20) NOT NULL,
@@ -73,6 +79,7 @@ CREATE TABLE `mipres_registro_entrega` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 
 
+DROP TABLE IF EXISTS `mipres_registro_programacion`;
 CREATE TABLE `mipres_registro_programacion` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `mipres_id` bigint(20) NOT NULL,
@@ -84,6 +91,7 @@ CREATE TABLE `mipres_registro_programacion` (
   PRIMARY KEY (`ID`),
   KEY `mipres_id` (`mipres_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
 ALTER TABLE `prefactura_paciente`
 ADD `reponsable_tipo_documento` varchar(2) COLLATE 'utf8_spanish_ci' NOT NULL COMMENT '(CC,CE,PA,RC,TI,AS,MS)' AFTER `Correo`,
 ADD `reponsable_identificacion` bigint NOT NULL COMMENT 'Identificacion del responsable del paciente' AFTER `reponsable_tipo_documento`,

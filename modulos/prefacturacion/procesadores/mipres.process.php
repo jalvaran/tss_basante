@@ -46,7 +46,7 @@ if( !empty($_REQUEST["Accion"]) ){
             $respuesta=$obCon->callAPI($method, $url, $Token, $data);
             $datos_obtenidos= json_decode($respuesta,1);
             if(isset($datos_obtenidos[0]["ID"])){
-                $obCon->guardar_programacion_mipres($db, $datos_obtenidos, $idUser);
+                $obCon->guardar_direccionamiento_mipres($db, $datos_obtenidos, $idUser);
                 print("OK;Datos Guardados");
             }else{
                 print("OK;No hay datos en la Fecha $fecha");
@@ -108,7 +108,7 @@ if( !empty($_REQUEST["Accion"]) ){
             $respuesta=$obCon->callAPI($method, $url, $Token, $data);
             $datos_obtenidos= json_decode($respuesta,1);
             if(isset($datos_obtenidos[0]["ID"])){
-                $obCon->guardar_programacion_mipres($db, $datos_obtenidos, $idUser);  
+                $obCon->guardar_direccionamiento_mipres($db, $datos_obtenidos, $idUser);  
             }
             
             $proxima_consulta=$obCon->sumar_dias_fecha($fecha_consulta, 1);
@@ -142,7 +142,8 @@ if( !empty($_REQUEST["Accion"]) ){
             
             if(isset($respuesta["OK"])){
                 $idProgramacion=$respuesta["IdProgramacion"];
-                exit("OK;Registro Programado con el id: $idProgramacion;$idProgramacion");
+                $NoPrescripcion=$respuesta["NoPrescripcion"];
+                exit("OK;Registro Programado con el id: $idProgramacion;$idProgramacion;$NoPrescripcion");
             }else{
                 print_r($respuesta);
             }
@@ -189,8 +190,10 @@ if( !empty($_REQUEST["Accion"]) ){
             
             if(isset($respuesta["OK"])){
                 $idEntrega=$respuesta["IdEntrega"];
-                $sql="UPDATE prefactura_paciente SET reponsable_tipo_documento='$mipres_tipo_documento_recibe',reponsable_identificacion='$mipres_identificacion_recibe',responsable_parentesco='$mipres_parentesco',responsable_nombre='$mipres_nombre_recibe'";
-                exit("OK;Registro Entregado con el id: $idEntrega;$idEntrega");
+                $NoPrescripcion=$respuesta["NoPrescripcion"];
+                $sql="UPDATE $db.prefactura_paciente SET reponsable_tipo_documento='$mipres_tipo_documento_recibe',reponsable_identificacion='$mipres_identificacion_recibe',responsable_parentesco='$mipres_parentesco',responsable_nombre='$mipres_nombre_recibe'";
+                $obCon->Query($sql);
+                exit("OK;Registro Entregado con el id: $idEntrega;$idEntrega;$NoPrescripcion");
             }else{
                 print_r($respuesta);
             }
@@ -210,7 +213,8 @@ if( !empty($_REQUEST["Accion"]) ){
             
             if(isset($respuesta["OK"])){
                 $mensaje=$respuesta["Mensaje"];
-                exit("OK;$mensaje");
+                $NoPrescripcion=$respuesta["NoPrescripcion"];
+                exit("OK;$mensaje;$NoPrescripcion");
             }else{
                 print_r($respuesta);
             }
@@ -230,14 +234,237 @@ if( !empty($_REQUEST["Accion"]) ){
             
             if(isset($respuesta["OK"])){
                 $mensaje=$respuesta["Mensaje"];
-                exit("OK;$mensaje");
+                $NoPrescripcion=$respuesta["NoPrescripcion"];
+                exit("OK;$mensaje;$NoPrescripcion");
             }else{
                 print_r($respuesta);
             }
             
         break;//Fin caso 8
         
-           
+        case 9: //recibe el rango de fechas y lo valida para consultar el direccionamiento mipres
+            
+            $FechaInicialMiPres=$obCon->normalizar($_REQUEST["FechaInicialMiPres"]);
+            $FechaFinalMiPres=$obCon->normalizar($_REQUEST["FechaFinalMiPres"]);
+            
+            if($FechaInicialMiPres==''){
+                exit("E1;La fecha inicial no puede estar vacía;FechaInicialMiPres");
+            }
+            
+            if($FechaFinalMiPres==''){
+                exit("E1;La fecha final no puede estar vacía;FechaFinalMiPres");
+            }
+            
+            
+            $ValidarFechaInicialMiPres= strtotime($FechaInicialMiPres);
+            $ValidarFechaFinalMiPres= strtotime($FechaFinalMiPres);
+            
+            if($ValidarFechaInicialMiPres>$ValidarFechaFinalMiPres){
+                exit("E1;La fecha inicial no puede ser mayor a la final;FechaFinalMiPres");
+            }
+            
+            $total_dias = $obCon->obtener_dias_diferencia_rango_fecha($FechaInicialMiPres, $FechaFinalMiPres);
+            $total_dias=$total_dias+1;
+            print("OK;Fechas Validadas;$FechaInicialMiPres;$FechaFinalMiPres;$FechaInicialMiPres;$total_dias");
+            
+        break;//Fin caso 9 
+        
+        case 10://obtenga las entregas mi pres de acuerdo a un rango de fechas
+                                
+            
+            $empresa_id=1;
+            $datos_empresa=$obCon->DevuelveValores("empresapro", "ID", $empresa_id);
+            $db=$datos_empresa["db"];
+            $datos_servidor=$obCon->DevuelveValores("servidores", "ID", 2006);//aqui se encuentra la url para obtener las entregas por fecha
+            
+            $token_consultas=$obCon->normalizar($_REQUEST["token_consultas"]);
+            
+            $fecha_inicial=$obCon->normalizar($_REQUEST["fecha_inicial"]);
+            $fecha_final=$obCon->normalizar($_REQUEST["fecha_final"]);
+            $fecha_consulta=$obCon->normalizar($_REQUEST["fecha_consulta"]);
+            $total_dias=$obCon->normalizar($_REQUEST["total_dias"]);
+            if($fecha_consulta=='undefined' or $fecha_consulta==''){
+                exit("E1;La fecha de consulta solicitada está vacía");
+            }
+            $method="GET";
+            $url=$datos_servidor["IP"].$datos_empresa["NIT"]."/".$token_consultas."/".$fecha_consulta;
+            $Token=$datos_empresa["TokenAPIMipres"];
+            $data="";
+            
+            $respuesta=$obCon->callAPI($method, $url, $Token, $data);
+            $datos_obtenidos= json_decode($respuesta,1);
+            if(isset($datos_obtenidos[0]["ID"])){
+                $obCon->guardar_entrega_mipres($db, $datos_obtenidos, $idUser);  
+            }
+            
+            $proxima_consulta=$obCon->sumar_dias_fecha($fecha_consulta, 1);
+            //print("Proxima consulta $proxima_consulta");
+            $ValidarFechaInicialMiPres= strtotime($proxima_consulta);
+            $ValidarFechaFinalMiPres= strtotime($fecha_final);
+            if($ValidarFechaInicialMiPres>$ValidarFechaFinalMiPres){
+                exit("FIN;Fueron Obtenidas todas las fechas solicitadas");
+            }
+            
+            $difencia_proxima_consulta=$obCon->obtener_dias_diferencia_rango_fecha($proxima_consulta, $fecha_final);
+            $difencia_proxima_consulta=$difencia_proxima_consulta+1;
+            //print("<br>diferencia: ".$difencia_proxima_consulta);
+            $porcentaje=round((100/$total_dias)*$difencia_proxima_consulta);
+            $porcentaje=100-$porcentaje;
+            //print("<br>porcentaje: ".$porcentaje);
+            exit("OK;Datos de la fecha $fecha_consulta Guardados;$proxima_consulta;$porcentaje;$fecha_consulta consultado");
+            
+        break;//Fin caso 10   
+        
+        case 11: //recibe el rango de fechas y lo valida para consultar la programacion mipres
+            
+            $FechaInicialMiPres=$obCon->normalizar($_REQUEST["FechaInicialMiPres"]);
+            $FechaFinalMiPres=$obCon->normalizar($_REQUEST["FechaFinalMiPres"]);
+            
+            if($FechaInicialMiPres==''){
+                exit("E1;La fecha inicial no puede estar vacía;FechaInicialMiPres");
+            }
+            
+            if($FechaFinalMiPres==''){
+                exit("E1;La fecha final no puede estar vacía;FechaFinalMiPres");
+            }
+            
+            
+            $ValidarFechaInicialMiPres= strtotime($FechaInicialMiPres);
+            $ValidarFechaFinalMiPres= strtotime($FechaFinalMiPres);
+            
+            if($ValidarFechaInicialMiPres>$ValidarFechaFinalMiPres){
+                exit("E1;La fecha inicial no puede ser mayor a la final;FechaFinalMiPres");
+            }
+            
+            $total_dias = $obCon->obtener_dias_diferencia_rango_fecha($FechaInicialMiPres, $FechaFinalMiPres);
+            $total_dias=$total_dias+1;
+            print("OK;Fechas Validadas;$FechaInicialMiPres;$FechaFinalMiPres;$FechaInicialMiPres;$total_dias");
+            
+        break;//Fin caso 11
+        
+        case 12://obtenga la programacion mipres de acuerdo a un rango de fechas
+                                
+            
+            $empresa_id=1;
+            $datos_empresa=$obCon->DevuelveValores("empresapro", "ID", $empresa_id);
+            $db=$datos_empresa["db"];
+            $datos_servidor=$obCon->DevuelveValores("servidores", "ID", 2007);//aqui se encuentra la url para obtener las entregas por fecha
+            
+            $token_consultas=$obCon->normalizar($_REQUEST["token_consultas"]);
+            
+            $fecha_inicial=$obCon->normalizar($_REQUEST["fecha_inicial"]);
+            $fecha_final=$obCon->normalizar($_REQUEST["fecha_final"]);
+            $fecha_consulta=$obCon->normalizar($_REQUEST["fecha_consulta"]);
+            $total_dias=$obCon->normalizar($_REQUEST["total_dias"]);
+            if($fecha_consulta=='undefined' or $fecha_consulta==''){
+                exit("E1;La fecha de consulta solicitada está vacía");
+            }
+            $method="GET";
+            $url=$datos_servidor["IP"].$datos_empresa["NIT"]."/".$token_consultas."/".$fecha_consulta;
+            $Token=$datos_empresa["TokenAPIMipres"];
+            $data="";
+            
+            $respuesta=$obCon->callAPI($method, $url, $Token, $data);
+            $datos_obtenidos= json_decode($respuesta,1);
+            if(isset($datos_obtenidos[0]["ID"])){
+                $obCon->guardar_programacion_mipres($db, $datos_obtenidos, $idUser);  
+            }
+            
+            $proxima_consulta=$obCon->sumar_dias_fecha($fecha_consulta, 1);
+            //print("Proxima consulta $proxima_consulta");
+            $ValidarFechaInicialMiPres= strtotime($proxima_consulta);
+            $ValidarFechaFinalMiPres= strtotime($fecha_final);
+            if($ValidarFechaInicialMiPres>$ValidarFechaFinalMiPres){
+                exit("FIN;Fueron Obtenidas todas las fechas solicitadas");
+            }
+            
+            $difencia_proxima_consulta=$obCon->obtener_dias_diferencia_rango_fecha($proxima_consulta, $fecha_final);
+            $difencia_proxima_consulta=$difencia_proxima_consulta+1;
+            //print("<br>diferencia: ".$difencia_proxima_consulta);
+            $porcentaje=round((100/$total_dias)*$difencia_proxima_consulta);
+            $porcentaje=100-$porcentaje;
+            //print("<br>porcentaje: ".$porcentaje);
+            exit("OK;Datos de la fecha $fecha_consulta Guardados;$proxima_consulta;$porcentaje;$fecha_consulta consultado");
+            
+        break;//Fin caso 12
+        
+        case 13://obtenga el direccionamiento mi pres de acuerdo por NoPrescripcion
+                                
+            
+            $empresa_id=1;
+            $datos_empresa=$obCon->DevuelveValores("empresapro", "ID", $empresa_id);
+            $db=$datos_empresa["db"];
+            $datos_servidor=$obCon->DevuelveValores("servidores", "ID", 2008);//aqui se encuentra la url para obtener las entregas por fecha
+            
+            $token_consultas=$obCon->normalizar($_REQUEST["token_consultas"]);
+            $NoPrescripcion=$obCon->normalizar($_REQUEST["NoPrescripcion"]);
+            
+            $method="GET";
+            $url=$datos_servidor["IP"].$datos_empresa["NIT"]."/".$token_consultas."/".$NoPrescripcion;
+            $Token=$datos_empresa["TokenAPIMipres"];
+            $data="";
+            
+            $respuesta=$obCon->callAPI($method, $url, $Token, $data);
+            $datos_obtenidos= json_decode($respuesta,1);
+            if(isset($datos_obtenidos[0]["ID"])){
+                $obCon->guardar_direccionamiento_mipres($db, $datos_obtenidos, $idUser);  
+            }
+            
+            exit("OK;Direccionamiento X Prescipcion $NoPrescripcion Guardado;$NoPrescripcion");
+            
+        break;//Fin caso 13
+        
+        case 14://obtenga la programacion mi pres de acuerdo al No. Prescripcion
+                                
+            
+            $empresa_id=1;
+            $datos_empresa=$obCon->DevuelveValores("empresapro", "ID", $empresa_id);
+            $db=$datos_empresa["db"];
+            $datos_servidor=$obCon->DevuelveValores("servidores", "ID", 2009);//aqui se encuentra la url para obtener la programacion por numero de prescipcion
+            
+            $token_consultas=$obCon->normalizar($_REQUEST["token_consultas"]);
+            $NoPrescripcion=$obCon->normalizar($_REQUEST["NoPrescripcion"]);
+            
+            $method="GET";
+            $url=$datos_servidor["IP"].$datos_empresa["NIT"]."/".$token_consultas."/".$NoPrescripcion;
+            $Token=$datos_empresa["TokenAPIMipres"];
+            $data="";
+            
+            $respuesta=$obCon->callAPI($method, $url, $Token, $data);
+            $datos_obtenidos= json_decode($respuesta,1);
+            if(isset($datos_obtenidos[0]["ID"])){
+                $obCon->guardar_programacion_mipres($db, $datos_obtenidos, $idUser);  
+            }
+            
+            exit("OK;Programacion X Prescipcion $NoPrescripcion Guardada;$NoPrescripcion");
+            
+        break;//Fin caso 14
+        
+        case 15://obtenga las entregas mi pres de acuerdo al No. Prescripcion
+                                
+            
+            $empresa_id=1;
+            $datos_empresa=$obCon->DevuelveValores("empresapro", "ID", $empresa_id);
+            $db=$datos_empresa["db"];
+            $datos_servidor=$obCon->DevuelveValores("servidores", "ID", 2010);//aqui se encuentra la url para obtener la programacion por numero de prescipcion
+            
+            $token_consultas=$obCon->normalizar($_REQUEST["token_consultas"]);
+            $NoPrescripcion=$obCon->normalizar($_REQUEST["NoPrescripcion"]);
+            
+            $method="GET";
+            $url=$datos_servidor["IP"].$datos_empresa["NIT"]."/".$token_consultas."/".$NoPrescripcion;
+            $Token=$datos_empresa["TokenAPIMipres"];
+            $data="";
+            
+            $respuesta=$obCon->callAPI($method, $url, $Token, $data);
+            $datos_obtenidos= json_decode($respuesta,1);
+            if(isset($datos_obtenidos[0]["ID"])){
+                $obCon->guardar_entrega_mipres($db, $datos_obtenidos, $idUser);  
+            }
+            
+            exit("OK;Entrega X Prescipcion $NoPrescripcion Guardada;$NoPrescripcion");
+            
+        break;//Fin caso 15
         
     }
     

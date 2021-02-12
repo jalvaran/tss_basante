@@ -17,10 +17,10 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
     
     switch($_REQUEST["Accion"]) {
        
-        case 1://dibuja el listado de la programacion mipres
+        case 1://dibuja el listado del direccionamiento mipres
                         
             $empresa_id=1;
-            $tabla="mipres_programacion";
+            $tabla="mipres_direccionamiento";
             $Limit=20;
             $Page=$obCon->normalizar($_REQUEST["Page"]);
             $NumPage=$obCon->normalizar($_REQUEST["Page"]);
@@ -61,29 +61,29 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             $ResultadosTotales = $totales['Items'];
                
             $colsQuery="ID,IDDireccionamiento,NoPrescripcion,TipoTec,ConTec,TipoIDPaciente,NoIDPaciente,NoEntrega,NoSubEntrega,FecMaxEnt,TipoIDProv,NoIDProv,CodMunEnt,CantTotAEntregar,DirPaciente,CodSerTecAEntregar,NoIDEPS,CodEPS,FecDireccionamiento,EstDireccionamiento,FecAnulacion,user_id ";
-            $colsSubQuery=",(SELECT IdProgramacion FROM mipres_registro_programacion t2 WHERE t2.mipres_id=t1.ID and user_id_anulacion='' ORDER BY ID DESC LIMIT 1) as idProgramacion ";
-            $colsSubQuery.=",(SELECT IdEntrega FROM mipres_registro_entrega t3 WHERE t3.mipres_id=t1.ID and user_id_anulacion='' ORDER BY ID DESC LIMIT 1) as idEntrega ";
+            $colsSubQuery=",(SELECT t2.estado_direccionamiento FROM mipres_estados_direccionamiento t2 WHERE t2.ID=t1.EstDireccionamiento LIMIT 1) as nombre_estado ";
+           
             $sql="SELECT $colsQuery  $colsSubQuery              
                   FROM $tabla t1 $Condicion ";
             $statement=$sql;
             
-            $limit_condition=" ORDER BY EstDireccionamiento ASC,ID DESC LIMIT $PuntoInicio,$Limit;";
+            $limit_condition=" ORDER BY ID DESC LIMIT $PuntoInicio,$Limit;";
             
             $sql.=$limit_condition;
             
             $Consulta=$obCon->Query($sql);
             
             
-            $css->CrearTitulo("MiPres", "verde");
+            $css->CrearTitulo("MiPres Direccionamiento", "verde");
             
             
             $statement= base64_encode(urlencode($statement));
-            $colsQuery= base64_encode(urlencode($colsQuery.",IdProgramacion,idEntrega"));
+            $colsQuery= base64_encode(urlencode($colsQuery.",nombre_estado"));
                     
             $css->div("", "box-body no-padding", "", "", "", "", "");
                 $css->div("", "mailbox-controls", "", "", "", "", "");
                     $CondicionURL= urlencode($Condicion);
-                    $link='../../general/procesadores/GeneradorCSV.process.php?Opcion=3&empresa_id='.$empresa_id.'&tb='.$tabla.'&st='.$statement.'&colsQuery='.$colsQuery;
+                    $link='../../general/procesadores/ExportarExcel.process.php?Accion=1&empresa_id='.$empresa_id.'&tb='.$tabla.'&st='.$statement.'&cols='.$colsQuery;
                     $css->div("", "row", "", "", "", "", "");
                         $css->CrearDiv("", "col-md-2", "left", 1, 1); 
                             $css->div("", "pull-left", "", "", "", "", "");
@@ -124,6 +124,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                             print("<strong>Consultar MiPres</strong>");
                             $css->CrearBotonEvento("btn_obtener_direccionamiento_mipres", "Obtener", 1, "onclick", "iniciar_consulta_mipres()", "naranja");
                         $css->Cdiv();
+                        
                         $css->CrearDiv("", "col-md-2", "left", 1, 1); 
                         $porcentaje=0;
                         $leyenda_barra="";
@@ -180,10 +181,8 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                     print('<table class="table table-hover table-striped">');
                         print('<tbody>');
                             print('<tr>');
-                                print("<th>Programar</th>");
-                                print("<th>Entregar</th>");
-                                print("<th>Anular Programación</th>");
-                                print("<th>Anular Entrega</th>");
+                                print("<th>Programar</th>");                                
+                                //print("<th>Anular</th>");                               
                                 print("<th>ID</th>");
                                 print("<th>IDDireccionamiento</th>");
                                 print("<th>NoPrescripcion</th>");                                
@@ -211,8 +210,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                             while($RegistrosTabla=$obCon->FetchAssoc($Consulta)){
                                 
                                 $idItem=$RegistrosTabla["ID"];
-                                $programacion_id=$RegistrosTabla["idProgramacion"];
-                                $entrega_id=$RegistrosTabla["idEntrega"];
+                                $direccionamiento_id=$RegistrosTabla["IDDireccionamiento"];
                                 print('<tr>');
                                 print("<td style='text-align:center'>");
                                     $disabled="disabled=1";
@@ -222,33 +220,19 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                     print('<button '.$disabled.'  class="btn btn-success fa fa-share" title="Direccionar Autorización" onclick="confirma_programar_mipres(`'.$idItem.'`)" target="_blank" ></button>');
 
                                 print("</td>");
+                                
+                                /*
                                 print("<td style='text-align:center'>");
                                     $disabled="disabled=1";
                                     if($RegistrosTabla["EstDireccionamiento"]==2){
                                         $disabled="";
                                     }
-                                    print('<button '.$disabled.'  class="btn btn-primary fa fa-send" title="Entregar" onclick="frm_entregar_mipres(`'.$idItem.'`)" target="_blank" ></button>');
+                                    print('<button '.$disabled.'  class="btn btn-danger  fa fa-remove" title="Anular Direccionamiento" onclick="confirma_anular_direccionamiento_mipres(`'.$direccionamiento_id.'`)" target="_blank" ></button>');
 
                                 print("</td>");
-                                
-                                print("<td style='text-align:center'>");
-                                    $disabled="disabled=1";
-                                    if($RegistrosTabla["idProgramacion"]>0){
-                                        $disabled="";
-                                    }
-                                    print('<button '.$disabled.'  class="btn btn-warning fa fa-times-circle" title="Anular Programacion" onclick="confirma_anular_programacion_mipres(`'.$programacion_id.'`)" target="_blank" ></button>');
-
-                                print("</td>");
-                                
-                                print("<td style='text-align:center'>");
-                                    $disabled="disabled=1";
-                                    if($RegistrosTabla["idEntrega"]>0){
-                                        $disabled="";
-                                    }
-                                    print('<button '.$disabled.'  class="btn btn-danger  fa fa-remove" title="Anular Entrega" onclick="confirma_anular_entrega_mipres(`'.$entrega_id.'`)" target="_blank" ></button>');
-
-                                print("</td>");
-                                                                   
+                                        
+                                 * 
+                                 */                           
 
                                 print("<td class='mailbox-name'>");
                                     print($RegistrosTabla["ID"]);
@@ -265,16 +249,8 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
                                 print("</td>");
                                 
                                 print("<td class='mailbox-subject text-primary'>");
-                                    if($RegistrosTabla["EstDireccionamiento"]==0){
-                                        $NombreEstado="ANULADO";
-                                    }
-                                    if($RegistrosTabla["EstDireccionamiento"]==1){
-                                        $NombreEstado="ACTIVO";
-                                    }
-                                    if($RegistrosTabla["EstDireccionamiento"]==2){
-                                        $NombreEstado="PROCESADO";
-                                    }
-                                    print("<strong>$NombreEstado</strong>");
+                                    
+                                    print("<strong>".$RegistrosTabla["nombre_estado"]."</strong>");
                                 print("</td>");
                                 
                                 print("<td class='mailbox-subject'>");
@@ -352,7 +328,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
         
         case 2: //dibuja el formulario para entregar un mipres
             $empresa_id=1;
-            $tabla="mipres_programacion";
+            $tabla="mipres_direccionamiento";
             
             $mipres_id=$obCon->normalizar($_REQUEST["mipres_id"]);
             $datos_mipres=$obCon->DevuelveValores($tabla, "ID", $mipres_id);
@@ -480,7 +456,616 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             $css->CerrarTabla();
         break;//fin caso 2
         
+        case 3://dibuja el listado de la programacion mipres
+                        
+            $empresa_id=1;
+            $tabla="mipres_programacion";
+            $Limit=20;
+            $Page=$obCon->normalizar($_REQUEST["Page"]);
+            $NumPage=$obCon->normalizar($_REQUEST["Page"]);
+            if($Page==''){
+                $Page=1;
+                $NumPage=1;
+            }
+            $Busquedas=$obCon->normalizar($_REQUEST["Busquedas"]);
+            $cmb_estado_mipres=$obCon->normalizar($_REQUEST["cmb_estado_mipres"]);
+                        
+            $FechaInicialRangos=$obCon->normalizar($_REQUEST["FechaInicialRangos"]);
+            $FechaFinalRangos=$obCon->normalizar($_REQUEST["FechaFinalRangos"]);
+            
+           
+            $Condicion=" WHERE ID>0 ";
+            
+            if($Busquedas<>''){
+                $Condicion.=" AND ( t1.ID = '$Busquedas' or t1.NoPrescripcion = '$Busquedas' or t1.NoIDPaciente = '$Busquedas' )";
+            }
+            if($FechaInicialRangos<>''){
+                $Condicion.=" AND t1.FecProgramacion>='$FechaInicialRangos 00:00:00'";
+            }
+            if($FechaFinalRangos<>''){
+                $Condicion.=" AND t1.FecProgramacion<='$FechaFinalRangos 23:59:59'";
+            }
+            if($cmb_estado_mipres<>''){
+                $Condicion.=" AND t1.EstProgramacion='$cmb_estado_mipres'";
+            }
+                        
+            
+            $PuntoInicio = ($Page * $Limit) - $Limit;
+            
+            $sql = "SELECT COUNT(*) as Items 
+                   FROM $tabla t1  $Condicion;";
+            
+            $Consulta=$obCon->Query($sql);
+            $totales = $obCon->FetchAssoc($Consulta);
+            $ResultadosTotales = $totales['Items'];
+               
+            $colsQuery="ID,IDProgramacion,NoPrescripcion,TipoTec,ConTec,TipoIDPaciente,NoIDPaciente,NoEntrega,FecMaxEnt,TipoIDSedeProv,NoIDSedeProv,CodSedeProv,CodSerTecAEntregar,CantTotAEntregar,FecProgramacion,EstProgramacion,FecAnulacion,user_id,created ";
+            $colsSubQuery=",(SELECT t2.estado_programacion FROM mipres_estados_programacion t2 WHERE t2.ID=t1.EstProgramacion LIMIT 1) as nombre_estado ";
+           
+            $sql="SELECT $colsQuery  $colsSubQuery              
+                  FROM $tabla t1 $Condicion ";
+            $statement=$sql;
+            
+            $limit_condition=" ORDER BY ID DESC LIMIT $PuntoInicio,$Limit;";
+            
+            $sql.=$limit_condition;
+            
+            $Consulta=$obCon->Query($sql);
+            
+            
+            $css->CrearTitulo("MiPres Programación", "naranja");
+            
+            
+            $statement= base64_encode(urlencode($statement));
+            $colsQuery= base64_encode(urlencode($colsQuery.",nombre_estado"));
+                    
+            $css->div("", "box-body no-padding", "", "", "", "", "");
+                $css->div("", "mailbox-controls", "", "", "", "", "");
+                    $CondicionURL= urlencode($Condicion);
+                    $link='../../general/procesadores/ExportarExcel.process.php?Accion=1&empresa_id='.$empresa_id.'&tb='.$tabla.'&st='.$statement.'&cols='.$colsQuery;
+                    $css->div("", "row", "", "", "", "", "");
+                        $css->CrearDiv("", "col-md-2", "left", 1, 1); 
+                            $css->div("", "pull-left", "", "", "", "", "");
+                                print('<a class="btn btn-app" style="background-color:#12a900;color:white;" href="'.$link.'" target="_blank">
+                                    <span class="badge bg-blue" style="font-size:14px">'.$ResultadosTotales.'</span>
+                                    <i class="fa fa-file-excel-o"></i> Exportar 
+                                  </a>');
+                            $css->Cdiv();
+                        $css->Cdiv();
+                        $css->CrearDiv("", "col-md-2", "left", 1, 1); 
+                            //$css->div("", "pull-left", "", "", "", "style=text-align:center", "");
+                                $FechaInicialMiPres=date("Y-m-d");
+                                if(isset($_REQUEST["fecha_inicial_mipres"])){
+                                    $FechaInicialMiPres=$obCon->normalizar($_REQUEST["fecha_inicial_mipres"]);
+                                }
+                                
+                                
+                                print("<strong>Fecha Inicial</strong>");
+                                $css->input("date", "FechaInicialMiPres", "form-control", "FechaInicialMiPres", "Fecha", $FechaInicialMiPres, "Fecha Inicial", "off", "", "","style='line-height: 15px;'");
+                                
+                            //$css->Cdiv();
+                        $css->Cdiv();
+                        $css->CrearDiv("", "col-md-2", "left", 1, 1); 
+                            //$css->div("", "pull-left", "", "", "", "style=text-align:center", "");
+                                
+                                
+                                $FechaFinallMiPres=date("Y-m-d");
+                                if(isset($_REQUEST["fecha_final_mipres"])){
+                                    $FechaFinallMiPres=$obCon->normalizar($_REQUEST["fecha_final_mipres"]);
+                                }
+                                
+                                print("<strong>Fecha Final</strong>");
+                                $css->input("date", "FechaFinalMiPres", "form-control", "FechaFinalMiPres", "Fecha", $FechaFinallMiPres, "Fecha Final", "off", "", "","style='line-height: 15px;'");
+                                
+                            //$css->Cdiv();
+                        $css->Cdiv();
+                        $css->CrearDiv("", "col-md-2", "left", 1, 1); 
+                            print("<strong>Consultar MiPres</strong>");
+                            $css->CrearBotonEvento("btn_obtener_direccionamiento_mipres", "Obtener", 1, "onclick", "iniciar_consulta_mipres()", "naranja");
+                        $css->Cdiv();
+                        
+                        $css->CrearDiv("", "col-md-2", "left", 1, 1); 
+                        $porcentaje=0;
+                        $leyenda_barra="";
+                        if(isset($_REQUEST["porcentaje_barra_mipres"])){
+                            $porcentaje=$_REQUEST["porcentaje_barra_mipres"];
+                            $leyenda_barra="Consulta completada";
+                        }
+                        print("<span id='sp_msg_mipres'>$leyenda_barra</span>");
+                        print('<div class="progress">
+                                <div id="PgProgresoUp" name="PgProgresoUp" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:'.$porcentaje.'%">
+                                  <div id="LyProgresoCMG" name="LyProgresoCMG" "="">'.$porcentaje.'%</div>
+                                </div>
+                              </div>');
+                        $css->Cdiv();
+                    $css->Cdiv();
+                    $css->div("", "row", "", "", "", "", "");
+                        $css->div("", "pull-right", "", "", "", "", "");
+                            if($ResultadosTotales>$Limit){
+                                $TotalPaginas= ceil($ResultadosTotales/$Limit);                               
+                                print('<div class="input-group" style=width:150px>');
+                                if($NumPage>1){
+                                    $NumPage1=$NumPage-1;
+                                print('<span class="input-group-addon" onclick=CambiePagina(`12`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-left"></i></span>');
+                                }
+                                $FuncionJS="onchange=CambiePagina(`12`);";
+                                $css->select("CmbPage", "form-control", "CmbPage", "", "", $FuncionJS, "");
+
+                                    for($p=1;$p<=$TotalPaginas;$p++){
+                                        if($p==$NumPage){
+                                            $sel=1;
+                                        }else{
+                                            $sel=0;
+                                        }
+
+                                        $css->option("", "", "", $p, "", "",$sel);
+                                            print($p);
+                                        $css->Coption();
+
+                                    }
+
+                                $css->Cselect();
+                                if($ResultadosTotales>($PuntoInicio+$Limit)){
+                                    $NumPage1=$NumPage+1;
+                                print('<span class="input-group-addon" onclick=CambiePagina(`12`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-right" ></i></span>');
+                                }
+                                print("</div>");
+                            }    
+                        $css->Cdiv();
+                    
+                    $css->Cdiv();
+                $css->Cdiv();
+                   
+                $css->CrearDiv("", "table-responsive mailbox-messages", "", 1, 1);
+                    print('<table class="table table-hover table-striped">');
+                        print('<tbody>');
+                            print('<tr>');
+                                print("<th>Entregar</th>");                                
+                                print("<th>Anular</th>");                               
+                                print("<th>ID</th>");
+                                print("<th>IDProgramacion</th>");
+                                print("<th>NoPrescripcion</th>");                                
+                                print("<th>FecProgramacion</th>");
+                                print("<th>EstProgramacion</th>");                                
+                                print("<th>TipoTec</th>");
+                                print("<th>ConTec</th>");
+                                print("<th>TipoIDPaciente</th>");
+                                print("<th>NoIDPaciente</th>");                                
+                                print("<th>NoEntrega</th>");
+                                                        
+                                print("<th>FecMaxEnt</th>");  
+                                print("<th>TipoIDSedeProv</th>");                                
+                                print("<th>NoIDSedeProv</th>");
+                                print("<th>CodSedeProv</th>");
+                                
+                                print("<th>CodSerTecAEntregar</th>");
+                                print("<th>CantTotAEntregar</th>");
+                                
+                                print("<th>FecAnulacion</th>");
+                                print("<th>IDUsuario</th>");
+                                    
+                            print('</tr>');
+                            while($RegistrosTabla=$obCon->FetchAssoc($Consulta)){
+                                
+                                $idItem=$RegistrosTabla["ID"];
+                                $programacion_id=$RegistrosTabla["IDProgramacion"];
+                                print('<tr>');
+                                print("<td style='text-align:center'>");
+                                    $disabled="disabled=1";
+                                    if($RegistrosTabla["EstProgramacion"]==1){
+                                        $disabled="";
+                                    }
+                                    print('<button '.$disabled.'  class="btn btn-primary fa fa-send" title="Entregar" onclick="frm_entregar_mipres(`'.$idItem.'`)" target="_blank" ></button>');
+
+                                print("</td>");
+                                
+                                
+                                print("<td style='text-align:center'>");
+                                    $disabled="disabled=1";
+                                    if($RegistrosTabla["EstProgramacion"]==2){
+                                        $disabled="";
+                                    }
+                                    print('<button '.$disabled.'  class="btn btn-danger  fa fa-remove" title="Anular Programacion" onclick="confirma_anular_programacion_mipres(`'.$programacion_id.'`)" target="_blank" ></button>');
+
+                                print("</td>");
+                                        
+                                                          
+
+                                print("<td class='mailbox-name'>");
+                                    print($RegistrosTabla["ID"]);
+                                print("</td>");
+                                print("<td class='mailbox-subject text-primary'>");
+                                    print("<strong>".$RegistrosTabla["IDProgramacion"]."</strong>");
+                                print("</td>");
+                                print("<td class='mailbox-subject text-flickr'>");
+                                    print("<strong>".$RegistrosTabla["NoPrescripcion"]."</strong>");
+                                print("</td>");
+                                
+                                print("<td class='mailbox-subject text-success'>");
+                                    print("<strong>".($RegistrosTabla["FecProgramacion"])."</strong>");
+                                print("</td>");
+                                
+                                print("<td class='mailbox-subject text-primary'>");
+                                    
+                                    print("<strong>".$RegistrosTabla["nombre_estado"]."</strong>");
+                                print("</td>");
+                                
+                                print("<td class='mailbox-subject'>");
+                                    print("".$RegistrosTabla["TipoTec"]."");
+                                print("</td>");   
+                                print("<td class='mailbox-subject'>");
+                                    print("".$RegistrosTabla["ConTec"]."");
+                                print("</td>");   
+                                print("<td class='mailbox-subject'>");
+                                    print("".$RegistrosTabla["TipoIDPaciente"]."");
+                                print("</td>");   
+                                print("<td class='mailbox-subject'>");
+                                    print("<strong>".$RegistrosTabla["NoIDPaciente"]."</strong>");
+                                print("</td>");   
+                                print("<td class='mailbox-subject'>");
+                                    print("".$RegistrosTabla["NoEntrega"]."");
+                                print("</td>");  
+                                
+                                print("<td class='mailbox-subject'>");
+                                    print("<strong>".$RegistrosTabla["FecMaxEnt"]."</strong>");
+                                print("</td>");   
+                                print("<td class='mailbox-subject'>");
+                                    print("".$RegistrosTabla["TipoIDSedeProv"]."");
+                                print("</td>");   
+                                
+                                print("<td class='mailbox-subject'>");
+                                    print("".$RegistrosTabla["NoIDSedeProv"]."");
+                                print("</td>");   
+                                
+                                print("<td class='mailbox-subject'>");
+                                    print("".$RegistrosTabla["CodSedeProv"]."");
+                                print("</td>");   
+                                                                
+                                print("<td class='mailbox-subject'>");
+                                    print("".$RegistrosTabla["CodSerTecAEntregar"]."");
+                                print("</td>"); 
+                                print("<td class='mailbox-subject text-flickr'>");
+                                    print("<strong>".number_format($RegistrosTabla["CantTotAEntregar"])."</strong>");
+                                print("</td>");
+                                
+                                print("<td class='mailbox-subject text-flickr'>");
+                                    print("<strong>".($RegistrosTabla["FecAnulacion"])."</strong>");
+                                print("</td>");
+                                
+                                print("<td class='mailbox-subject text-flickr'>");
+                                    print("".($RegistrosTabla["user_id"])."");
+                                print("</td>");
+                                
+                                
+                            print('</tr>');
+
+                            }
+
+                        print('</tbody>');
+                    print('</table>');
+                $css->Cdiv();
+            $css->Cdiv();
+        break;//fin caso 3
         
+        case 4://dibuja el listado de las entregas mipres
+                        
+            $empresa_id=1;
+            $tabla="mipres_entrega";
+            $Limit=20;
+            $Page=$obCon->normalizar($_REQUEST["Page"]);
+            $NumPage=$obCon->normalizar($_REQUEST["Page"]);
+            if($Page==''){
+                $Page=1;
+                $NumPage=1;
+            }
+            $Busquedas=$obCon->normalizar($_REQUEST["Busquedas"]);
+            $cmb_estado_mipres=$obCon->normalizar($_REQUEST["cmb_estado_mipres"]);
+                        
+            $FechaInicialRangos=$obCon->normalizar($_REQUEST["FechaInicialRangos"]);
+            $FechaFinalRangos=$obCon->normalizar($_REQUEST["FechaFinalRangos"]);
+            
+           
+            $Condicion=" WHERE ID>0 ";
+            
+            if($Busquedas<>''){
+                $Condicion.=" AND ( t1.ID = '$Busquedas' or t1.NoPrescripcion = '$Busquedas' or t1.NoIDPaciente = '$Busquedas' )";
+            }
+            if($FechaInicialRangos<>''){
+                $Condicion.=" AND t1.FecProgramacion>='$FechaInicialRangos 00:00:00'";
+            }
+            if($FechaFinalRangos<>''){
+                $Condicion.=" AND t1.FecProgramacion<='$FechaFinalRangos 23:59:59'";
+            }
+            if($cmb_estado_mipres<>''){
+                $Condicion.=" AND t1.EstEntrega='$cmb_estado_mipres'";
+            }
+                        
+            
+            $PuntoInicio = ($Page * $Limit) - $Limit;
+            
+            $sql = "SELECT COUNT(*) as Items 
+                   FROM $tabla t1  $Condicion;";
+            
+            $Consulta=$obCon->Query($sql);
+            $totales = $obCon->FetchAssoc($Consulta);
+            $ResultadosTotales = $totales['Items'];
+               
+            $colsQuery="ID,IDEntrega,NoPrescripcion,TipoTec,ConTec,TipoIDPaciente,NoIDPaciente,NoEntrega,CodSerTecEntregado,CantTotEntregada,EntTotal,CausaNoEntrega,FecEntrega,NoLote,TipoIDRecibe,NoIDRecibe,EstEntrega,FecAnulacion,CodigosEntrega,user_id,created ";
+            $colsSubQuery=",(SELECT t2.estado_entrega FROM mipres_estados_entrega t2 WHERE t2.ID=t1.EstEntrega LIMIT 1) as nombre_estado ";
+            $colsSubQuery.=",(SELECT t3.causa FROM mipres_causas_no_entrega t3 WHERE t3.ID=t1.CausaNoEntrega LIMIT 1) as nombre_causa_no_entrega ";
+           
+            $sql="SELECT $colsQuery  $colsSubQuery              
+                  FROM $tabla t1 $Condicion ";
+            $statement=$sql;
+            
+            $limit_condition=" ORDER BY ID DESC LIMIT $PuntoInicio,$Limit;";
+            
+            $sql.=$limit_condition;
+            
+            $Consulta=$obCon->Query($sql);
+            
+            
+            $css->CrearTitulo("MiPres Entrega", "rojo");
+            
+            
+            $statement= base64_encode(urlencode($statement));
+            $colsQuery= base64_encode(urlencode($colsQuery.",nombre_estado"));
+                    
+            $css->div("", "box-body no-padding", "", "", "", "", "");
+                $css->div("", "mailbox-controls", "", "", "", "", "");
+                    $CondicionURL= urlencode($Condicion);
+                    $link='../../general/procesadores/ExportarExcel.process.php?Accion=1&empresa_id='.$empresa_id.'&tb='.$tabla.'&st='.$statement.'&cols='.$colsQuery;
+                    $css->div("", "row", "", "", "", "", "");
+                        $css->CrearDiv("", "col-md-2", "left", 1, 1); 
+                            $css->div("", "pull-left", "", "", "", "", "");
+                                print('<a class="btn btn-app" style="background-color:#12a900;color:white;" href="'.$link.'" target="_blank">
+                                    <span class="badge bg-blue" style="font-size:14px">'.$ResultadosTotales.'</span>
+                                    <i class="fa fa-file-excel-o"></i> Exportar 
+                                  </a>');
+                            $css->Cdiv();
+                        $css->Cdiv();
+                        $css->CrearDiv("", "col-md-2", "left", 1, 1); 
+                            //$css->div("", "pull-left", "", "", "", "style=text-align:center", "");
+                                $FechaInicialMiPres=date("Y-m-d");
+                                if(isset($_REQUEST["fecha_inicial_mipres"])){
+                                    $FechaInicialMiPres=$obCon->normalizar($_REQUEST["fecha_inicial_mipres"]);
+                                }
+                                
+                                
+                                print("<strong>Fecha Inicial</strong>");
+                                $css->input("date", "FechaInicialMiPres", "form-control", "FechaInicialMiPres", "Fecha", $FechaInicialMiPres, "Fecha Inicial", "off", "", "","style='line-height: 15px;'");
+                                
+                            //$css->Cdiv();
+                        $css->Cdiv();
+                        $css->CrearDiv("", "col-md-2", "left", 1, 1); 
+                            //$css->div("", "pull-left", "", "", "", "style=text-align:center", "");
+                                
+                                
+                                $FechaFinallMiPres=date("Y-m-d");
+                                if(isset($_REQUEST["fecha_final_mipres"])){
+                                    $FechaFinallMiPres=$obCon->normalizar($_REQUEST["fecha_final_mipres"]);
+                                }
+                                
+                                print("<strong>Fecha Final</strong>");
+                                $css->input("date", "FechaFinalMiPres", "form-control", "FechaFinalMiPres", "Fecha", $FechaFinallMiPres, "Fecha Final", "off", "", "","style='line-height: 15px;'");
+                                
+                            //$css->Cdiv();
+                        $css->Cdiv();
+                        $css->CrearDiv("", "col-md-2", "left", 1, 1); 
+                            print("<strong>Consultar MiPres</strong>");
+                            $css->CrearBotonEvento("btn_obtener_direccionamiento_mipres", "Obtener", 1, "onclick", "iniciar_consulta_mipres()", "naranja");
+                        $css->Cdiv();
+                        
+                        $css->CrearDiv("", "col-md-2", "left", 1, 1); 
+                        $porcentaje=0;
+                        $leyenda_barra="";
+                        if(isset($_REQUEST["porcentaje_barra_mipres"])){
+                            $porcentaje=$_REQUEST["porcentaje_barra_mipres"];
+                            $leyenda_barra="Consulta completada";
+                        }
+                        print("<span id='sp_msg_mipres'>$leyenda_barra</span>");
+                        print('<div class="progress">
+                                <div id="PgProgresoUp" name="PgProgresoUp" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:'.$porcentaje.'%">
+                                  <div id="LyProgresoCMG" name="LyProgresoCMG" "="">'.$porcentaje.'%</div>
+                                </div>
+                              </div>');
+                        $css->Cdiv();
+                    $css->Cdiv();
+                    $css->div("", "row", "", "", "", "", "");
+                        $css->div("", "pull-right", "", "", "", "", "");
+                            if($ResultadosTotales>$Limit){
+                                $TotalPaginas= ceil($ResultadosTotales/$Limit);                               
+                                print('<div class="input-group" style=width:150px>');
+                                if($NumPage>1){
+                                    $NumPage1=$NumPage-1;
+                                print('<span class="input-group-addon" onclick=CambiePagina(`13`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-left"></i></span>');
+                                }
+                                $FuncionJS="onchange=CambiePagina(`13`);";
+                                $css->select("CmbPage", "form-control", "CmbPage", "", "", $FuncionJS, "");
+
+                                    for($p=1;$p<=$TotalPaginas;$p++){
+                                        if($p==$NumPage){
+                                            $sel=1;
+                                        }else{
+                                            $sel=0;
+                                        }
+
+                                        $css->option("", "", "", $p, "", "",$sel);
+                                            print($p);
+                                        $css->Coption();
+
+                                    }
+
+                                $css->Cselect();
+                                if($ResultadosTotales>($PuntoInicio+$Limit)){
+                                    $NumPage1=$NumPage+1;
+                                print('<span class="input-group-addon" onclick=CambiePagina(`13`,`'.$NumPage1.'`) style=cursor:pointer><i class="fa fa-chevron-right" ></i></span>');
+                                }
+                                print("</div>");
+                            }    
+                        $css->Cdiv();
+                    
+                    $css->Cdiv();
+                $css->Cdiv();
+                   
+                $css->CrearDiv("", "table-responsive mailbox-messages", "", 1, 1);
+                    print('<table class="table table-hover table-striped">');
+                        print('<tbody>');
+                            print('<tr>');
+                                                      
+                                print("<th>Anular</th>");                               
+                                print("<th>ID</th>");
+                                print("<th>IDEntrega</th>");
+                                print("<th>NoPrescripcion</th>");                                
+                                print("<th>FecEntrega</th>");
+                                print("<th>EstEntrega</th>"); 
+                                print("<th>TipoIDPaciente</th>");       
+                                print("<th>NoIDPaciente</th>");   
+                                print("<th>CodSerTecEntregado</th>");
+                                print("<th>CantTotEntregada</th>");
+                                print("<th>EntTotal</th>");
+                                                             
+                                print("<th>NoEntrega</th>");
+                                print("<th>CausaNoEntrega</th>");  
+                                print("<th>NoLote</th>");                                
+                                print("<th>TipoIDRecibe</th>");
+                                print("<th>NoIDRecibe</th>");
+                                print("<th>CodigosEntrega</th>");
+                                
+                                print("<th>FecAnulacion</th>");
+                                print("<th>IDUsuario</th>");
+                                    
+                            print('</tr>');
+                            while($RegistrosTabla=$obCon->FetchAssoc($Consulta)){
+                                
+                                $idItem=$RegistrosTabla["ID"];
+                                $entrega_id=$RegistrosTabla["IDEntrega"];
+                                print('<tr>');
+                                
+                                
+                                print("<td style='text-align:center'>");
+                                    $disabled="disabled=1";
+                                    if($RegistrosTabla["EstEntrega"]==2){
+                                        $disabled="";
+                                    }
+                                     print('<button '.$disabled.'  class="btn btn-danger fa fa-times-circle" title="Anular Entrega" onclick="confirma_anular_entrega_mipres(`'.$entrega_id.'`)" target="_blank" ></button>');
+                                print("</td>");
+                                        
+                                                          
+
+                                print("<td class='mailbox-name'>");
+                                    print($RegistrosTabla["ID"]);
+                                print("</td>");
+                                print("<td class='mailbox-subject text-primary'>");
+                                    print("<strong>".$RegistrosTabla["IDEntrega"]."</strong>");
+                                print("</td>");
+                                print("<td class='mailbox-subject text-flickr'>");
+                                    print("<strong>".$RegistrosTabla["NoPrescripcion"]."</strong>");
+                                print("</td>");
+                                
+                                print("<td class='mailbox-subject text-success'>");
+                                    print("<strong>".($RegistrosTabla["FecEntrega"])."</strong>");
+                                print("</td>");
+                                
+                                print("<td class='mailbox-subject text-primary'>");
+                                    
+                                    print("<strong>".$RegistrosTabla["nombre_estado"]."</strong>");
+                                print("</td>");
+                                print("<td class='mailbox-subject'>");
+                                    print("<strong>".$RegistrosTabla["TipoIDPaciente"]."</strong>");
+                                print("</td>");   
+                                print("<td class='mailbox-subject'>");
+                                    print("".$RegistrosTabla["NoIDPaciente"]."");
+                                print("</td>");  
+                                print("<td class='mailbox-subject'>");
+                                    print("".$RegistrosTabla["CodSerTecEntregado"]."");
+                                print("</td>");   
+                                print("<td class='mailbox-subject'>");
+                                    print("".$RegistrosTabla["CantTotEntregada"]."");
+                                print("</td>");   
+                                print("<td class='mailbox-subject'>");
+                                    print("".$RegistrosTabla["EntTotal"]."");
+                                print("</td>");   
+                                
+                                
+                                print("<td class='mailbox-subject'>");
+                                    print("<strong>".$RegistrosTabla["NoEntrega"]."</strong>");
+                                print("</td>");   
+                                print("<td class='mailbox-subject'>");
+                                    print("".$RegistrosTabla["nombre_causa_no_entrega"]."");
+                                print("</td>");   
+                                
+                                print("<td class='mailbox-subject'>");
+                                    print("".$RegistrosTabla["NoLote"]."");
+                                print("</td>");   
+                                
+                                print("<td class='mailbox-subject'>");
+                                    print("".$RegistrosTabla["TipoIDRecibe"]."");
+                                print("</td>");   
+                                                                
+                                print("<td class='mailbox-subject'>");
+                                    print("".$RegistrosTabla["NoIDRecibe"]."");
+                                print("</td>"); 
+                                print("<td class='mailbox-subject text-flickr'>");
+                                    print("<strong>".($RegistrosTabla["CodigosEntrega"])."</strong>");
+                                print("</td>");
+                                
+                                print("<td class='mailbox-subject text-flickr'>");
+                                    print("<strong>".($RegistrosTabla["FecAnulacion"])."</strong>");
+                                print("</td>");
+                                
+                                print("<td class='mailbox-subject text-flickr'>");
+                                    print("".($RegistrosTabla["user_id"])."");
+                                print("</td>");
+                                
+                                
+                            print('</tr>');
+
+                            }
+
+                        print('</tbody>');
+                    print('</table>');
+                $css->Cdiv();
+            $css->Cdiv();
+        break;//fin caso 4
+        
+        case 5://dibuja los filtros de los estados del mipres 
+                        
+            $empresa_id=1;
+            if($_REQUEST["tabla_id"]==1){
+                $tabla="mipres_estados_direccionamiento";
+                $nombre_columna_mostrar="estado_direccionamiento";
+            }
+            if($_REQUEST["tabla_id"]==2){
+                $tabla="mipres_estados_programacion";
+                $nombre_columna_mostrar="estado_programacion";
+            }
+            if($_REQUEST["tabla_id"]==3){
+                $tabla="mipres_estados_entrega";
+                $nombre_columna_mostrar="estado_entrega";
+            }
+            
+            $sql="SELECT * FROM $tabla";
+            
+            $Consulta=$obCon->Query($sql);
+            
+            $css->select("cmb_estado_mipres", "form-control", "cmb_estado_mipres", "Estado:", "", 'onchange="MostrarListadoSegunID()" ', "");
+            
+                $css->option("", "", "", "", "", "");                    
+                    print("Todos");
+                $css->Coption();
+            while($datos_consulta=$obCon->FetchAssoc($Consulta)){
+                $sel=0;
+                if($_REQUEST["defecto"]==$datos_consulta["ID"]){
+                    $sel=1;
+                }
+                $css->option("", "", "", $datos_consulta["ID"], "", "",$sel);                    
+                    print($datos_consulta[$nombre_columna_mostrar]);
+                $css->Coption();
+            }
+            $css->Cselect();
+            
+        break;//fin caso 5
         
  }
     

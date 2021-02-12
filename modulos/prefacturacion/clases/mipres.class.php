@@ -43,11 +43,11 @@ class MiPres extends conexion{
         return $result;
     }
     
-    //insertar los datos a la tabla de programacion
+    //insertar los datos a la tabla de direccionamiento
     
-    public function guardar_programacion_mipres($db,$datos_programacion,$user_id) {
+    public function guardar_direccionamiento_mipres($db,$datos_programacion,$user_id) {
         
-        $Tabla="$db.mipres_programacion";
+        $Tabla="$db.mipres_direccionamiento";
         
         $sql="REPLACE INTO "
                 . "$Tabla (`ID`,`IDDireccionamiento`,`NoPrescripcion`,`TipoTec`,`ConTec`,`TipoIDPaciente`,"
@@ -104,7 +104,7 @@ class MiPres extends conexion{
     public function programar_mipres_x_id($datos_empresa,$ID,$token_consultas,$idUser) {
         $db=$datos_empresa["db"];
         
-        $datos_mipres=$this->DevuelveValores("$db.mipres_programacion", "ID", $ID);
+        $datos_mipres=$this->DevuelveValores("$db.mipres_direccionamiento", "ID", $ID);
         
         $datos_servidor=$this->DevuelveValores("servidores", "ID", 2002);//aqui se encuentra la url para programar
         $method="PUT";
@@ -122,10 +122,10 @@ class MiPres extends conexion{
             $Datos["user_id"]=$idUser;
             $sql=$this->getSQLInsert("$db.mipres_registro_programacion", $Datos);            
             $this->Query($sql);
-            $sql="UPDATE $db.mipres_programacion SET  EstDireccionamiento=2 WHERE ID='$ID'";
-            $this->Query($sql);
+            
             $retorno["OK"]=1;
             $retorno["IdProgramacion"]=$idProgramacion;
+            $retorno["NoPrescripcion"]=$datos_mipres["NoPrescripcion"];
             return($retorno);
         }
         
@@ -136,10 +136,10 @@ class MiPres extends conexion{
             $Datos["user_id"]=$idUser;
             $sql=$this->getSQLInsert("$db.mipres_registro_programacion", $Datos);            
             $this->Query($sql);
-            $sql="UPDATE $db.mipres_programacion SET  EstDireccionamiento=2 WHERE ID='$ID'";
-            $this->Query($sql);
+            
             $retorno["OK"]=1;
             $retorno["IdProgramacion"]=$idProgramacion;
+            $retorno["NoPrescripcion"]=$datos_mipres["NoPrescripcion"];
             return($retorno);
         }
         
@@ -165,20 +165,26 @@ class MiPres extends conexion{
     public function entregar_mipres_x_id($datos_empresa,$ID,$token_consultas,$mipres_cantidad_entregada,$mipres_identificacion_recibe,$mipres_fecha_real_entrega,$mipres_tipo_documento_recibe,$mipres_causas_no_entrega,$idUser) {
         $db=$datos_empresa["db"];
         
-        $datos_mipres=$this->DevuelveValores("$db.mipres_programacion", "ID", $ID);
+        $datos_mipres=$this->DevuelveValores("$db.mipres_direccionamiento", "ID", $ID);
         if($mipres_cantidad_entregada>$datos_mipres["CantTotAEntregar"]){
             exit("E1;La cantidad entregada no puede ser mayor a la cantidad por entregar");
         }
-        
-        if($mipres_cantidad_entregada<$datos_mipres["CantTotAEntregar"] and $mipres_causas_no_entrega==''){
-            exit("E1;La cantidad entregada es menor a la cantidad por entrega, debe seleccionar una causa de no entrega");
+        $flag_total_entrega=1;
+        if($mipres_cantidad_entregada<$datos_mipres["CantTotAEntregar"]){
+            $flag_total_entrega=0;
         }
-        
+        if($mipres_causas_no_entrega<>''){
+            $flag_total_entrega=0;
+            $mipres_cantidad_entregada=0;
+            $mipres_fecha_real_entrega='0000-00-00';
+            $mipres_tipo_documento_recibe="";
+            $mipres_identificacion_recibe="";
+        }
         $datos_servidor=$this->DevuelveValores("servidores", "ID", 2003);//aqui se encuentra la url para entregar
         $method="PUT";
         $url=$datos_servidor["IP"].$datos_empresa["NIT"]."/".$token_consultas;
         $Token=$datos_empresa["TokenAPIMipres"];
-        $data=$this->json_entregar_mipres_x_id($ID, $datos_mipres["CodSerTecAEntregar"], $datos_mipres["CantTotAEntregar"], $mipres_cantidad_entregada, $mipres_causas_no_entrega, $mipres_fecha_real_entrega, "", $mipres_tipo_documento_recibe, $mipres_identificacion_recibe);
+        $data=$this->json_entregar_mipres_x_id($ID, $datos_mipres["CodSerTecAEntregar"], $mipres_cantidad_entregada , $flag_total_entrega, $mipres_causas_no_entrega, $mipres_fecha_real_entrega, "", $mipres_tipo_documento_recibe, $mipres_identificacion_recibe);
         $respuesta=$this->callAPI($method, $url, $Token, $data);
         $datos_obtenidos= json_decode($respuesta,1);
         
@@ -192,6 +198,7 @@ class MiPres extends conexion{
             $this->Query($sql);            
             $retorno["OK"]=1;
             $retorno["IdEntrega"]=$idEntrega;
+            $retorno["NoPrescripcion"]=$datos_mipres["NoPrescripcion"];
             return($retorno);
         }
         
@@ -204,6 +211,7 @@ class MiPres extends conexion{
             $this->Query($sql);            
             $retorno["OK"]=1;
             $retorno["IdEntrega"]=$idEntrega;
+            $retorno["NoPrescripcion"]=$datos_mipres["NoPrescripcion"];
             return($retorno);
         }
         
@@ -230,7 +238,7 @@ class MiPres extends conexion{
     
     
     public function anular_programacion_mipres($datos_empresa,$programacion_id,$token_consultas,$idUser) {
-                
+        $db=$datos_empresa["db"];        
         $datos_servidor=$this->DevuelveValores("servidores", "ID", 2004);//aqui se encuentra la url para anular una programacion
         $method="PUT";
         $url=$datos_servidor["IP"].$datos_empresa["NIT"]."/".$token_consultas."/".$programacion_id;
@@ -242,8 +250,10 @@ class MiPres extends conexion{
         if(isset($datos_obtenidos["Mensaje"])){
             $sql="UPDATE mipres_registro_programacion SET user_id_anulacion='$idUser', fecha_anulacion='$fecha' WHERE IdProgramacion='$programacion_id'";
             $this->Query($sql);
+            $datos_mipres=$this->DevuelveValores("$db.mipres_programacion", "IDProgramacion", $programacion_id);
             $retorno["OK"]=1;
             $retorno["Mensaje"]=$datos_obtenidos["Mensaje"];
+            $retorno["NoPrescripcion"]=$datos_mipres["NoPrescripcion"];
             return($retorno);
         }
                 
@@ -262,11 +272,102 @@ class MiPres extends conexion{
         if(isset($datos_obtenidos["Mensaje"])){
             $sql="UPDATE mipres_registro_entrega SET user_id_anulacion='$idUser', fecha_anulacion='$fecha' WHERE IdEntrega='$entrega_id'";
             $this->Query($sql);
+            $datos_mipres=$this->DevuelveValores("$db.mipres_entrega", "IDEntrega", $entrega_id);
             $retorno["OK"]=1;
             $retorno["Mensaje"]=$datos_obtenidos["Mensaje"];
+            $retorno["NoPrescripcion"]=$datos_mipres["NoPrescripcion"];
             return($retorno);
         }
                 
+    }
+    
+    //insertar los datos a la tabla de entrega
+    
+    public function guardar_entrega_mipres($db,$datos_programacion,$user_id) {
+        
+        $Tabla="$db.mipres_entrega";
+        
+        $sql="REPLACE INTO "
+                . "$Tabla (`ID`,`IDEntrega`,`NoPrescripcion`,`TipoTec`,`ConTec`,`TipoIDPaciente`,"
+                . "`NoIDPaciente`,`NoEntrega`,`CodSerTecEntregado`,`CantTotEntregada`,`EntTotal`,`CausaNoEntrega`,"
+                . "`FecEntrega`,`NoLote`,"
+                . "`TipoIDRecibe`,`NoIDRecibe`,`EstEntrega`,`FecAnulacion`,`CodigosEntrega`,`user_id`)"
+                . " VALUES ";
+        
+        foreach ($datos_programacion as $key => $array_programacion) {
+            $sql.="(";
+            $sql.="'".$array_programacion["ID"]."',";
+            $sql.="'".$array_programacion["IDEntrega"]."',";
+            $sql.="'".$array_programacion["NoPrescripcion"]."',";
+            $sql.="'".$array_programacion["TipoTec"]."',";
+            $sql.="'".$array_programacion["ConTec"]."',";
+            $sql.="'".$array_programacion["TipoIDPaciente"]."',";
+            $sql.="'".$array_programacion["NoIDPaciente"]."',";
+            $sql.="'".$array_programacion["NoEntrega"]."',";
+            $sql.="'".$array_programacion["CodSerTecEntregado"]."',";
+            $sql.="'".$array_programacion["CantTotEntregada"]."',";
+            $sql.="'".$array_programacion["EntTotal"]."',";
+            $sql.="'".$array_programacion["CausaNoEntrega"]."',";
+            $sql.="'".$array_programacion["FecEntrega"]."',";            
+            $sql.="'".$array_programacion["NoLote"]."',";
+            $sql.="'".$array_programacion["TipoIDRecibe"]."',";
+            $sql.="'".$array_programacion["NoIDRecibe"]."',";            
+            $sql.="'".$array_programacion["EstEntrega"]."',";
+            $sql.="'".$array_programacion["FecAnulacion"]."',";
+            $sql.="'".$array_programacion["CodigosEntrega"]."',";                      
+            $sql.="'".$user_id."'";
+            
+            $sql.="),";
+            
+        }
+        
+        $sql=substr($sql, 0, -1);
+        $this->Query($sql);
+        
+    }
+    
+    //insertar los datos a la tabla de entrega
+    
+    public function guardar_programacion_mipres($db,$datos_programacion,$user_id) {
+        
+        $Tabla="$db.mipres_programacion";
+        
+        $sql="REPLACE INTO "
+                . "$Tabla (`ID`,`IDProgramacion`,`NoPrescripcion`,`TipoTec`,`ConTec`,`TipoIDPaciente`,"
+                . "`NoIDPaciente`,`NoEntrega`,`FecMaxEnt`,`TipoIDSedeProv`,`NoIDSedeProv`,`CodSedeProv`,"
+                . "`CodSerTecAEntregar`,`CantTotAEntregar`,"
+                . "`FecProgramacion`,`EstProgramacion`,`FecAnulacion`,`user_id`)"
+                . " VALUES ";
+        
+        foreach ($datos_programacion as $key => $array_programacion) {
+            $sql.="(";
+            $sql.="'".$array_programacion["ID"]."',";
+            $sql.="'".$array_programacion["IDProgramacion"]."',";
+            $sql.="'".$array_programacion["NoPrescripcion"]."',";
+            $sql.="'".$array_programacion["TipoTec"]."',";
+            $sql.="'".$array_programacion["ConTec"]."',";
+            $sql.="'".$array_programacion["TipoIDPaciente"]."',";
+            $sql.="'".$array_programacion["NoIDPaciente"]."',";
+            $sql.="'".$array_programacion["NoEntrega"]."',";
+            $sql.="'".$array_programacion["FecMaxEnt"]."',";
+            $sql.="'".$array_programacion["TipoIDSedeProv"]."',";
+            $sql.="'".$array_programacion["NoIDSedeProv"]."',";
+            $sql.="'".$array_programacion["CodSedeProv"]."',";
+            $sql.="'".$array_programacion["CodSerTecAEntregar"]."',";            
+            $sql.="'".$array_programacion["CantTotAEntregar"]."',";
+            $sql.="'".$array_programacion["FecProgramacion"]."',";
+            $sql.="'".$array_programacion["EstProgramacion"]."',";            
+            $sql.="'".$array_programacion["FecAnulacion"]."',";
+                                
+            $sql.="'".$user_id."'";
+            
+            $sql.="),";
+            
+        }
+        
+        $sql=substr($sql, 0, -1);
+        $this->Query($sql);
+        
     }
     
     /**

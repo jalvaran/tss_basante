@@ -77,8 +77,16 @@ function MostrarListadoSegunID(){
     }
     
     if(idListado==11){
-        MuestraOcultaXID('div_filtro_mipres');
+        
+        ListarDireccionamientoMipres();
+    }
+    if(idListado==12){
+        
         ListarProgramacionMipres();
+    }
+    if(idListado==13){
+        
+        ListarEntregaMipres();
     }
     
 }
@@ -128,7 +136,13 @@ function CambiePagina(Funcion,Page=""){
         ListarDocumentosElectronicosError(Page);
     }
     if(Funcion==11){
+        ListarDireccionamientoMipres(Page);
+    }
+    if(Funcion==12){
         ListarProgramacionMipres(Page);
+    }
+    if(Funcion==13){
+        ListarEntregaMipres(Page);
     }
     
 }
