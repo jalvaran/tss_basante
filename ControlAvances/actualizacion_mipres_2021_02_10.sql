@@ -129,7 +129,7 @@ CREATE TABLE `mipres_estados_programacion` (
 INSERT INTO `mipres_estados_programacion` (`ID`, `estado_programacion`) VALUES
 (0,	'ANULADO'),
 (1,	'PTE. POR ENTREGAR'),
-(2,	'PROCESADO');
+(2,	'ENTREGADO');
 
 DROP TABLE IF EXISTS `mipres_programacion`;
 CREATE TABLE `mipres_programacion` (

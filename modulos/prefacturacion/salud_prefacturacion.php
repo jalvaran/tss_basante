@@ -109,6 +109,11 @@ $css->PageInit($myTitulo);
                     <a href="#" onclick="idListado=13;MostrarListadoSegunID();">
                         <i class="fa fa-calendar-check-o"></i> MiPres Entrega</a>
                 </li>
+                
+                <li>
+                    <a href="#" onclick="idListado=14;MostrarListadoSegunID();">
+                        <i class="fa fa-calendar-check-o"></i> MiPres Reporte Entrega</a>
+                </li>
                
               </ul>
             </div>

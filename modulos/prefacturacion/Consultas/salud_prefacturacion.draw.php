@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+@session_start();
 if (!isset($_SESSION['username'])){// valida que el usuario tenga alguna sesion iniciada 
   exit("<a href='../../index.php' ><img src='../images/401.png'>Iniciar Sesion </a>");
   
@@ -1751,7 +1751,7 @@ if(!empty($_REQUEST["Accion"]) ){// se verifica si el indice accion es diferente
             
             
             if($Busquedas<>'' AND $TotalBusquedasArray == 2 ){
-                $Condicion.=" AND ( NumeroFactura='$Busquedas' or NumeroAutorizacion='$Busquedas' or NumeroDocumento='$Busquedas' )";
+                $Condicion.=" AND ( NumeroFactura='$Busquedas')";
             }
             if($Busquedas<>'' AND count($ArrayBusqueda)>1){
                 $Condicion.=" AND (";

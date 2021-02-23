@@ -167,14 +167,14 @@ if( !empty($_REQUEST["Accion"]) ){
             $mipres_nombre_recibe=$obCon->normalizar($_REQUEST["mipres_nombre_recibe"]);
             $mipres_causas_no_entrega=$obCon->normalizar($_REQUEST["mipres_causas_no_entrega"]);
             
-            if(!is_numeric($mipres_cantidad_entregada) or $mipres_cantidad_entregada<1){
-                exit("E1;El campo cantidad entregada debe ser un numero mayor a cero;mipres_cantidad_entregada");
+            if(!is_numeric($mipres_cantidad_entregada) or $mipres_cantidad_entregada<0){
+                exit("E1;El campo cantidad entregada debe ser un numero mayor o igual a cero;mipres_cantidad_entregada");
             }
             if(!is_numeric($mipres_identificacion_recibe) or $mipres_identificacion_recibe<1){
                 exit("E1;El campo cantidad identificacion de quien recibe debe ser un numero mayor a cero;mipres_identificacion_recibe");
             }
             
-            if($mipres_fecha_real_entrega==''){
+            if($mipres_fecha_real_entrega=='' and $mipres_causas_no_entrega==''){
                 exit("E1;El campo fecha de entrega no puede estar vacío;mipres_fecha_real_entrega");
             }
             
@@ -237,6 +237,7 @@ if( !empty($_REQUEST["Accion"]) ){
                 $NoPrescripcion=$respuesta["NoPrescripcion"];
                 exit("OK;$mensaje;$NoPrescripcion");
             }else{
+                print("No se pudo anular: ");
                 print_r($respuesta);
             }
             
@@ -465,6 +466,129 @@ if( !empty($_REQUEST["Accion"]) ){
             exit("OK;Entrega X Prescipcion $NoPrescripcion Guardada;$NoPrescripcion");
             
         break;//Fin caso 15
+        
+        case 16://obtenga los reportes de entrega mipres de acuerdo al No. Prescripcion
+                                
+            
+            $empresa_id=1;
+            $datos_empresa=$obCon->DevuelveValores("empresapro", "ID", $empresa_id);
+            $db=$datos_empresa["db"];
+            $datos_servidor=$obCon->DevuelveValores("servidores", "ID", 2013);//aqui se encuentra la url para obtener el reporte de entrega por numero de prescipcion
+            
+            $token_consultas=$obCon->normalizar($_REQUEST["token_consultas"]);
+            $NoPrescripcion=$obCon->normalizar($_REQUEST["NoPrescripcion"]);
+            
+            $method="GET";
+            $url=$datos_servidor["IP"].$datos_empresa["NIT"]."/".$token_consultas."/".$NoPrescripcion;
+            $Token=$datos_empresa["TokenAPIMipres"];
+            $data="";
+            //print($url);
+            $respuesta=$obCon->callAPI($method, $url, $Token, $data);
+            $datos_obtenidos= json_decode($respuesta,1);
+            //print_r($datos_obtenidos);
+            if(isset($datos_obtenidos[0]["ID"])){
+                $obCon->guardar_reporte_entrega_mipres($db, $datos_obtenidos, $idUser);  
+            }
+            
+            exit("OK;Reporte Entrega X Prescipcion $NoPrescripcion Guardada;$NoPrescripcion");
+            
+        break;//Fin caso 16
+        
+        case 17://obtenga el reporte de entrega mi pres de acuerdo a un rango de fechas
+                                
+            
+            $empresa_id=1;
+            $datos_empresa=$obCon->DevuelveValores("empresapro", "ID", $empresa_id);
+            $db=$datos_empresa["db"];
+            $datos_servidor=$obCon->DevuelveValores("servidores", "ID", 2014);//aqui se encuentra la url para obtener el token
+            
+            $token_consultas=$obCon->normalizar($_REQUEST["token_consultas"]);
+            
+            $fecha_inicial=$obCon->normalizar($_REQUEST["fecha_inicial"]);
+            $fecha_final=$obCon->normalizar($_REQUEST["fecha_final"]);
+            $fecha_consulta=$obCon->normalizar($_REQUEST["fecha_consulta"]);
+            $total_dias=$obCon->normalizar($_REQUEST["total_dias"]);
+            if($fecha_consulta=='undefined' or $fecha_consulta==''){
+                exit("E1;La fecha de consulta solicitada está vacía");
+            }
+            $method="GET";
+            $url=$datos_servidor["IP"].$datos_empresa["NIT"]."/".$token_consultas."/".$fecha_consulta;
+            $Token=$datos_empresa["TokenAPIMipres"];
+            $data="";
+            
+            $respuesta=$obCon->callAPI($method, $url, $Token, $data);
+            $datos_obtenidos= json_decode($respuesta,1);
+            if(isset($datos_obtenidos[0]["ID"])){
+                $obCon->guardar_reporte_entrega_mipres($db, $datos_obtenidos, $idUser);  
+            }
+            
+            $proxima_consulta=$obCon->sumar_dias_fecha($fecha_consulta, 1);
+            //print("Proxima consulta $proxima_consulta");
+            $ValidarFechaInicialMiPres= strtotime($proxima_consulta);
+            $ValidarFechaFinalMiPres= strtotime($fecha_final);
+            if($ValidarFechaInicialMiPres>$ValidarFechaFinalMiPres){
+                exit("FIN;Fueron Obtenidas todas las fechas solicitadas");
+            }
+            
+            $difencia_proxima_consulta=$obCon->obtener_dias_diferencia_rango_fecha($proxima_consulta, $fecha_final);
+            $difencia_proxima_consulta=$difencia_proxima_consulta+1;
+            //print("<br>diferencia: ".$difencia_proxima_consulta);
+            $porcentaje=round((100/$total_dias)*$difencia_proxima_consulta);
+            $porcentaje=100-$porcentaje;
+            //print("<br>porcentaje: ".$porcentaje);
+            exit("OK;Datos de la fecha $fecha_consulta Guardados;$proxima_consulta;$porcentaje;$fecha_consulta consultado");
+            
+        break;//Fin caso 17
+        
+        case 18: //Anular un reporte de entrega Mipres
+            
+            //$empresa_id=$obCon->normalizar($_REQUEST["empresa_id"]);
+            $empresa_id=1;
+            $datos_empresa=$obCon->DevuelveValores("empresapro", "ID", $empresa_id);
+            $db=$datos_empresa["db"];            
+            $token_consultas=$obCon->normalizar($_REQUEST["token_consultas"]);
+            $reporte_entrega_id=$obCon->normalizar($_REQUEST["reporte_entrega_id"]);
+            
+            $respuesta=$obCon->anular_reporte_entrega_mipres($datos_empresa, $reporte_entrega_id, $token_consultas,$idUser);
+            
+            if(isset($respuesta["OK"])){
+                $mensaje=$respuesta["Mensaje"];
+                $NoPrescripcion=$respuesta["NoPrescripcion"];
+                exit("OK;$mensaje;$NoPrescripcion");
+            }else{
+                print("No se pudo anular: ");
+                print_r($respuesta);
+            }
+            
+        break;//Fin caso 18
+        
+        case 19: //Reportar Entrega Mipres
+            
+            //$empresa_id=$obCon->normalizar($_REQUEST["empresa_id"]);
+            $empresa_id=1;
+            $datos_empresa=$obCon->DevuelveValores("empresapro", "ID", $empresa_id);
+            $db=$datos_empresa["db"];            
+            $token_consultas=$obCon->normalizar($_REQUEST["token_consultas"]);
+            $mipres_id=$obCon->normalizar($_REQUEST["mipres_id"]);
+            
+            $mipres_valor_facturado=$obCon->normalizar($_REQUEST["mipres_valor_facturado"]);
+            
+            if(!is_numeric($mipres_valor_facturado) or $mipres_valor_facturado<0){
+                exit("E1;El campo cantidad entregada debe ser un numero mayor o igual a cero;mipres_valor_facturado");
+            }
+                        
+            $respuesta=$obCon->reporte_entrega_mipres_x_id($datos_empresa, $mipres_id, $token_consultas, $mipres_valor_facturado, $idUser);
+            
+            if(isset($respuesta["OK"])){
+                $idEntrega=$respuesta["IdReporteEntrega"];
+                $NoPrescripcion=$respuesta["NoPrescripcion"];
+               
+                exit("OK;Entrega Reportada con el id: $idEntrega;$idEntrega;$NoPrescripcion");
+            }else{
+                print_r($respuesta);
+            }
+            
+        break;//Fin caso 19
         
     }
     

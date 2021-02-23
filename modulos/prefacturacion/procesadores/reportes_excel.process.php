@@ -7,21 +7,19 @@ if (!isset($_SESSION['username'])){
 }
 $idUser=$_SESSION['idUser'];
 
-include_once("../clases/ClasesDocumentosExcel.class.php");
+include_once("../clases/reportes_excel.class.php");
 
 if( !empty($_REQUEST["Accion"]) ){
     $obCon = new TS_Excel($idUser);
     
     switch ($_REQUEST["Accion"]) {
         
-        case 1: //exportar una tabla a excel
+        case 1: //genere reporte de entrega en excel
             $empresa_id=$obCon->normalizar($_REQUEST["empresa_id"]);
-            $Tabla=$obCon->normalizar($_REQUEST["tb"]);
-            $sql= urldecode(base64_decode($_REQUEST["st"]));
-            $columnas= urldecode(base64_decode($_REQUEST["cols"]));
-            $array_cols= explode(",", $columnas);
-            $obCon->exportar_tabla($Tabla, $sql, $array_cols);
-            print("OK;tabla $Tabla exportada");
+            $mipres_id=$obCon->normalizar($_REQUEST["mipres_id"]);
+            $datos_empresa=$obCon->DevuelveValores("empresapro", "ID", $empresa_id);
+            $obCon->reporte_entrega_excel($datos_empresa,$mipres_id);
+            print("OK;reporte generado");
             
         break; //fin caso 1
     

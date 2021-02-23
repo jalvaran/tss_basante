@@ -88,6 +88,10 @@ function MostrarListadoSegunID(){
         
         ListarEntregaMipres();
     }
+    if(idListado==14){
+        
+        ListarReporteEntregaMipres();
+    }
     
 }
 
@@ -143,6 +147,9 @@ function CambiePagina(Funcion,Page=""){
     }
     if(Funcion==13){
         ListarEntregaMipres(Page);
+    }
+    if(Funcion==14){
+        ListarReporteEntregaMipres(Page);
     }
     
 }
